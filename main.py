@@ -238,14 +238,16 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     bot_settings = db.query(BotSettings).first()
-    krw_balance = upbit.get_krw_balance()
-    coin_balance = upbit.get_coin_balance(SYMBOL)
+    krw_balance = upbit.get_krw_balance() or 0.0
+    coin_balance = upbit.get_coin_balance(SYMBOL) or 0.0
     current_price = upbit.get_current_price(SYMBOL)
-    current_rsi = strategy.get_rsi()
+    current_rsi = strategy.get_rsi() or 0.0
     
     profit_rate = 0.0
     if bot_settings and bot_settings.avg_buy_price > 0 and current_price:
         profit_rate = ((current_price / bot_settings.avg_buy_price) - 1) * 100
+    elif current_price is None:
+        current_price = 0.0 # Safety default
     
     # Calculate Detailed Statistics
     all_trades = db.query(TradeHistory).filter(TradeHistory.side == "SELL").order_by(TradeHistory.timestamp.asc()).all()
