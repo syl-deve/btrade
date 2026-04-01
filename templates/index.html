@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upbit Auto-Trader Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .neon-text { text-shadow: 0 0 10px rgba(52, 152, 219, 0.8), 0 0 20px rgba(52, 152, 219, 0.4); }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.12); }
+        .bot-on { background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; }
+        .bot-off { background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; }
+    </style>
+</head>
+<body class="p-6 md:p-12">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-12">
+            <h1 class="text-3xl font-bold neon-text text-blue-400">BITRADE CORE v1.0</h1>
+            <div class="flex items-center gap-4">
+                <button onclick="document.getElementById('config-modal').showModal()" class="text-[10px] text-gray-500 hover:text-blue-400 transition-colors tracking-widest uppercase mr-2 border border-blue-500/10 px-3 py-1 rounded-full">⚡ SYSTEM_CONFIG</button>
+                <a href="/logout" class="text-[10px] text-gray-500 hover:text-white transition-colors tracking-widest uppercase mr-2 border border-white/10 px-3 py-1 rounded-full">SIGN_OUT</a>
+                <span id="bot-status-badge" class="badge badge-error gap-2 px-4 py-3 font-bold border-2">OFFLINE</span>
+                <button id="toggle-btn" class="btn btn-outline btn-info px-8 font-bold border-2 transition-all hover:scale-105">START SYSTEM</button>
+            </div>
+        </header>
+
+        <!-- Main Stats Grid -->
+        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div class="glass-card rounded-2xl p-6 transition-all hover:border-blue-500/50">
+                <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">KRW BALANCE</p>
+                <div id="krw-balance" class="text-2xl font-bold text-white">0</div>
+                <p class="text-[10px] text-gray-400 mt-2">Available for Trading</p>
+            </div>
+            
+            <div class="glass-card rounded-2xl p-6 transition-all hover:border-yellow-500/50 border-yellow-500/20">
+                <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">AVG BUY PRICE</p>
+                <div id="avg-buy-price" class="text-2xl font-bold text-yellow-400">0</div>
+                <p id="profit-rate" class="text-[10px] text-gray-400 mt-2">No Position</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 transition-all hover:border-gray-500/50">
+                <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">CURRENT PRICE</p>
+                <div id="current-price" class="text-2xl font-bold text-blue-400">0</div>
+                <p class="text-[10px] text-gray-400 mt-2">Real-time Upbit Data</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 border-indigo-500/30">
+                <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">CURRENT RSI</p>
+                <div id="current-rsi" class="text-2xl font-bold text-purple-400">0</div>
+                <p id="rsi-status" class="text-[10px] text-gray-400 mt-2">Buy at RSI < 30</p>
+            </div>
+        </main>
+
+        <!-- Stats Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div class="glass-card rounded-2xl p-6 border-green-500/20">
+                <p class="text-xs text-gray-500 uppercase font-bold mb-2">TOTAL NET PROFIT</p>
+                <div class="flex items-end gap-2">
+                    <span id="total-net-profit" class="text-3xl font-black text-green-400">0 ₩</span>
+                    <span class="text-xs text-gray-400 pb-1">Cum. Return</span>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-6 border-blue-500/20">
+                <p class="text-xs text-gray-500 uppercase font-bold mb-2">WIN RATE</p>
+                <div class="flex items-end gap-3">
+                    <span id="win-rate" class="text-3xl font-black text-blue-400">0%</span>
+                    <span id="win-loss-count" class="text-xs text-gray-400 pb-1">0 Wins / 0 Losses</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profit Trend Chart Section -->
+        <section class="glass-card rounded-3xl p-8 mb-12 border-blue-500/10">
+            <h2 class="text-xl font-bold text-white border-l-4 border-blue-500 pl-4 mb-6 uppercase tracking-wider">CUMULATIVE PROFIT TREND</h2>
+            <div class="w-full" style="height: 300px;">
+                <canvas id="profitChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Trade History Section -->
+        <section class="glass-card rounded-3xl overflow-hidden p-8 backdrop-blur-md">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold text-white border-l-4 border-blue-500 pl-4">SCALPING PROTOCOLS</h2>
+                <div id="last-update" class="text-xs text-gray-500">LAST REFRESH: 00:00:00</div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="table table-zebra table-sm">
+                    <thead>
+                        <tr class="text-gray-500 border-b border-white/5">
+                            <th class="py-4">STATUS</th>
+                            <th>TIMESTAMP</th>
+                            <th>PRICE (KRW)</th>
+                            <th>VOLUME</th>
+                            <th>TOTAL (KRW)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trade-history-body" class="text-gray-200">
+                        <!-- History injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        
+        <footer class="mt-12 text-center text-[10px] text-gray-600 tracking-tighter opacity-50">
+            <span id="footer-strategy">STRATEGY: RSI_SCALPER // ENCRYPTED_CONNECTION_ACTIVE</span>
+        </footer>
+    </div>
+
+    <!-- Strategy Config Modal -->
+    <dialog id="config-modal" class="modal">
+        <div class="modal-box glass-card border border-blue-500/30 rounded-3xl p-10 max-w-sm">
+            <h3 class="text-xl font-bold text-white mb-6 orbitron tracking-wider">PROTOCOL SETTINGS</h3>
+            
+            <div class="space-y-6">
+                <div class="form-control">
+                    <label class="label"><span class="label-text text-[10px] text-gray-400 font-bold uppercase tracking-widest">BUY RSI THRESHOLD</span></label>
+                    <input type="number" id="cfg-rsi" value="30" step="0.5" class="input input-bordered bg-black/40 border-white/5 text-center text-blue-400 font-bold">
+                    <p class="text-[8px] text-gray-600 mt-1">Typical: 25 ~ 35 (Lower is safer dipping)</p>
+                </div>
+
+                <div class="form-control">
+                    <label class="label"><span class="label-text text-[10px] text-gray-400 font-bold uppercase tracking-widest">TARGET PROFIT (%)</span></label>
+                    <input type="number" id="cfg-profit" value="1.0" step="0.1" class="input input-bordered bg-black/40 border-white/5 text-center text-green-400 font-bold">
+                    <p class="text-[8px] text-gray-600 mt-1">Recommended: 0.5 ~ 2.0 (Fast scalping)</p>
+                </div>
+
+                <div class="form-control">
+                    <label class="label"><span class="label-text text-[10px] text-gray-400 font-bold uppercase tracking-widest">STOP LOSS (%)</span></label>
+                    <input type="number" id="cfg-loss" value="-2.0" step="0.1" class="input input-bordered bg-black/40 border-white/5 text-center text-red-500 font-bold">
+                    <p class="text-[8px] text-gray-600 mt-1">Exit immediately if price drops below this %</p>
+                </div>
+
+                <div class="form-control">
+                    <label class="label"><span class="label-text text-[10px] text-gray-400 font-bold uppercase tracking-widest">TRAILING OFFSET (%)</span></label>
+                    <input type="number" id="cfg-trailing" value="0.2" step="0.05" class="input input-bordered bg-black/40 border-white/5 text-center text-orange-400 font-bold">
+                    <p class="text-[8px] text-gray-600 mt-1">Sell after drop from peak (e.g. 0.2)</p>
+                </div>
+
+                <div class="modal-action flex items-center justify-between mt-10">
+                    <form method="dialog"><button class="btn btn-ghost btn-xs text-gray-600">CLOSE</button></form>
+                    <button onclick="saveConfig()" class="btn btn-info btn-sm px-8 rounded-xl font-bold orbitron text-xs">APPLY CHANGES</button>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <!-- Application Script -->
+    <script>
+        // Chart Initialization
+        let profitChart;
+        function initChart() {
+            const ctx = document.getElementById('profitChart').getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(52, 152, 219, 0.4)');
+            gradient.addColorStop(1, 'rgba(52, 152, 219, 0.0)');
+
+            profitChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Cumulative Profit (KRW)',
+                        data: [],
+                        borderColor: '#3498db',
+                        backgroundColor: gradient,
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 2,
+                        pointBackgroundColor: '#3498db'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#718096', font: { size: 10 } }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { color: '#718096', font: { size: 8 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function saveConfig() {
+            const rsi = document.getElementById('cfg-rsi').value;
+            const profit = document.getElementById('cfg-profit').value;
+            const loss = document.getElementById('cfg-loss').value;
+            const trailing = document.getElementById('cfg-trailing').value;
+
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        rsi_threshold: parseFloat(rsi),
+                        target_profit_rate: parseFloat(profit),
+                        stop_loss_rate: parseFloat(loss),
+                        trailing_offset: parseFloat(trailing)
+                    })
+                });
+                if (response.ok) {
+                    alert("PROTOCOL UPDATED SUCCESSFULLY");
+                    document.getElementById('config-modal').close();
+                    updateStatus(); // Sync UI
+                }
+            } catch (err) {
+                console.error("Config Error:", err);
+            }
+        }
+
+        async function updateStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                // Update UI values
+                document.getElementById('krw-balance').innerText = new Intl.NumberFormat().format(data.krw_balance) + ' ₩';
+                document.getElementById('avg-buy-price').innerText = data.avg_buy_price > 0 ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '---';
+                document.getElementById('current-price').innerText = new Intl.NumberFormat().format(data.current_price) + ' ₩';
+                document.getElementById('current-rsi').innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '---';
+                
+                // Sync Settings to Modal (Pre-populate)
+                if (!document.getElementById('config-modal').open) {
+                    document.getElementById('cfg-rsi').value = data.config.rsi_threshold;
+                    document.getElementById('cfg-profit').value = data.config.target_profit_rate;
+                    document.getElementById('cfg-loss').value = data.config.stop_loss_rate;
+                    document.getElementById('cfg-trailing').value = data.config.trailing_offset;
+                }
+
+                // Update Footer with current strategy info
+                document.getElementById('footer-strategy').innerText = `STRATEGY: RSI < ${data.config.rsi_threshold} / TARGET: +${data.config.target_profit_rate}% / OFFSET: ${data.config.trailing_offset}% / STOP: ${data.config.stop_loss_rate}%`;
+
+                // Detailed Stats Update
+                const netProfitEl = document.getElementById('total-net-profit');
+                netProfitEl.innerText = (data.total_net_profit >= 0 ? '+' : '') + new Intl.NumberFormat().format(data.total_net_profit) + ' ₩';
+                netProfitEl.className = `text-3xl font-black ${data.total_net_profit >= 0 ? "text-green-400" : "text-red-400"}`;
+                
+                document.getElementById('win-rate').innerText = data.win_rate.toFixed(1) + '%';
+                document.getElementById('win-loss-count').innerText = `${data.win_count} Wins / ${data.loss_count} Losses`;
+
+                // Update Chart Data
+                if (profitChart && data.chart_data.length > 0) {
+                    profitChart.data.labels = data.chart_data.map(d => d.x);
+                    profitChart.data.datasets[0].data = data.chart_data.map(d => d.y);
+                    profitChart.update('none'); 
+                }
+
+                // Profit Rate display
+                const profitEl = document.getElementById('profit-rate');
+                if (data.avg_buy_price > 0) {
+                    const colorClass = data.profit_rate >= 0 ? "text-green-400" : "text-red-400";
+                    profitEl.innerHTML = `ROI: <span class="${colorClass} font-bold">${data.profit_rate.toFixed(2)}%</span> (Target: +1%)`;
+                } else {
+                    profitEl.innerText = "No Open Position";
+                }
+
+                // RSI Status
+                const rsiStatus = document.getElementById('rsi-status');
+                if (data.current_rsi) {
+                    if (data.current_rsi <= 35) {
+                        rsiStatus.innerText = "🔥 OPPORTUNITY: RSI LOW";
+                        rsiStatus.className = "text-[10px] text-orange-400 font-bold animate-pulse";
+                    } else if (data.current_rsi >= 70) {
+                        rsiStatus.innerText = "⚠️ DANGER: OVERBOUGHT";
+                        rsiStatus.className = "text-[10px] text-red-500 font-bold";
+                    } else {
+                        rsiStatus.innerText = "NEUTRAL STATE";
+                        rsiStatus.className = "text-[10px] text-gray-500";
+                    }
+                }
+
+                // Update Bot Status Toggle
+                const btn = document.getElementById('toggle-btn');
+                const badge = document.getElementById('bot-status-badge');
+                
+                if (data.is_running) {
+                    btn.innerText = 'STOP SYSTEM';
+                    btn.classList.replace('btn-info', 'btn-error');
+                    badge.innerText = 'SCALPER_ACTIVE';
+                    badge.classList.replace('badge-error', 'badge-success');
+                } else {
+                    btn.innerText = 'START SYSTEM';
+                    btn.classList.replace('btn-error', 'btn-info');
+                    badge.innerText = 'STANDBY';
+                    badge.classList.replace('badge-success', 'badge-error');
+                }
+
+                // Update Table
+                const tbody = document.getElementById('trade-history-body');
+                tbody.innerHTML = '';
+                data.history.forEach(trade => {
+                    const row = `
+                        <tr class="hover:bg-white/5 border-b border-white/5">
+                            <td class="py-4">
+                                <span class="badge ${trade.side === 'BUY' ? 'badge-success' : 'badge-error'} badge-sm font-bold">${trade.side}</span>
+                            </td>
+                            <td class="text-gray-400 font-mono">${trade.timestamp}</td>
+                            <td>${new Intl.NumberFormat().format(trade.price)}</td>
+                            <td>${trade.volume.toFixed(8)}</td>
+                            <td>${new Intl.NumberFormat().format(trade.total_amount)}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+
+                document.getElementById('last-update').innerText = 'LAST REFRESH: ' + new Date().toLocaleTimeString();
+
+            } catch (error) {
+                console.error("Protocol Error:", error);
+            }
+        }
+
+        // Toggle Button Click
+        document.getElementById('toggle-btn').addEventListener('click', async () => {
+            await fetch('/api/toggle', { method: 'POST' });
+            updateStatus();
+        });
+
+        // Periodic Refresh
+        initChart();
+        updateStatus();
+        setInterval(updateStatus, 5000);
+    </script>
+</body>
+</html>

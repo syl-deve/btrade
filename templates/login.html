@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BITRADE LOGIN // AUTHORIZED ACCESS ONLY</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="glass-card w-full max-w-sm rounded-3xl p-10 text-center animate-fade-in">
+        <div class="mb-8">
+            <h1 class="orbitron text-2xl font-bold text-blue-500 tracking-tighter mb-2">BITRADE CORE</h1>
+            <p class="text-[10px] text-gray-500 tracking-widest uppercase opacity-60">Authentication Required</p>
+        </div>
+
+        <form action="/login" method="post" class="space-y-6">
+            <div class="form-control">
+                <input type="password" name="password" placeholder="ENTER MASTER PASSCODE" 
+                       class="input input-bordered w-full bg-black/40 border-white/10 text-center text-white placeholder:text-gray-700 focus:border-blue-500 rounded-xl"
+                       required autofocus>
+            </div>
+
+            {% if error %}
+            <p class="text-xs text-red-500 font-medium">{{ error }}</p>
+            {% endif %}
+
+            <button type="submit" class="btn btn-info w-full rounded-xl orbitron text-xs tracking-widest hover:scale-105 transition-transform">
+                SECURE ACCESS
+            </button>
+        </form>
+
+        <div class="mt-12">
+            <p class="text-[8px] text-gray-700 tracking-tighter uppercase">
+                Hardware ID: ENCRYPTED // Session Status: LOCKED
+            </p>
+        </div>
+    </div>
+</body>
+</html>
