@@ -60,8 +60,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # Global Client and Strategy Instances
-upbit = UpbitClient()
-strategy = ScalperStrategy()
+try:
+    upbit = UpbitClient()
+    strategy = ScalperStrategy()
+except Exception:
+    print("--- CRITICAL ERROR DURING GLOBAL INITIALIZATION ---")
+    traceback.print_exc()
+    upbit = None
+    strategy = None
 
 # DB Dependency
 def get_db():
@@ -90,9 +96,15 @@ async def trading_loop():
 
             if bot_settings.is_running:
                 # 1. Fetch current data
-                current_price = upbit.get_current_price(SYMBOL)
-                current_rsi = strategy.get_rsi()
-                coin_balance = upbit.get_coin_balance(SYMBOL)
+                try:
+                    current_price = upbit.get_current_price(SYMBOL)
+                    current_rsi = strategy.get_rsi()
+                    coin_balance = upbit.get_coin_balance(SYMBOL)
+                except Exception:
+                    print("--- ERROR IN TRADING LOOP DATA FETCH ---")
+                    traceback.print_exc()
+                    await asyncio.sleep(10)
+                    continue
                 
                 # Safety Check: Skip if data is missing
                 if current_price is None or coin_balance is None:
