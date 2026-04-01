@@ -26,13 +26,23 @@ class UpbitClient:
         """ Returns the balance of KRW in the account. """
         if not self._is_authenticated:
             return 0.0
-        return self.upbit.get_balance("KRW")
+        try:
+            balance = self.upbit.get_balance("KRW")
+            return balance
+        except Exception as e:
+            print(f"[DEBUG] KRW Balance Error: {type(e).__name__} - {e}")
+            return 0.0
 
     def get_coin_balance(self, ticker=SYMBOL):
         """ Returns the balance of the specified coin. """
         if not self._is_authenticated:
             return 0.0
-        return self.upbit.get_balance(ticker)
+        try:
+            balance = self.upbit.get_balance(ticker)
+            return balance
+        except Exception as e:
+            print(f"[DEBUG] {ticker} Balance Error: {type(e).__name__} - {e}")
+            return 0.0
 
     def buy_market_order(self, amount, ticker=SYMBOL):
         """ Places a market buy order. """
