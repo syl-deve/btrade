@@ -94,6 +94,13 @@ async def trading_loop():
                 current_rsi = strategy.get_rsi()
                 coin_balance = upbit.get_coin_balance(SYMBOL)
                 
+                # Safety Check: Skip if data is missing
+                if current_price is None or coin_balance is None:
+                    logger.warning(f"⚠️ Data missing from Upbit. Retrying in next loop...")
+                    db.close()
+                    await asyncio.sleep(10) # Quick retry
+                    continue
+
                 rsi_display = f"{current_rsi:.2f}" if current_rsi else "0.00"
                 logger.info(f"[Checking] {SYMBOL} @ {current_price:,.0f} | RSI: {rsi_display} | Balance: {coin_balance:.6f}")
 
