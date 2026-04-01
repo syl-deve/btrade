@@ -50,8 +50,11 @@
 
             <div class="glass-card rounded-2xl p-6 border-indigo-500/30">
                 <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">CURRENT RSI</p>
-                <div id="current-rsi" class="text-2xl font-bold text-purple-400">0</div>
-                <p id="rsi-status" class="text-[10px] text-gray-400 mt-2">Buy at RSI < 30</p>
+                <div class="flex items-baseline gap-2">
+                    <div id="current-rsi" class="text-2xl font-bold text-purple-400">0</div>
+                    <div class="text-[10px] text-gray-500">/ <span id="target-rsi" class="font-bold">30</span></div>
+                </div>
+                <p id="rsi-status" class="text-[10px] text-gray-400 mt-2">Initializing...</p>
             </div>
         </main>
 
@@ -233,6 +236,7 @@
                 document.getElementById('avg-buy-price').innerText = data.avg_buy_price > 0 ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '---';
                 document.getElementById('current-price').innerText = new Intl.NumberFormat().format(data.current_price) + ' ₩';
                 document.getElementById('current-rsi').innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '---';
+                document.getElementById('target-rsi').innerText = data.config.rsi_threshold;
                 
                 // Sync Settings to Modal (Pre-populate)
                 if (!document.getElementById('config-modal').open) {
