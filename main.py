@@ -282,13 +282,13 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         
         return {
             "is_running": bot_settings.is_running if bot_settings else False,
-            "krw_balance": krw_balance,
+            "krw_balance": int(krw_balance),
             "coin_balance": coin_balance,
-            "current_price": current_price,
+            "current_price": int(current_price),
             "current_rsi": current_rsi,
-            "avg_buy_price": bot_settings.avg_buy_price if bot_settings else 0.0,
+            "avg_buy_price": int(bot_settings.avg_buy_price) if bot_settings else 0,
             "profit_rate": profit_rate,
-            "total_net_profit": total_net_profit,
+            "total_net_profit": int(total_net_profit),
             "win_rate": win_rate,
             "win_count": win_count,
             "loss_count": loss_count,
@@ -300,8 +300,8 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                 "trailing_offset": bot_settings.trailing_stop_offset if bot_settings else 0.2
             },
             "history": [{
-                "id": h.id, "side": h.side, "price": h.price, "volume": h.volume,
-                "total_amount": h.total_amount, "net_profit": h.net_profit,
+                "id": h.id, "side": h.side, "price": int(h.price), "volume": h.volume,
+                "total_amount": int(h.total_amount), "net_profit": int(h.net_profit) if h.net_profit else 0,
                 "timestamp": h.timestamp.strftime("%Y-%m-%d %H:%M:%S")
             } for h in history]
         }
