@@ -251,20 +251,21 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
     
     # Calculate Detailed Statistics
     all_trades = db.query(TradeHistory).filter(TradeHistory.side == "SELL").order_by(TradeHistory.timestamp.asc()).all()
-    total_net_profit = sum([t.net_profit for t in all_trades])
-    win_count = len([t for t in all_trades if t.net_profit > 0])
-    loss_count = len([t for t in all_trades if t.net_profit < 0])
+    total_net_profit = sum([t.net_profit for t in all_trades if t.net_profit is not None])
+    win_count = len([t for t in all_trades if t.net_profit is not None and t.net_profit > 0])
+    loss_count = len([t for t in all_trades if t.net_profit is not None and t.net_profit < 0])
     win_rate = (win_count / (win_count + loss_count) * 100) if (win_count + loss_count) > 0 else 0.0
     
     # Prepare Chart Data (Cumulative Profit Over Time)
     cumulative_profits = []
     current_sum = 0
     for t in all_trades:
-        current_sum += t.net_profit
-        cumulative_profits.append({
-            "x": t.timestamp.strftime("%m-%d %H:%M"),
-            "y": current_sum
-        })
+        if t.net_profit is not None:
+            current_sum += t.net_profit
+            cumulative_profits.append({
+                "x": t.timestamp.strftime("%m-%d %H:%M"),
+                "y": current_sum
+            })
 
     # Recent trade history
     history = db.query(TradeHistory).order_by(TradeHistory.timestamp.desc()).limit(10).all()
