@@ -17,7 +17,7 @@ import logging
 import sys
 
 # --- Logging Setup ---
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
 # --- Lifespan Event Handler ---
@@ -90,9 +90,13 @@ async def trading_loop():
             if bot_settings.is_running:
                 # 1. Fetch current data
                 try:
+                    logger.debug(f"DEBUG: Current price for {SYMBOL}...")
                     current_price = upbit.get_current_price(SYMBOL)
+                    logger.debug(f"DEBUG: Current RSI...")
                     current_rsi = strategy.get_rsi()
+                    logger.debug(f"DEBUG: Coin balance for {SYMBOL}...")
                     coin_balance = upbit.get_coin_balance(SYMBOL)
+                    logger.debug(f"DEBUG: Data fetch complete. Price: {current_price}, RSI: {current_rsi}, Balance: {coin_balance}")
                 except Exception:
                     print("--- ERROR IN TRADING LOOP DATA FETCH ---")
                     traceback.print_exc()
