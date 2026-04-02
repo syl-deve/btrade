@@ -32,6 +32,7 @@ class BotSettings(Base):
     stop_loss_rate = Column(Float, default=-2.0) # 손절 기준 (%)
     highest_profit_rate = Column(Float, default=0.0) # 매수 후 도달한 최고 수익률 (%)
     trailing_stop_offset = Column(Float, default=0.2) # 최고점 대비 하락 시 익절할 간격 (%)
+    exchange = Column(String, default="UPBIT") # 현재 활성화된 거래소 (UPBIT, BITHUMB)
 
 # Database Setup
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})

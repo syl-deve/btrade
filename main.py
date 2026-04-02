@@ -7,9 +7,10 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 import uvicorn
 
-from config import SYMBOL, DASHBOARD_PASSWORD, TRADING_INTERVAL_MINUTES
+from config import SYMBOL, DASHBOARD_PASSWORD, TRADING_INTERVAL_MINUTES, EXCHANGE
 from models import SessionLocal, init_db, BotSettings, TradeHistory
 from core.upbit_client import UpbitClient
+from core.bithumb_client import BithumbClient
 from core.strategy import ScalperStrategy
 from core.discord_notifier import send_discord_message
 from contextlib import asynccontextmanager
@@ -53,14 +54,27 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # Global Client and Strategy Instances
-try:
-    upbit = UpbitClient()
-    strategy = ScalperStrategy()
-except Exception:
-    print("--- CRITICAL ERROR DURING GLOBAL INITIALIZATION ---")
-    traceback.print_exc()
-    upbit = None
-    strategy = None
+upbit_client = None
+bithumb_client = None
+strategy = None
+
+def init_clients():
+    global upbit_client, bithumb_client, strategy
+    try:
+        upbit_client = UpbitClient()
+        bithumb_client = BithumbClient()
+        strategy = ScalperStrategy()
+    except Exception:
+        import traceback
+        print("--- ERROR DURING CLIENT INITIALIZATION ---")
+        traceback.print_exc()
+
+init_clients()
+
+def get_client(exchange="UPBIT"):
+    if exchange == "BITHUMB":
+        return bithumb_client
+    return upbit_client
 
 # DB Dependency
 def get_db():
@@ -88,14 +102,18 @@ async def trading_loop():
                 db.refresh(bot_settings)
 
             if bot_settings.is_running:
+                # 0. Select Client based on DB
+                target_exchange = bot_settings.exchange or "UPBIT"
+                current_client = get_client(target_exchange)
+                
                 # 1. Fetch current data
                 try:
-                    logger.debug(f"DEBUG: Current price for {SYMBOL}...")
-                    current_price = upbit.get_current_price(SYMBOL)
+                    logger.debug(f"DEBUG: Current price for {SYMBOL} ({target_exchange})...")
+                    current_price = current_client.get_current_price(SYMBOL)
                     logger.debug(f"DEBUG: Current RSI...")
                     current_rsi = strategy.get_rsi()
                     logger.debug(f"DEBUG: Coin balance for {SYMBOL}...")
-                    coin_balance = upbit.get_coin_balance(SYMBOL)
+                    coin_balance = current_client.get_coin_balance(SYMBOL)
                     logger.debug(f"DEBUG: Data fetch complete. Price: {current_price}, RSI: {current_rsi}, Balance: {coin_balance}")
                 except Exception:
                     print("--- ERROR IN TRADING LOOP DATA FETCH ---")
@@ -105,7 +123,7 @@ async def trading_loop():
                 
                 # Safety Check: Skip if data is missing
                 if current_price is None or coin_balance is None:
-                    logger.warning(f"⚠️ Data missing from Upbit. Retrying in next loop...")
+                    logger.warning(f"⚠️ Data missing from Exchange. Retrying in next loop...")
                     db.close()
                     await asyncio.sleep(10) # Quick retry
                     continue
@@ -120,7 +138,7 @@ async def trading_loop():
                         
                         # 1. Stop Loss (Emergency - Highest Priority)
                         if profit_rate <= bot_settings.stop_loss_rate:
-                            res = upbit.sell_market_order(coin_balance)
+                            res = current_client.sell_market_order(coin_balance)
                             if res:
                                 buy_principle = bot_settings.avg_buy_price * coin_balance
                                 sell_total = current_price * coin_balance
@@ -149,7 +167,7 @@ async def trading_loop():
                             # Take Profit (Trailing Mode)
                             if bot_settings.highest_profit_rate >= bot_settings.target_profit_rate:
                                 if profit_rate <= (bot_settings.highest_profit_rate - bot_settings.trailing_stop_offset):
-                                    res = upbit.sell_market_order(coin_balance)
+                                    res = current_client.sell_market_order(coin_balance)
                                     if res:
                                         buy_principle = bot_settings.avg_buy_price * coin_balance
                                         sell_total = current_price * coin_balance
@@ -174,10 +192,10 @@ async def trading_loop():
                     # 🛒 BUY Condition: RSI is low (Dynamic)
                     if current_rsi and current_rsi <= bot_settings.rsi_threshold:
                         logger.info(f"💎 BUY Signal Detected: RSI {current_rsi:.2f} <= {bot_settings.rsi_threshold}")
-                        krw_balance = upbit.get_krw_balance()
+                        krw_balance = current_client.get_krw_balance()
                         if krw_balance > 5000:
                             buy_amount = krw_balance * 0.9995
-                            res = upbit.buy_market_order(buy_amount)
+                            res = current_client.buy_market_order(buy_amount)
                             if res:
                                 bot_settings.avg_buy_price = current_price
                                 bot_settings.highest_profit_rate = 0.0 # Reset peak on BUY
@@ -248,9 +266,12 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             raise HTTPException(status_code=401, detail="Unauthorized")
         
         bot_settings = db.query(BotSettings).first()
-        krw_balance = upbit.get_krw_balance() or 0.0
-        coin_balance = upbit.get_coin_balance(SYMBOL) or 0.0
-        current_price = upbit.get_current_price(SYMBOL)
+        target_exchange = bot_settings.exchange or "UPBIT"
+        current_client = get_client(target_exchange)
+        
+        krw_balance = current_client.get_krw_balance() or 0.0
+        coin_balance = current_client.get_coin_balance(SYMBOL) or 0.0
+        current_price = current_client.get_current_price(SYMBOL)
         current_rsi = strategy.get_rsi() or 0.0
         
         profit_rate = 0.0
@@ -281,6 +302,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         history = db.query(TradeHistory).order_by(TradeHistory.timestamp.desc()).limit(10).all()
         
         return {
+            "exchange": EXCHANGE,
             "is_running": bot_settings.is_running if bot_settings else False,
             "krw_balance": int(krw_balance),
             "coin_balance": coin_balance,
@@ -320,6 +342,7 @@ async def update_settings(data: dict, db: Session = Depends(get_db), user=Depend
         bot_settings.target_profit_rate = data.get("target_profit_rate", 1.0)
         bot_settings.stop_loss_rate = data.get("stop_loss_rate", -2.0)
         bot_settings.trailing_stop_offset = data.get("trailing_offset", 0.2)
+        bot_settings.exchange = data.get("exchange", "UPBIT")
         db.commit()
         return {"status": "success"}
     return {"status": "error"}

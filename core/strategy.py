@@ -1,26 +1,36 @@
 import pyupbit
+import pybithumb
 import pandas as pd
-from config import SYMBOL
+from config import SYMBOL, EXCHANGE
 
 class ScalperStrategy:
     """
     RSI-based 'Buy the Dip' & 1% Take-Profit Strategy.
-    1. Buy when RSI < 30 (Oversold).
-    2. Sell when price increases by 1% from entry price.
-    3. Repeats 24/7.
+    Exchange-agnostic (Supports Upbit & Bithumb).
     """
     def __init__(self, ticker=SYMBOL, buy_rsi_threshold=30, target_profit_rate=1.01, stop_loss_rate=0.98):
         self.ticker = ticker
+        self.exchange = EXCHANGE
         self.buy_rsi_threshold = buy_rsi_threshold
         self.target_profit_rate = target_profit_rate
         self.stop_loss_rate = stop_loss_rate
+
+    def _get_api(self):
+        return pyupbit if self.exchange == "UPBIT" else pybithumb
+
+    def _normalize_ticker(self, ticker):
+        if self.exchange == "BITHUMB" and "-" in ticker:
+            return ticker.split("-")[1]
+        return ticker
 
     def get_rsi(self, interval="minute15", count=100):
         """
         Calculates the Relative Strength Index (RSI) for the current ticker.
         """
         try:
-            df = pyupbit.get_ohlcv(self.ticker, interval=interval, count=count)
+            api = self._get_api()
+            target = self._normalize_ticker(self.ticker)
+            df = api.get_ohlcv(target, interval=interval, count=count)
             if df is None:
                 return None
             

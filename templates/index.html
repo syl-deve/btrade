@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upbit Auto-Trader Dashboard</title>
+    <title>BITRADE Core Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -23,6 +23,7 @@
             <div class="flex items-center gap-4">
                 <button onclick="document.getElementById('config-modal').showModal()" class="text-[10px] text-gray-500 hover:text-blue-400 transition-colors tracking-widest uppercase mr-2 border border-blue-500/10 px-3 py-1 rounded-full">⚡ SYSTEM_CONFIG</button>
                 <a href="/logout" class="text-[10px] text-gray-500 hover:text-white transition-colors tracking-widest uppercase mr-2 border border-white/10 px-3 py-1 rounded-full">SIGN_OUT</a>
+                <span id="exchange-badge" class="badge badge-outline gap-2 px-4 py-3 font-bold border-2 border-blue-500/30 text-blue-400">UPBIT</span>
                 <span id="bot-status-badge" class="badge badge-error gap-2 px-4 py-3 font-bold border-2">OFFLINE</span>
                 <button id="toggle-btn" class="btn btn-outline btn-info px-8 font-bold border-2 transition-all hover:scale-105">START SYSTEM</button>
             </div>
@@ -121,6 +122,14 @@
             
             <div class="space-y-6">
                 <div class="form-control">
+                    <label class="label"><span class="label-text text-[10px] text-blue-400 font-bold uppercase tracking-widest">EXCHANGE_SELECT</span></label>
+                    <select id="cfg-exchange" class="select select-bordered bg-black/40 border-blue-500/20 text-center text-blue-400 font-bold orbitron text-xs">
+                        <option value="UPBIT">UPBIT (K-Premium)</option>
+                        <option value="BITHUMB">BITHUMB (Low Fees)</option>
+                    </select>
+                </div>
+
+                <div class="form-control">
                     <label class="label"><span class="label-text text-[10px] text-gray-400 font-bold uppercase tracking-widest">BUY RSI THRESHOLD</span></label>
                     <input type="number" id="cfg-rsi" value="30" step="0.5" class="input input-bordered bg-black/40 border-white/5 text-center text-blue-400 font-bold">
                     <p class="text-[8px] text-gray-600 mt-1">Typical: 25 ~ 35 (Lower is safer dipping)</p>
@@ -204,6 +213,7 @@
             const profit = document.getElementById('cfg-profit').value;
             const loss = document.getElementById('cfg-loss').value;
             const trailing = document.getElementById('cfg-trailing').value;
+            const exchange = document.getElementById('cfg-exchange').value;
 
             try {
                 const response = await fetch('/api/settings', {
@@ -213,7 +223,8 @@
                         rsi_threshold: parseFloat(rsi),
                         target_profit_rate: parseFloat(profit),
                         stop_loss_rate: parseFloat(loss),
-                        trailing_offset: parseFloat(trailing)
+                        trailing_offset: parseFloat(trailing),
+                        exchange: exchange
                     })
                 });
                 if (response.ok) {
@@ -237,6 +248,7 @@
                 document.getElementById('current-price').innerText = new Intl.NumberFormat().format(data.current_price) + ' ₩';
                 document.getElementById('current-rsi').innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '---';
                 document.getElementById('target-rsi').innerText = data.config.rsi_threshold;
+                document.getElementById('exchange-badge').innerText = data.exchange;
                 
                 // Sync Settings to Modal (Pre-populate)
                 if (!document.getElementById('config-modal').open) {
@@ -244,6 +256,7 @@
                     document.getElementById('cfg-profit').value = data.config.target_profit_rate;
                     document.getElementById('cfg-loss').value = data.config.stop_loss_rate;
                     document.getElementById('cfg-trailing').value = data.config.trailing_offset;
+                    document.getElementById('cfg-exchange').value = data.exchange;
                 }
 
                 // Update Footer with current strategy info
