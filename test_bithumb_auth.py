@@ -20,13 +20,23 @@ def test():
     if client._is_authenticated:
         print("성공: 빗썸 v1 API 인증에 성공했습니다!")
         
-        # 잔고 확인
-        krw_balance = client.get_krw_balance()
-        print(f"현재 KRW 잔고: {krw_balance:,.0f}원")
+        # 상세 잔고 확인
+        headers = client._get_headers()
+        res = requests.get(f"{client.api_url}/v1/accounts", headers=headers)
+        if res.status_code == 200:
+            accounts = res.json()
+            for acc in accounts:
+                if acc['currency'] == 'KRW':
+                    balance = float(acc['balance'])
+                    locked = float(acc.get('locked', 0))
+                    print(f"현재 KRW 주문 가능: {balance:,.0f}원")
+                    print(f"현재 KRW 주문 대기(락): {locked:,.0f}원")
+                    print(f"현재 KRW 총합: {balance + locked:,.0f}원")
         
         # 현재가 확인
         price = client.get_current_price("KRW-BTC")
-        print(f"현재 BTC 가격: {price:,.0f}원")
+        if price:
+            print(f"현재 BTC 가격: {price:,.0f}원")
         
     else:
         print("실패: 빗썸 API 인증에 실패했습니다.")
