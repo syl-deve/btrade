@@ -26,15 +26,13 @@ class BithumbClient:
         }
         
         if params:
-            # Important: Bithumb (and Upbit) requires parameters to be alphabetically sorted before hashing
-            # Also uses RFC 3986 (quote) for encoding instead of quote_plus
+            # Sort parameters alphabetically to ensure consistent query string
             sorted_params = sorted(params.items())
-            query_string = urlencode(sorted_params, quote_via=quote).encode()
-            m = hashlib.sha512()
-            m.update(query_string)
-            query_hash = m.hexdigest()
-            payload["query_hash"] = query_hash
-            payload["query_hash_alg"] = "SHA512"
+            query_string = urlencode(sorted_params, quote_via=quote)
+            
+            # Use 'query' field instead of 'query_hash' for maximum compatibility
+            # This allows the exchange server to calculate the hash directly
+            payload['query'] = query_string
 
         token = jwt.encode(payload, self.secret_key, algorithm='HS256')
         return {
@@ -125,7 +123,7 @@ class BithumbClient:
             params = {
                 "market": str(ticker),
                 "side": "bid",
-                "price": str(float(krw_amount)), # Ensure float string for consistent hashing
+                "price": str(int(float(krw_amount))), # Market buy price must be an integer string
                 "ord_type": "price"
             }
             headers = self._get_headers(params)
@@ -149,7 +147,7 @@ class BithumbClient:
             params = {
                 "market": str(ticker),
                 "side": "ask",
-                "volume": str(float(amount)), # Ensure float string for consistent hashing
+                "volume": str(float(amount)), # Amount should maintain precision
                 "ord_type": "market"
             }
             headers = self._get_headers(params)
