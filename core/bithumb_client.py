@@ -5,7 +5,7 @@ import time
 import requests
 import logging
 import base64
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote
 from config import BITHUMB_ACCESS_KEY, BITHUMB_SECRET_KEY, SYMBOL
 
 logger = logging.getLogger(__name__)
@@ -27,8 +27,9 @@ class BithumbClient:
         
         if params:
             # Important: Bithumb (and Upbit) requires parameters to be alphabetically sorted before hashing
+            # Also uses RFC 3986 (quote) for encoding instead of quote_plus
             sorted_params = sorted(params.items())
-            query_string = urlencode(sorted_params).encode()
+            query_string = urlencode(sorted_params, quote_via=quote).encode()
             m = hashlib.sha512()
             m.update(query_string)
             query_hash = m.hexdigest()
@@ -122,9 +123,9 @@ class BithumbClient:
         try:
             ticker = self._normalize_ticker(ticker)
             params = {
-                "market": ticker,
+                "market": str(ticker),
                 "side": "bid",
-                "price": str(krw_amount), # For market buy, price is the KRW amount
+                "price": str(float(krw_amount)), # Ensure float string for consistent hashing
                 "ord_type": "price"
             }
             headers = self._get_headers(params)
@@ -146,9 +147,9 @@ class BithumbClient:
         try:
             ticker = self._normalize_ticker(ticker)
             params = {
-                "market": ticker,
+                "market": str(ticker),
                 "side": "ask",
-                "volume": str(amount),
+                "volume": str(float(amount)), # Ensure float string for consistent hashing
                 "ord_type": "market"
             }
             headers = self._get_headers(params)
