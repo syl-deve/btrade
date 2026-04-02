@@ -26,7 +26,9 @@ class BithumbClient:
         }
         
         if params:
-            query_string = urlencode(params).encode()
+            # Important: Bithumb (and Upbit) requires parameters to be alphabetically sorted before hashing
+            sorted_params = sorted(params.items())
+            query_string = urlencode(sorted_params).encode()
             m = hashlib.sha512()
             m.update(query_string)
             query_hash = m.hexdigest()
@@ -127,7 +129,12 @@ class BithumbClient:
             }
             headers = self._get_headers(params)
             res = requests.post(f"{self.api_url}/v1/orders", json=params, headers=headers)
-            return res.json()
+            
+            data = res.json()
+            if res.status_code != 201:
+                logger.error(f"Bithumb Market Buy Failed: {data} (Status: {res.status_code})")
+                return None
+            return data
         except Exception as e:
             logger.error(f"Bithumb Market Buy Error: {e}")
             return None
@@ -146,7 +153,12 @@ class BithumbClient:
             }
             headers = self._get_headers(params)
             res = requests.post(f"{self.api_url}/v1/orders", json=params, headers=headers)
-            return res.json()
+            
+            data = res.json()
+            if res.status_code != 201:
+                logger.error(f"Bithumb Market Sell Failed: {data} (Status: {res.status_code})")
+                return None
+            return data
         except Exception as e:
             logger.error(f"Bithumb Market Sell Error: {e}")
             return None

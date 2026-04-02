@@ -224,7 +224,7 @@ async def trading_loop():
                             res = current_client.buy_market_order(buy_amount)
                             if res:
                                 bot_settings.avg_buy_price = current_price
-                                bot_settings.highest_profit_rate = 0.0 # Reset peak on BUY
+                                bot_settings.highest_profit_rate = 100.0 # Force peak reset
                                 db.commit()
                                 new_trade = TradeHistory(
                                     symbol=SYMBOL, side="BUY", price=current_price, 
@@ -232,10 +232,12 @@ async def trading_loop():
                                 )
                                 db.add(new_trade)
                                 db.commit()
-                                logger.info(f"🛒 BUY Entry Success: {SYMBOL} at {current_price} (Amount: {buy_amount:,.0f} KRW)")
+                                logger.info(f"🛒 BUY Entry Success: {SYMBOL} at {current_price} (Amount: {buy_amount:,.0f} KRW) | API Response: {res}")
                                 send_discord_message(f"🛒 BUY Entry: {SYMBOL}", 
-                                                    f"Bought at {current_price} due to RSI {current_rsi:.2f}", 
+                                                    f"Bought at {current_price} due to RSI {current_rsi:.2f}\nResponse: {res}", 
                                                     color=0x00ff00)
+                            else:
+                                logger.error(f"❌ BUY Entry Failed: {SYMBOL} | Check Bithumb API response above.")
             db.close()
         except Exception as e:
             logger.error(f"[Trading Loop Error] {e}")
