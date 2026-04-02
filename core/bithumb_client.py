@@ -27,14 +27,25 @@ class BithumbClient:
         
         if params:
             # Sort parameters alphabetically to ensure consistent query string
-            sorted_params = sorted(params.items())
+            sorted_params = dict(sorted(params.items()))
             query_string = urlencode(sorted_params, quote_via=quote)
             
-            # Use 'query' field instead of 'query_hash' for maximum compatibility
-            # This allows the exchange server to calculate the hash directly
-            payload['query'] = query_string
+            # Generate SHA512 hash of the query string
+            m = hashlib.sha512()
+            m.update(query_string.encode())
+            query_hash = m.hexdigest()
+            
+            payload['query_hash'] = query_hash
+            payload['query_hash_alg'] = 'SHA512'
 
-        token = jwt.encode(payload, self.secret_key, algorithm='HS256')
+        # Important: Bithumb secret key must be Base64 decoded for HMAC signing
+        try:
+            # Only decode if it looks like a base64 string (ends with == or is long enough)
+            decoded_secret = base64.b64decode(self.secret_key)
+        except Exception:
+            decoded_secret = self.secret_key.encode()
+
+        token = jwt.encode(payload, decoded_secret, algorithm='HS256')
         return {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json"
@@ -123,7 +134,7 @@ class BithumbClient:
             params = {
                 "market": str(ticker),
                 "side": "bid",
-                "price": str(int(float(krw_amount))), # Market buy price must be an integer string
+                "price": int(float(krw_amount)), # Send as Number (integer) instead of String
                 "ord_type": "price"
             }
             headers = self._get_headers(params)
@@ -147,7 +158,7 @@ class BithumbClient:
             params = {
                 "market": str(ticker),
                 "side": "ask",
-                "volume": str(float(amount)), # Amount should maintain precision
+                "volume": float(amount), # Send as Number instead of String
                 "ord_type": "market"
             }
             headers = self._get_headers(params)
