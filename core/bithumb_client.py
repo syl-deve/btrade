@@ -5,6 +5,7 @@ import time
 import requests
 import logging
 import base64
+import json
 from urllib.parse import urlencode, quote
 from config import BITHUMB_ACCESS_KEY, BITHUMB_SECRET_KEY, SYMBOL
 
@@ -38,14 +39,8 @@ class BithumbClient:
             payload['query_hash'] = query_hash
             payload['query_hash_alg'] = 'SHA512'
 
-        # Important: Bithumb secret key must be Base64 decoded for HMAC signing
-        try:
-            # Only decode if it looks like a base64 string (ends with == or is long enough)
-            decoded_secret = base64.b64decode(self.secret_key)
-        except Exception:
-            decoded_secret = self.secret_key.encode()
-
-        token = jwt.encode(payload, decoded_secret, algorithm='HS256')
+        # Use secret key as is for signing
+        token = jwt.encode(payload, self.secret_key, algorithm='HS256')
         return {
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json"
@@ -131,14 +126,14 @@ class BithumbClient:
             return None
         try:
             ticker = self._normalize_ticker(ticker)
-            params = {
-                "market": str(ticker),
-                "side": "bid",
-                "price": int(float(krw_amount)), # Send as Number (integer) instead of String
-                "ord_type": "price"
-            }
+            # Sort keys to ensure hash consistency
+            params = dict(sorted(params.items()))
+            
+            # Generate JSON body with NO spaces (important for hash match)
+            json_body = json.dumps(params, separators=(',', ':'))
+            
             headers = self._get_headers(params)
-            res = requests.post(f"{self.api_url}/v1/orders", json=params, headers=headers)
+            res = requests.post(f"{self.api_url}/v1/orders", data=json_body, headers=headers)
             
             data = res.json()
             if res.status_code != 201:
@@ -155,14 +150,14 @@ class BithumbClient:
             return None
         try:
             ticker = self._normalize_ticker(ticker)
-            params = {
-                "market": str(ticker),
-                "side": "ask",
-                "volume": float(amount), # Send as Number instead of String
-                "ord_type": "market"
-            }
+            # Sort keys to ensure hash consistency
+            params = dict(sorted(params.items()))
+            
+            # Generate JSON body with NO spaces (important for hash match)
+            json_body = json.dumps(params, separators=(',', ':'))
+            
             headers = self._get_headers(params)
-            res = requests.post(f"{self.api_url}/v1/orders", json=params, headers=headers)
+            res = requests.post(f"{self.api_url}/v1/orders", data=json_body, headers=headers)
             
             data = res.json()
             if res.status_code != 201:
