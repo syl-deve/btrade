@@ -136,8 +136,8 @@ async def trading_loop():
                 try:
                     logger.debug(f"DEBUG: Current price for {SYMBOL} ({target_exchange})...")
                     current_price = current_client.get_current_price(SYMBOL)
-                    logger.debug(f"DEBUG: Current RSI...")
-                    current_rsi = strategy.get_rsi()
+                    logger.debug(f"DEBUG: Current RSI for {target_exchange}...")
+                    current_rsi = strategy.get_rsi(target_exchange)
                     logger.debug(f"DEBUG: Coin balance for {SYMBOL}...")
                     coin_balance = current_client.get_coin_balance(SYMBOL)
                     logger.debug(f"DEBUG: Data fetch complete. Price: {current_price}, RSI: {current_rsi}, Balance: {coin_balance}")
@@ -301,7 +301,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         krw_balance = current_client.get_krw_balance() or 0.0 if authorized else 0.0
         coin_balance = current_client.get_coin_balance(SYMBOL) or 0.0 if authorized else 0.0
         current_price = current_client.get_current_price(SYMBOL)
-        current_rsi = strategy.get_rsi() or 0.0
+        current_rsi = strategy.get_rsi(target_exchange) or 0.0
         
         profit_rate = 0.0
         if bot_settings and bot_settings.avg_buy_price > 0 and current_price:

@@ -15,21 +15,21 @@ class ScalperStrategy:
         self.target_profit_rate = target_profit_rate
         self.stop_loss_rate = stop_loss_rate
 
-    def _get_api(self):
-        return pyupbit if self.exchange == "UPBIT" else pybithumb
+    def _get_api(self, exchange):
+        return pyupbit if exchange == "UPBIT" else pybithumb
 
-    def _normalize_ticker(self, ticker):
-        if self.exchange == "BITHUMB" and "-" in ticker:
+    def _normalize_ticker(self, ticker, exchange):
+        if exchange == "BITHUMB" and "-" in ticker:
             return ticker.split("-")[1]
         return ticker
 
-    def get_rsi(self, interval="minute15", count=100):
+    def get_rsi(self, exchange="UPBIT", interval="minute15", count=100):
         """
         Calculates the Relative Strength Index (RSI) for the current ticker.
         """
         try:
-            api = self._get_api()
-            target = self._normalize_ticker(self.ticker)
+            api = self._get_api(exchange)
+            target = self._normalize_ticker(self.ticker, exchange)
             df = api.get_ohlcv(target, interval=interval, count=count)
             if df is None:
                 return None
