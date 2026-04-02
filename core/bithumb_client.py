@@ -126,6 +126,12 @@ class BithumbClient:
             return None
         try:
             ticker = self._normalize_ticker(ticker)
+            params = {
+                "market": str(ticker),
+                "side": "bid",
+                "price": int(float(krw_amount)), 
+                "ord_type": "price"
+            }
             # Sort keys to ensure hash consistency
             params = dict(sorted(params.items()))
             
@@ -150,6 +156,12 @@ class BithumbClient:
             return None
         try:
             ticker = self._normalize_ticker(ticker)
+            params = {
+                "market": str(ticker),
+                "side": "ask",
+                "volume": float(amount),
+                "ord_type": "market"
+            }
             # Sort keys to ensure hash consistency
             params = dict(sorted(params.items()))
             
