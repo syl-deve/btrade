@@ -28,6 +28,17 @@ class ScalperStrategy:
         Calculates the Relative Strength Index (RSI) for the current ticker.
         """
         try:
+            # Mapping interval for different exchanges
+            if exchange == "BITHUMB":
+                if interval == "minute15": interval = "15m"
+                elif interval == "minute1": interval = "1m"
+                elif interval == "minute3": interval = "3m"
+                elif interval == "minute5": interval = "5m"
+                elif interval == "minute10": interval = "10m"
+                elif interval == "minute30": interval = "30m"
+                elif interval == "minute60": interval = "1h"
+                elif interval == "day": interval = "24h"
+
             api = self._get_api(exchange)
             target = self._normalize_ticker(self.ticker, exchange)
             df = api.get_ohlcv(target, interval=interval, count=count)

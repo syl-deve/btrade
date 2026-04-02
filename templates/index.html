@@ -53,7 +53,7 @@
             <div class="glass-card rounded-2xl p-6 transition-all hover:border-gray-500/50">
                 <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">CURRENT PRICE</p>
                 <div id="current-price" class="text-2xl font-bold text-blue-400">0</div>
-                <p class="text-[10px] text-gray-400 mt-2">Real-time Upbit Data</p>
+                <p id="price-data-label" class="text-[10px] text-gray-400 mt-2">Real-time Data</p>
             </div>
 
             <div class="glass-card rounded-2xl p-6 border-indigo-500/30">
@@ -257,6 +257,17 @@
                 document.getElementById('current-rsi').innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '---';
                 document.getElementById('target-rsi').innerText = data.config.rsi_threshold;
                 document.getElementById('exchange-badge').innerText = data.exchange;
+                document.getElementById('price-data-label').innerText = "Real-time " + data.exchange + " Data";
+                
+                // RSI Status message
+                const rsiStatus = document.getElementById('rsi-status');
+                if (data.current_rsi) {
+                    rsiStatus.innerText = data.current_rsi <= data.config.rsi_threshold ? "BUY SIGNAL ACTIVE" : "Analyzing Trend...";
+                    rsiStatus.className = `text-[10px] mt-2 ${data.current_rsi <= data.config.rsi_threshold ? "text-green-400 font-bold" : "text-gray-400"}`;
+                } else {
+                    rsiStatus.innerText = "Initializing Chart Data...";
+                    rsiStatus.className = "text-[10px] text-gray-400 mt-2";
+                }
 
                 // Auth Warning Check
                 const authBadge = document.getElementById('auth-warning-badge');
