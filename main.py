@@ -85,9 +85,23 @@ def init_clients():
 init_clients()
 
 def get_client(exchange="UPBIT"):
+    global upbit_client, bithumb_client
     if exchange == "BITHUMB":
+        # Always check if client needs re-initialization if not authorized
+        if not bithumb_client or not getattr(bithumb_client, "_is_authenticated", False):
+            try:
+                bithumb_client = BithumbClient()
+            except Exception:
+                pass
         return bithumb_client
-    return upbit_client
+    else:
+        # Default to Upbit
+        if not upbit_client or not getattr(upbit_client, "_is_authenticated", False):
+            try:
+                upbit_client = UpbitClient()
+            except Exception:
+                pass
+        return upbit_client
 
 def is_client_authorized(exchange="UPBIT"):
     client = get_client(exchange)
@@ -300,7 +314,11 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         
         krw_balance = current_client.get_krw_balance() or 0.0 if authorized else 0.0
         coin_balance = current_client.get_coin_balance(SYMBOL) or 0.0 if authorized else 0.0
+        
         current_price = current_client.get_current_price(SYMBOL)
+        if current_price is None:
+            logger.error(f"❌ Failed to fetch current price for {SYMBOL} on {target_exchange}")
+            current_price = 0.0
         current_rsi = strategy.get_rsi(target_exchange) or 0.0
         
         profit_rate = 0.0
