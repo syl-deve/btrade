@@ -313,21 +313,6 @@
                     profitEl.innerText = "No Open Position";
                 }
 
-                // RSI Status
-                const rsiStatus = document.getElementById('rsi-status');
-                if (data.current_rsi) {
-                    if (data.current_rsi <= 35) {
-                        rsiStatus.innerText = "🔥 OPPORTUNITY: RSI LOW";
-                        rsiStatus.className = "text-[10px] text-orange-400 font-bold animate-pulse";
-                    } else if (data.current_rsi >= 70) {
-                        rsiStatus.innerText = "⚠️ DANGER: OVERBOUGHT";
-                        rsiStatus.className = "text-[10px] text-red-500 font-bold";
-                    } else {
-                        rsiStatus.innerText = "NEUTRAL STATE";
-                        rsiStatus.className = "text-[10px] text-gray-500";
-                    }
-                }
-
                 // Update Bot Status Toggle
                 const btn = document.getElementById('toggle-btn');
                 const badge = document.getElementById('bot-status-badge');
