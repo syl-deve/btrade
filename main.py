@@ -234,7 +234,8 @@ async def trading_loop():
                         logger.info(f"💎 BUY Signal Detected: RSI {current_rsi:.2f} <= {bot_settings.rsi_threshold}")
                         krw_balance = current_client.get_krw_balance()
                         if krw_balance > 5000:
-                            buy_amount = krw_balance * 0.9995
+                            # Use 99.5% of balance to safely account for both Upbit(0.05%) and Bithumb(0.25%) fees
+                            buy_amount = krw_balance * 0.995
                             res = current_client.buy_market_order(buy_amount)
                             if res:
                                 bot_settings.avg_buy_price = current_price
