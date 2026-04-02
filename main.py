@@ -29,6 +29,19 @@ async def lifespan(app: FastAPI):
     
     # Ensure BotSettings exist
     db = SessionLocal()
+    # --- Auto Migration for 'exchange' column ---
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT exchange FROM bot_settings LIMIT 1"))
+    except Exception:
+        logger.info("[Migration] Adding 'exchange' column to bot_settings table...")
+        try:
+            db.execute(text("ALTER TABLE bot_settings ADD COLUMN exchange VARCHAR DEFAULT 'UPBIT'"))
+            db.commit()
+        except Exception as e:
+            logger.error(f"[Migration Error] Could not add column: {e}")
+    # --------------------------------------------
+
     if not db.query(BotSettings).first():
         db.add(BotSettings(
             is_running=False, 
