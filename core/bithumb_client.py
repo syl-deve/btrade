@@ -14,21 +14,8 @@ class BithumbClient:
     def __init__(self):
         self.api_url = "https://api.bithumb.com"
         self.access_key = BITHUMB_ACCESS_KEY
-        self.secret_key = self._check_and_decode_base64(BITHUMB_SECRET_KEY)
+        self.secret_key = BITHUMB_SECRET_KEY
         self._is_authenticated = self._check_auth()
-
-    def _check_and_decode_base64(self, key):
-        """ 빗썸 시크릿 키가 Base64로 인코딩된 경우 자동으로 디코딩하여 반환합니다. """
-        if key and (key.endswith("==") or len(key) > 64):
-            try:
-                # Base64 디코딩 시도
-                decoded = base64.b64decode(key).decode('utf-8')
-                logger.info("Bithumb Secret Key detected as Base64 encoded. Decoded successfully.")
-                return decoded
-            except Exception:
-                # 디코딩 실패 시 원본 반환
-                return key
-        return key
 
     def _get_headers(self, params=None):
         """ Generates JWT Authorization header for Bithumb v1 API """
