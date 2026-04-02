@@ -108,6 +108,7 @@
                             <th>PRICE (KRW)</th>
                             <th>VOLUME</th>
                             <th>TOTAL (KRW)</th>
+                            <th class="text-right">PROFIT / LOSS (₩)</th>
                         </tr>
                     </thead>
                     <tbody id="trade-history-body" class="text-gray-200">
@@ -333,6 +334,17 @@
                 const tbody = document.getElementById('trade-history-body');
                 tbody.innerHTML = '';
                 data.history.forEach(trade => {
+                    let profitHtml = '<td class="text-right text-gray-500">---</td>';
+                    
+                    if (trade.side === 'SELL' && trade.net_profit !== null && trade.net_profit !== undefined) {
+                        const profitFormatted = new Intl.NumberFormat().format(Math.floor(trade.net_profit)) + ' ₩';
+                        if (trade.net_profit > 0) {
+                            profitHtml = `<td class="text-right text-green-400 font-bold">+${profitFormatted}</td>`;
+                        } else {
+                            profitHtml = `<td class="text-right text-red-500 font-bold">${profitFormatted}</td>`;
+                        }
+                    }
+
                     const row = `
                         <tr class="hover:bg-white/5 border-b border-white/5">
                             <td class="py-4">
@@ -342,8 +354,10 @@
                             <td>${new Intl.NumberFormat().format(trade.price)}</td>
                             <td>${trade.volume.toFixed(8)}</td>
                             <td>${new Intl.NumberFormat().format(trade.total_amount)}</td>
+                            ${profitHtml}
                         </tr>
                     `;
+
                     tbody.innerHTML += row;
                 });
 
