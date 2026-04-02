@@ -89,6 +89,12 @@ def get_client(exchange="UPBIT"):
         return bithumb_client
     return upbit_client
 
+def is_client_authorized(exchange="UPBIT"):
+    client = get_client(exchange)
+    if not client: return False
+    # Upbit & Bithumb clients both have _is_authenticated attribute
+    return getattr(client, "_is_authenticated", False)
+
 # DB Dependency
 def get_db():
     db = SessionLocal()
@@ -119,6 +125,13 @@ async def trading_loop():
                 target_exchange = bot_settings.exchange or "UPBIT"
                 current_client = get_client(target_exchange)
                 
+                # Check Auth before data fetch
+                if not is_client_authorized(target_exchange):
+                    logger.warning(f"🚨 API Key for {target_exchange} is NOT AUTHENTICATED. Please check your .env file.")
+                    db.close()
+                    await asyncio.sleep(60)
+                    continue
+
                 # 1. Fetch current data
                 try:
                     logger.debug(f"DEBUG: Current price for {SYMBOL} ({target_exchange})...")
@@ -281,9 +294,10 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         bot_settings = db.query(BotSettings).first()
         target_exchange = bot_settings.exchange or "UPBIT"
         current_client = get_client(target_exchange)
+        authorized = is_client_authorized(target_exchange)
         
-        krw_balance = current_client.get_krw_balance() or 0.0
-        coin_balance = current_client.get_coin_balance(SYMBOL) or 0.0
+        krw_balance = current_client.get_krw_balance() or 0.0 if authorized else 0.0
+        coin_balance = current_client.get_coin_balance(SYMBOL) or 0.0 if authorized else 0.0
         current_price = current_client.get_current_price(SYMBOL)
         current_rsi = strategy.get_rsi() or 0.0
         
@@ -315,7 +329,8 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         history = db.query(TradeHistory).order_by(TradeHistory.timestamp.desc()).limit(10).all()
         
         return {
-            "exchange": EXCHANGE,
+            "exchange": target_exchange,
+            "authorized": authorized,
             "is_running": bot_settings.is_running if bot_settings else False,
             "krw_balance": int(krw_balance),
             "coin_balance": coin_balance,
