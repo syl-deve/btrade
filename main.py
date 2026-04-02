@@ -239,7 +239,7 @@ async def trading_loop():
                             res = current_client.buy_market_order(buy_amount)
                             if res:
                                 bot_settings.avg_buy_price = current_price
-                                bot_settings.highest_profit_rate = 100.0 # Force peak reset
+                                bot_settings.highest_profit_rate = 0.0 # Force peak reset
                                 db.commit()
                                 new_trade = TradeHistory(
                                     symbol=SYMBOL, side="BUY", price=current_price, 
