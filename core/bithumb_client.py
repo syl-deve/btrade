@@ -21,9 +21,14 @@ class BithumbClient:
             return False
         try:
             # Simple balance check
-            self.bithumb.get_balance("BTC")
-            return True
-        except Exception:
+            res = self.bithumb.get_balance("BTC")
+            if isinstance(res, dict) and res.get('status') != '0000':
+                logger.error(f"Bithumb Auth Failed: {res.get('message')} (Status: {res.get('status')})")
+                return False
+            # Standard return is a tuple of length 4
+            return isinstance(res, (list, tuple)) and len(res) == 4
+        except Exception as e:
+            logger.error(f"Bithumb Auth Check Exception: {e}")
             return False
 
     def get_krw_balance(self):
@@ -31,9 +36,14 @@ class BithumbClient:
         if not self._is_authenticated:
             return 0.0
         try:
-            # get_balance returns (total_coin, used_coin, total_krw, used_krw)
-            _, _, total_krw, _ = self.bithumb.get_balance("BTC")
-            return float(total_krw)
+            res = self.bithumb.get_balance("BTC")
+            if isinstance(res, (list, tuple)) and len(res) == 4:
+                # get_balance returns (total_coin, used_coin, total_krw, used_krw)
+                _, _, total_krw, _ = res
+                return float(total_krw)
+            else:
+                logger.error(f"Bithumb Get KRW Balance Unexpected Response: {res}")
+                return 0.0
         except Exception as e:
             logger.error(f"Bithumb KRW Balance Error: {e}")
             return 0.0
@@ -44,9 +54,14 @@ class BithumbClient:
             return 0.0
         try:
             target = self._normalize_ticker(ticker)
-            # get_balance returns (total_coin, used_coin, ...)
-            total_coin, _, _, _ = self.bithumb.get_balance(target)
-            return float(total_coin)
+            res = self.bithumb.get_balance(target)
+            if isinstance(res, (list, tuple)) and len(res) == 4:
+                # get_balance returns (total_coin, used_coin, ...)
+                total_coin, _, _, _ = res
+                return float(total_coin)
+            else:
+                logger.error(f"Bithumb Get {ticker} Balance Unexpected Response: {res}")
+                return 0.0
         except Exception as e:
             logger.error(f"Bithumb {ticker} Balance Error: {e}")
             return 0.0
