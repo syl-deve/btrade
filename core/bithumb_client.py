@@ -4,6 +4,7 @@ import hashlib
 import time
 import requests
 import logging
+import pandas as pd
 import base64
 import json
 from urllib.parse import urlencode, quote
@@ -46,7 +47,8 @@ class BithumbClient:
             "Content-Type": "application/json"
         }
 
-    def _normalize_ticker(self, ticker):
+    @staticmethod
+    def _normalize_ticker(ticker):
         """ Ensure ticker is in KRW-BTC format for v1 API (same as Upbit) """
         if "-" not in ticker:
             return f"KRW-{ticker}"
@@ -125,7 +127,7 @@ class BithumbClient:
         if not self._is_authenticated:
             return None
         try:
-            ticker = self._normalize_ticker(ticker)
+            ticker = BithumbClient._normalize_ticker(ticker)
             params = {
                 "market": str(ticker),
                 "side": "bid",
@@ -155,7 +157,7 @@ class BithumbClient:
         if not self._is_authenticated:
             return None
         try:
-            ticker = self._normalize_ticker(ticker)
+            ticker = BithumbClient._normalize_ticker(ticker)
             params = {
                 "market": str(ticker),
                 "side": "ask",
@@ -178,4 +180,43 @@ class BithumbClient:
             return data
         except Exception as e:
             logger.error(f"Bithumb Market Sell Error: {e}")
+            return None
+    @staticmethod
+    def get_ohlcv(ticker=SYMBOL, interval="15m", count=100):
+        """ 
+        Fetches OHLCV data from Public v1 API.
+        Intervals: 1m, 3m, 5m, 10m, 15m, 30m, 60m, 24h
+        """
+        try:
+            api_url = "https://api.bithumb.com"
+            ticker = BithumbClient._normalize_ticker(ticker)
+            
+            # Map intervals to v1 API paths
+            if "m" in interval:
+                unit = interval.replace("m", "")
+                url = f"{api_url}/v1/candles/minutes/{unit}"
+            elif interval == "24h" or interval == "day":
+                url = f"{api_url}/v1/candles/days"
+            else:
+                url = f"{api_url}/v1/candles/minutes/15" # Default
+                
+            params = {"market": ticker, "count": count}
+            res = requests.get(url, params=params)
+             
+            if res.status_code == 200:
+                data = res.json()
+                # v1 returns data from newest to oldest. Reverse it for RSI calculation.
+                df = pd.DataFrame(data)
+                df = df.rename(columns={
+                    'opening_price': 'open',
+                    'high_price': 'high',
+                    'low_price': 'low',
+                    'trade_price': 'close',
+                    'candle_acc_trade_volume': 'volume'
+                })
+                df = df.sort_values(by='candle_date_time_kst')
+                return df
+            return None
+        except Exception as e:
+            logger.error(f"Bithumb Get OHLCV Error: {e}")
             return None

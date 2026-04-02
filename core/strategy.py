@@ -1,6 +1,6 @@
 import pyupbit
-import pybithumb
 import pandas as pd
+from core.bithumb_client import BithumbClient
 from config import SYMBOL, EXCHANGE
 
 class ScalperStrategy:
@@ -28,8 +28,8 @@ class ScalperStrategy:
         Calculates the Relative Strength Index (RSI) for the current ticker.
         """
         try:
-            # Mapping interval for different exchanges
             if exchange == "BITHUMB":
+                # Use our custom BithumbClient for v1 API OHLCV
                 if interval == "minute15": interval = "15m"
                 elif interval == "minute1": interval = "1m"
                 elif interval == "minute3": interval = "3m"
@@ -38,13 +38,16 @@ class ScalperStrategy:
                 elif interval == "minute30": interval = "30m"
                 elif interval == "minute60": interval = "1h"
                 elif interval == "day": interval = "24h"
+                
+                df = BithumbClient.get_ohlcv(self.ticker, interval=interval, count=count)
+            else:
+                # Use pyupbit for Upbit
+                df = pyupbit.get_ohlcv(self.ticker, interval=interval, count=count)
 
-            api = self._get_api(exchange)
-            target = self._normalize_ticker(self.ticker, exchange)
-            df = api.get_ohlcv(target, interval=interval, count=count)
-            if df is None:
+            if df is None or df.empty:
                 return None
             
+            # Ensure 'close' column exists (already handled by BithumbClient.get_ohlcv)
             delta = df['close'].diff()
             ups, downs = delta.copy(), delta.copy()
             ups[ups < 0] = 0
