@@ -38,14 +38,7 @@ def test():
         if price:
             print(f"현재 BTC 가격: {price:,.0f}원")
             
-        # 4. [실전 테스트] 소액 시장가 매수 시도
-        print("\n--- 소액(5,000원) 시장가 매수 테스트 시도 ---")
-        # 5,000원 정수로 확실히 전달
-        buy_res = client.buy_market_order(5000, "KRW-BTC")
-        if buy_res:
-            print(f"매수 테스트 성공: {buy_res}")
-        else:
-            print("매수 테스트 실패: 위 에러 로그를 확인하세요.")
+        # 실전 테스트 코드(매수) 제거 완료 - 안전하게 잔고 및 시세만 확인합니다.
         
     else:
         print("실패: 빗썸 API 인증에 실패했습니다.")
