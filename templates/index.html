@@ -276,12 +276,10 @@
                 }
 
                 // Balance Logic Fixed Path
-                if (data.balance) {
-                    const krw = data.balance.krw != null ? data.balance.krw : 0;
-                    const coin = data.balance.coin != null ? data.balance.coin : 0;
-                    document.getElementById('krw-balance').innerText = new Intl.NumberFormat().format(krw) + ' ₩';
-                    document.getElementById('coin-balance').innerText = parseFloat(coin).toFixed(6);
-                    document.getElementById('coin-unit').innerText = data.target_coin || 'WAIT';
+                if (data.krw_balance !== undefined) {
+                    document.getElementById('krw-balance').innerText = new Intl.NumberFormat().format(data.krw_balance) + ' ₩';
+                    document.getElementById('coin-balance').innerText = data.coin_balance ? parseFloat(data.coin_balance).toFixed(6) : '0.000000';
+                    document.getElementById('coin-unit').innerText = data.target_coin || 'BIT';
                 }
 
                 // Bot Status

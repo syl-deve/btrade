@@ -353,6 +353,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             "exchange": target_exchange,
             "authorized": authorized,
             "is_running": bot_settings.is_running if bot_settings else False,
+            "target_coin": SYMBOL,
             "krw_balance": int(krw_balance),
             "coin_balance": coin_balance,
             "current_price": int(current_price),
