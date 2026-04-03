@@ -22,40 +22,41 @@
                 <h1 class="text-4xl font-black archivo-bold tracking-tighter uppercase">BITRADE.<span class="text-red-600">DASHBOARD</span></h1>
             </div>
             
-            <nav class="flex items-center gap-10 mt-6 md:mt-0 font-bold uppercase text-sm tracking-widest">
+            <nav class="flex items-center gap-8 mt-6 md:mt-0 font-bold uppercase text-sm tracking-widest">
                 <div id="exchange-badge" class="flex items-center gap-2">
                     <div class="bau-shape bau-square w-3 h-3"></div>
-                    <span id="exchange-text">CONNECTING_NODE</span>
+                    <span id="exchange-text">AUTO_CONNECT</span>
                 </div>
                 <div id="bot-status-badge" class="flex items-center gap-2 text-red-600 font-black">
                     <div class="bau-shape bau-circle w-3 h-3"></div>
-                    <span id="status-text">SYSTEM_OFFLINE</span>
+                    <span id="status-text">OFFLINE</span>
                 </div>
                 <button id="toggle-btn" class="btn-bau btn-bau-red text-xs py-3 border-4 border-black">START_SYSTEM</button>
+                <a href="/logout" class="btn-bau text-xs py-3 border-4 border-black hover:bg-black hover:text-white transition-all">EXIT_NODE</a>
             </nav>
         </header>
 
-        <!-- Balance Info (Restored) -->
-        <div class="px-12 py-6 border-b-4 border-black flex flex-wrap gap-8 bg-zinc-50">
+        <!-- Balance Info (Enhanced Sync) -->
+        <div id="balance-section" class="px-12 py-6 border-b-4 border-black flex flex-wrap gap-8 bg-zinc-50">
             <div class="flex flex-col">
                 <p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Available Balance (KRW)</p>
-                <div id="krw-balance" class="text-2xl font-black archivo-bold">0 ₩</div>
+                <div id="krw-balance" class="text-2xl font-black archivo-bold">SYNCING...</div>
             </div>
             <div class="w-[2px] bg-black/10"></div>
             <div class="flex flex-col">
                 <p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Currently Held (Unit)</p>
-                <div id="coin-balance" class="text-2xl font-black archivo-bold">0 <span id="coin-unit" class="text-sm opacity-60">BIT</span></div>
+                <div id="coin-balance" class="text-2xl font-black archivo-bold">0.0000 <span id="coin-unit" class="text-sm opacity-60">WAIT</span></div>
             </div>
             <div class="ml-auto flex items-center gap-4">
                 <div class="text-right">
                     <p class="text-[10px] font-black text-zinc-400 uppercase">Authorization Status</p>
-                    <p id="auth-status" class="text-sm font-bold text-red-600">UNAUTHORIZED</p>
+                    <p id="auth-status" class="text-sm font-bold text-red-600">NODATA_ERR</p>
                 </div>
                 <div class="bau-shape bau-square w-8 h-8 opacity-20"></div>
             </div>
         </div>
 
-        <main class="bau-container">
+        <main class="bau-container mb-12">
             <!-- Main Chart -->
             <section class="bau-tile tile-big flex flex-col">
                 <div class="label-bau">
@@ -67,16 +68,16 @@
                 </div>
                 <div class="mt-8 border-t-2 border-black pt-4 flex justify-between items-end">
                     <div>
-                        <p class="text-[10px] font-black uppercase text-zinc-400 font-black">Total Net Accumulation</p>
+                        <p class="text-[10px] font-black uppercase text-zinc-400 font-black">Gross Accumulation</p>
                         <div id="total-net-profit" class="value-bau">0 ₩</div>
                     </div>
                     <div class="flex gap-10">
                         <div class="text-right">
-                            <p class="text-[10px] font-black uppercase text-zinc-400 font-black">Success Rate</p>
+                            <p class="text-[10px] font-black uppercase text-zinc-400 font-black font-black">Success Rate</p>
                             <p id="win-rate" class="text-3xl font-black">0.0%</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] font-black uppercase text-zinc-400 font-black">Trade Records</p>
+                            <p class="text-[10px] font-black uppercase text-zinc-400 font-black font-black">Trade Records</p>
                             <p id="win-loss-count" class="text-xl font-black">0 W / 0 L</p>
                         </div>
                     </div>
@@ -112,7 +113,7 @@
                 </div>
 
                 <div class="mt-6">
-                    <p class="text-[11px] font-bold tracking-tighter opacity-80 text-white uppercase italic">BAUHAUS_TERMINAL_V.8 // CORE.SYSTEM</p>
+                    <p class="text-[11px] font-bold tracking-tighter opacity-80 text-white uppercase italic">BAUHAUS_UTILITY_V.10 // EXIT_ENABLED</p>
                 </div>
             </section>
 
@@ -130,28 +131,19 @@
                 <p class="text-[10px] font-bold mt-2 text-zinc-500 uppercase">Node_Stability</p>
             </div>
 
-            <!-- Config & Logs triggers -->
+            <!-- Configuration -->
             <div class="bau-tile tile-stats-bau flex flex-col gap-4">
-                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau w-full justify-center">GENERAL_CONFIG</button>
-                <div id="uptime_display" class="text-[10px] font-bold text-center opacity-40 uppercase">System Uptime: Online</div>
+                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau w-full justify-center py-4 bg-zinc-900 text-white border-black">GENERAL_CONFIG</button>
+                <div id="uptime_display" class="text-[10px] font-bold text-center opacity-40 uppercase">System Status: Online</div>
             </div>
 
-            <div class="bau-tile tile-stats-bau bg-zinc-900 text-white flex items-center justify-center">
-                 <a href="#log-terminal" class="text-sm font-black uppercase underline decoration-4 decoration-red-600">View_System_Logs</a>
+            <div class="bau-tile tile-stats-bau border-black flex items-center justify-center">
+                 <div class="text-center">
+                    <p class="text-[10px] font-black text-zinc-400 uppercase">System Version</p>
+                    <p class="text-lg font-black archivo-bold">INTERNAL_v14</p>
+                 </div>
             </div>
         </main>
-
-        <!-- System Logs Section (Restored) -->
-        <section id="log-terminal" class="px-12 py-12 border-t-4 border-black bg-white">
-            <div class="label-bau mb-6">
-                <div class="bau-shape bau-square bg-black"></div>
-                <span>SYSTEM_REALTIME_DECISION_LOGS</span>
-            </div>
-            <div id="log-display" class="bau-terminal">
-                [SYSTEM] Initializing Bauhaus Terminal Node...
-                [SYSTEM] Waiting for API Sync...
-            </div>
-        </section>
     </div>
 
     <!-- Modal (Bauhaus Style) -->
@@ -195,7 +187,7 @@
                 <form method="dialog">
                     <div class="flex gap-4">
                         <button class="btn-bau">IGNORE</button>
-                        <button onclick="saveSettings()" class="btn-bau btn-bau-yellow">APPLY_CHANGES</button>
+                        <button onclick="saveSettings()" class="btn-bau btn-bau-yellow text-black">APPLY_CHANGES</button>
                     </div>
                 </form>
             </div>
@@ -205,7 +197,6 @@
     <script>
         let profitChart;
         let isConfigPopulated = false;
-        let lastLogLine = "";
         
         function initChart() {
             const ctx = document.getElementById('profitChart').getContext('2d');
@@ -284,11 +275,13 @@
                     authEl.className = 'text-sm font-bold text-red-600';
                 }
 
-                // Balance Restored
+                // Balance Logic Fixed Path
                 if (data.balance) {
-                    document.getElementById('krw-balance').innerText = new Intl.NumberFormat().format(data.balance.krw) + ' ₩';
-                    document.getElementById('coin-balance').innerText = data.balance.coin.toFixed(8);
-                    document.getElementById('coin-unit').innerText = data.target_coin || 'BIT';
+                    const krw = data.balance.krw != null ? data.balance.krw : 0;
+                    const coin = data.balance.coin != null ? data.balance.coin : 0;
+                    document.getElementById('krw-balance').innerText = new Intl.NumberFormat().format(krw) + ' ₩';
+                    document.getElementById('coin-balance').innerText = parseFloat(coin).toFixed(6);
+                    document.getElementById('coin-unit').innerText = data.target_coin || 'WAIT';
                 }
 
                 // Bot Status
@@ -297,13 +290,13 @@
                 const toggleBtn = document.getElementById('toggle-btn');
 
                 if (data.is_running) {
-                    statusText.innerText = 'SYSTEM_ACTIVE';
+                    statusText.innerText = 'ACTIVE';
                     botBadge.className = 'flex items-center gap-2 text-green-600 font-black';
                     botBadge.querySelector('.bau-shape').style.backgroundColor = '#22C55E';
                     toggleBtn.innerText = 'STOP_SYSTEM';
                     toggleBtn.className = 'btn-bau btn-bau-yellow text-xs py-3 border-4 border-black';
                 } else {
-                    statusText.innerText = 'SYSTEM_OFFLINE';
+                    statusText.innerText = 'OFFLINE';
                     botBadge.className = 'flex items-center gap-2 text-red-600 font-black';
                     botBadge.querySelector('.bau-shape').style.backgroundColor = '#E63946';
                     toggleBtn.innerText = 'START_SYSTEM';
@@ -328,17 +321,17 @@
                 
                 // Market Details
                 document.getElementById('target-coin').innerText = data.target_coin || 'WAITING';
-                document.getElementById('current-price').innerText = data.current_price ? new Intl.NumberFormat().format(data.current_price) + ' ₩' : 'API_CONNECTING...';
+                document.getElementById('current-price').innerText = data.current_price ? new Intl.NumberFormat().format(data.current_price) + ' ₩' : 'API_CONNECT...';
                 document.getElementById('avg-buy-price').innerText = (data.avg_buy_price > 0) ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '0 ₩';
 
                 // RSI
                 document.getElementById('rsi-value').innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '0.00';
                 const rsiStatus = document.getElementById('rsi-status');
                 if (data.current_rsi <= data.config.rsi_threshold) {
-                    rsiStatus.innerText = "BUY_SIGNAL_ACTIVE";
+                    rsiStatus.innerText = "BUY_SIGNAL";
                     rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-red-600 text-white inline-block border-2 border-black";
                 } else {
-                    rsiStatus.innerText = "MARKET_NEUTRAL";
+                    rsiStatus.innerText = "NEUTRAL";
                     rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-black text-white inline-block border-2 border-black";
                 }
 
@@ -359,20 +352,6 @@
                     profitChart.update();
                 }
             } catch (err) { console.error('Sync Error:', err); }
-        }
-
-        async function updateLogs() {
-            try {
-                const res = await fetch('/api/logs');
-                const logs = await res.json();
-                const logDisplay = document.getElementById('log-display');
-                
-                if (logs.length > 0) {
-                    logDisplay.innerHTML = logs.map(log => `<div>[LOG] ${log}</div>`).join("");
-                    // Hard scroll to bottom
-                    logDisplay.scrollTop = logDisplay.scrollHeight;
-                }
-            } catch (err) { console.error('Log Sync Error:', err); }
         }
 
         async function saveSettings() {
@@ -408,12 +387,10 @@
             finally { btn.disabled = false; }
         });
 
-        // Initialize & Loops
+        // Initialize & Loop
         initChart();
         setInterval(updateStatus, 3000);
-        setInterval(updateLogs, 2000); // 2sec for logs
         updateStatus();
-        updateLogs();
     </script>
 </body>
 </html>
