@@ -91,11 +91,11 @@
                 <div>
                     <div class="label-bau text-white">
                         <div class="bau-shape bau-circle border-2 border-white"></div>
-                        <span>REALTIME_YIELD_PERFORMANCE</span>
+                        <span data-i18n="label_yield">REALTIME_YIELD_PERFORMANCE</span>
                     </div>
                     <!-- Significant Profit Rate Display -->
                     <div id="current-profit-rate" class="text-8xl font-black archivo-bold leading-tight mt-4 text-white tracking-tighter">0.00<span class="text-4xl">%</span></div>
-                    <p class="text-[12px] font-black uppercase text-white mt-2 opacity-80 tracking-widest">Active_Trade_Yield</p>
+                    <p data-i18n="label_yield_sub" class="text-[12px] font-black uppercase text-white mt-2 opacity-80 tracking-widest">Active_Trade_Yield</p>
                 </div>
                 
                 <div id="current-crypto" class="border-4 border-black bg-white p-6 text-black shadow-[4px_4px_0px_#000]">
@@ -240,6 +240,8 @@
                 label_engine: 'MONITORING_ENGINE',
                 label_price:  'Current Price',
                 label_avgbuy: 'Avg Buy Price',
+                label_yield:  'REALTIME_YIELD_PERFORMANCE',
+                label_yield_sub: 'Active_Trade_Yield',
                 btn_config:   'GENERAL_CONFIG',
                 label_status: 'System Status: Online',
                 label_version:'System Version',
@@ -254,6 +256,12 @@
                 label_history:'TRADE_HISTORY (LATEST 10)',
                 th_time: 'Time', th_side: 'Side', th_price: 'Price',
                 th_volume: 'Volume', th_amount: 'Amount', th_profit: 'Net P&L',
+                // 동적 JS 문자열
+                status_active: 'ACTIVE', status_offline: 'OFFLINE',
+                auth_ok: 'AUTHORIZED', auth_err: 'UNAUTHORIZED',
+                btn_start: 'START_SYSTEM', btn_stop: 'STOP_SYSTEM',
+                rsi_buy: 'BUY_SIGNAL', rsi_neutral: 'NEUTRAL',
+                no_trade: 'NO_TRADE_HISTORY',
             },
             ko: {
                 label_krw:    '사용 가능 잔고 (원화)',
@@ -266,6 +274,8 @@
                 label_engine: '감시 대상 코인',
                 label_price:  '현재가',
                 label_avgbuy: '평균 매수가',
+                label_yield:  '실시간 수익률',
+                label_yield_sub: '현재 보유 수익률',
                 btn_config:   '시스템 설정',
                 label_status: '시스템 상태: 가동중',
                 label_version:'시스템 버전',
@@ -280,6 +290,12 @@
                 label_history:'거래 내역 (최근 10건)',
                 th_time: '시간', th_side: '구분', th_price: '체결가',
                 th_volume: '수량', th_amount: '거래금액', th_profit: '손익',
+                // 동적 JS 문자열
+                status_active: '가동중', status_offline: '정지',
+                auth_ok: '인증완료', auth_err: '인증실패',
+                btn_start: '시작', btn_stop: '정지',
+                rsi_buy: '매수신호', rsi_neutral: '관망',
+                no_trade: '거래 내역 없음',
             }
         };
 
@@ -385,11 +401,12 @@
                 }
 
                 if (authEl) {
+                    const t = i18n[currentLang];
                     if (data.authorized) {
-                        authEl.innerText = 'AUTHORIZED_SUCCESS';
+                        authEl.innerText = t.auth_ok;
                         authEl.className = 'text-sm font-bold text-green-600';
                     } else {
-                        authEl.innerText = 'UNAUTHORIZED_ERR';
+                        authEl.innerText = t.auth_err;
                         authEl.className = 'text-sm font-bold text-red-600';
                     }
                 }
@@ -408,23 +425,23 @@
                 const toggleBtn = document.getElementById('toggle-btn');
                 
                 if (data.is_running) {
-                    if (statusText) statusText.innerText = 'ACTIVE';
+                    if (statusText) statusText.innerText = i18n[currentLang].status_active;
                     if (botBadge) {
                         botBadge.className = 'flex items-center gap-2 text-green-600 font-black';
                         botBadge.querySelector('.bau-shape').style.backgroundColor = '#22C55E';
                     }
                     if (toggleBtn) {
-                        toggleBtn.innerText = 'STOP_SYSTEM';
+                        toggleBtn.innerText = i18n[currentLang].btn_stop;
                         toggleBtn.className = 'btn-bau btn-bau-red text-xs py-3 border-4 border-black';
                     }
                 } else {
-                    if (statusText) statusText.innerText = 'OFFLINE';
+                    if (statusText) statusText.innerText = i18n[currentLang].status_offline;
                     if (botBadge) {
                         botBadge.className = 'flex items-center gap-2 text-red-600 font-black';
                         botBadge.querySelector('.bau-shape').style.backgroundColor = '#E63946';
                     }
                     if (toggleBtn) {
-                        toggleBtn.innerText = 'START_SYSTEM';
+                        toggleBtn.innerText = i18n[currentLang].btn_start;
                         toggleBtn.className = 'btn-bau btn-bau-yellow text-xs py-3 border-4 border-black';
                     }
                 }
@@ -459,10 +476,10 @@
                 const rsiStatus = document.getElementById('rsi-status');
                 if (rsiStatus && data.config) {
                     if (data.current_rsi <= data.config.rsi_threshold) {
-                        rsiStatus.innerText = "BUY_SIGNAL";
+                        rsiStatus.innerText = i18n[currentLang].rsi_buy;
                         rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-red-600 text-white inline-block border-2 border-black";
                     } else {
-                        rsiStatus.innerText = "NEUTRAL";
+                        rsiStatus.innerText = i18n[currentLang].rsi_neutral;
                         rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-black text-white inline-block border-2 border-black";
                     }
                 }
