@@ -346,8 +346,8 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                     "y": current_sum
                 })
 
-        # Recent trade history
-        history = db.query(TradeHistory).order_by(TradeHistory.timestamp.desc()).limit(10).all()
+        # Full trade history (all records, newest first)
+        history = db.query(TradeHistory).order_by(TradeHistory.timestamp.desc()).all()
         
         return {
             "exchange": target_exchange,

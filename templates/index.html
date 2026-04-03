@@ -148,25 +148,29 @@
 
             <!-- 거래내역 전체폭 섹션 -->
             <section class="bau-tile tile-full flex flex-col gap-4">
-                <div class="label-bau">
-                    <div class="bau-shape bau-circle"></div>
-                    <span data-i18n="label_history">TRADE_HISTORY (LATEST 10)</span>
+                <div class="flex items-center justify-between">
+                    <div class="label-bau mb-0">
+                        <div class="bau-shape bau-circle"></div>
+                        <span data-i18n="label_history">TRADE_HISTORY (ALL)</span>
+                    </div>
+                    <span id="trade-count" class="text-xs font-black text-zinc-500 uppercase tracking-widest"></span>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm border-collapse">
-                        <thead>
-                            <tr class="border-b-4 border-black">
-                                <th class="text-left py-3 px-2 meta-label" data-i18n="th_time">Time</th>
-                                <th class="text-left py-3 px-2 meta-label" data-i18n="th_side">Side</th>
-                                <th class="text-right py-3 px-2 meta-label" data-i18n="th_price">Price</th>
-                                <th class="text-right py-3 px-2 meta-label" data-i18n="th_volume">Volume</th>
-                                <th class="text-right py-3 px-2 meta-label" data-i18n="th_amount">Amount</th>
-                                <th class="text-right py-3 px-2 meta-label" data-i18n="th_profit">Net P&L</th>
+                <!-- sticky thead를 위해 table을 wrapper div 안에 배치 -->
+                <div style="max-height: 480px; overflow-y: auto; border: 2px solid #000;" id="trade-scroll-wrap">
+                    <table class="w-full text-sm border-collapse" style="min-width: 640px;">
+                        <thead style="position: sticky; top: 0; background: #fff; z-index: 10; border-bottom: 4px solid #000; box-shadow: 0 2px 0 #000;">
+                            <tr>
+                                <th class="text-left py-3 px-3 meta-label" data-i18n="th_time">Time</th>
+                                <th class="text-left py-3 px-3 meta-label" data-i18n="th_side">Side</th>
+                                <th class="text-right py-3 px-3 meta-label" data-i18n="th_price">Price</th>
+                                <th class="text-right py-3 px-3 meta-label" data-i18n="th_volume">Volume</th>
+                                <th class="text-right py-3 px-3 meta-label" data-i18n="th_amount">Amount</th>
+                                <th class="text-right py-3 px-3 meta-label" data-i18n="th_profit">Net P&L</th>
                             </tr>
                         </thead>
                         <tbody id="trade-history-body">
                             <tr>
-                                <td colspan="6" class="text-center py-8 text-zinc-400 font-bold text-xs uppercase">AWAITING_DATA...</td>
+                                <td colspan="6" class="text-center py-8 text-zinc-500 font-bold text-xs uppercase">AWAITING_DATA...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -253,7 +257,7 @@
                 cfg_offset:   'Trailing Stop Offset',
                 btn_ignore:   'IGNORE',
                 btn_apply:    'APPLY_CHANGES',
-                label_history:'TRADE_HISTORY (LATEST 10)',
+                label_history:'TRADE_HISTORY (ALL)',
                 th_time: 'Time', th_side: 'Side', th_price: 'Price',
                 th_volume: 'Volume', th_amount: 'Amount', th_profit: 'Net P&L',
                 // 동적 JS 문자열
@@ -291,7 +295,7 @@
                 cfg_offset:   '트레일링 스탑 오프셋',
                 btn_ignore:   '취소',
                 btn_apply:    '변경사항 적용',
-                label_history:'거래 내역 (최근 10건)',
+                label_history:'거래 내역 (전체)',
                 th_time: '시간', th_side: '구분', th_price: '체결가',
                 th_volume: '수량', th_amount: '거래금액', th_profit: '손익',
                 // 동적 JS 문자열
@@ -527,8 +531,12 @@
                             <td class="py-3 px-2 text-right font-black" style="${profitColor}">${h.side === 'SELL' ? profitSign + h.net_profit.toLocaleString() + ' ₩' : '-'}</td>
                         </tr>`;
                     }).join('');
+                    const countEl = document.getElementById('trade-count');
+                    if (countEl) countEl.textContent = `${data.history.length} RECORDS`;
                 } else if (tbody && (!data.history || data.history.length === 0)) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-zinc-400 font-bold text-xs uppercase">NO_TRADE_HISTORY</td></tr>';
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-zinc-500 font-bold text-xs uppercase">${i18n[currentLang].no_trade}</td></tr>`;
+                    const countEl = document.getElementById('trade-count');
+                    if (countEl) countEl.textContent = '0 RECORDS';
                 }
             } catch (err) { 
                 console.error('SYNC_CRASH_PREVENTED:', err); 
