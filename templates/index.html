@@ -389,9 +389,37 @@
         }
 
         // Toggle Button Click
-        document.getElementById('toggle-btn').addEventListener('click', async () => {
-            await fetch('/api/toggle', { method: 'POST' });
-            updateStatus();
+        document.getElementById('toggle-btn').addEventListener('click', async (e) => {
+            const btn = e.currentTarget;
+            const originalText = btn.innerText;
+            
+            // 즉각적인 피드백 제공 및 중복 클릭 방지
+            btn.innerText = 'PROCESSING...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+
+            try {
+                const response = await fetch('/api/toggle', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) throw new Error('SERVER_RESPONSE_ERROR');
+                
+                const result = await response.json();
+                console.log("Toggle Result:", result);
+                
+                // 상태 업데이트 즉시 실행
+                await updateStatus();
+                
+            } catch (err) {
+                console.error("Critical Toggle Error:", err);
+                alert("⚠️ 통신 오류: 서버와 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+                btn.innerText = originalText;
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
         });
 
         // Periodic Refresh
