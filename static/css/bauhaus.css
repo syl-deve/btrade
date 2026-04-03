@@ -1,0 +1,148 @@
+/* Dashboard 2025: True Bauhaus (Design Prompts Style) */
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;700;900&display=swap');
+
+:root {
+    --bau-red: #E63946;
+    --bau-blue: #2563EB;
+    --bau-yellow: #FACC15;
+    --bau-white: #FFFFFF;
+    --bau-light: #F8FAFC;
+    --bau-black: #000000;
+    --bau-grey: #E2E8F0;
+    
+    --border-main: 4px solid #000;
+    --shadow-hard: 8px 8px 0px #000;
+    --shadow-active: 2px 2px 0px #000;
+}
+
+body {
+    background-color: var(--bau-white);
+    background-image: radial-gradient(circle, #CBD5E1 1.5px, transparent 1.5px);
+    background-size: 32px 32px; /* Dot Grid Pattern from Reference */
+    color: var(--bau-black);
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.02em;
+    padding-bottom: 5rem;
+}
+
+/* Grid System Override */
+.bau-container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(130px, auto);
+    gap: 2rem;
+    padding: 3rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.bau-tile {
+    background: var(--bau-white);
+    border: var(--border-main);
+    box-shadow: var(--shadow-hard);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.15s ease-in-out;
+}
+
+.bau-tile:hover {
+    transform: translate(-4px, -4px);
+    box-shadow: 12px 12px 0px var(--bau-black);
+}
+
+/* Colors Blocks */
+.tile-blue-dot {
+    background-color: var(--bau-blue);
+    background-image: radial-gradient(circle, rgba(255,255,255,0.2) 1.5px, transparent 1.5px);
+    background-size: 16px 16px;
+    color: white;
+}
+
+.tile-red-accent { border-top: 12px solid var(--bau-red); }
+.tile-yellow-accent { border-top: 12px solid var(--bau-yellow); }
+
+/* Typography */
+h1, .archivo-bold {
+    font-family: 'Archivo Black', sans-serif;
+    text-transform: uppercase;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+}
+
+.label-bau {
+    font-size: 0.75rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Geometric Symbols (Reference Style) */
+.bau-shape { width: 14px; height: 14px; display: inline-block; }
+.bau-circle { border-radius: 50%; background: var(--bau-red); border: 2px solid #000; }
+.bau-square { background: var(--bau-blue); border: 2px solid #000; }
+.bau-triangle { 
+    width: 0; height: 0; 
+    border-left: 7px solid transparent; 
+    border-right: 7px solid transparent; 
+    border-bottom: 14px solid var(--bau-yellow);
+    filter: drop-shadow(1px 1px 0px #000);
+}
+
+/* Value Display */
+.value-bau {
+    font-size: 3rem;
+    font-weight: 900;
+    font-family: 'Archivo Black', sans-serif;
+}
+
+/* Buttons */
+.btn-bau {
+    background: var(--bau-white);
+    border: var(--border-main);
+    box-shadow: var(--shadow-hard);
+    color: var(--bau-black);
+    font-family: 'Archivo Black', sans-serif;
+    padding: 1rem 2rem;
+    text-transform: uppercase;
+    transition: all 0.1s;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.btn-bau:active {
+    transform: translate(6px, 6px);
+    box-shadow: var(--shadow-active);
+}
+
+.btn-bau-red { background: var(--bau-red); color: white; }
+.btn-bau-yellow { background: var(--bau-yellow); color: black; }
+
+/* Modal Customization */
+.modal-bau {
+    background: var(--bau-white);
+    border: 6px solid #000;
+    box-shadow: 16px 16px 0px #000;
+    border-radius: 0;
+}
+
+/* Chart Styles */
+#profitChart {
+    background: var(--bau-white);
+}
+
+/* Specific Sizes Mapping */
+.tile-full { grid-column: span 12; }
+.tile-big { grid-column: span 8; grid-row: span 3; }
+.tile-side { grid-column: span 4; grid-row: span 3; }
+.tile-stats-bau { grid-column: span 3; grid-row: span 1; }
+
+@media (max-width: 1024px) {
+    .bau-tile { grid-column: span 12 !important; grid-row: auto !important; }
+}

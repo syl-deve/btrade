@@ -1,184 +1,128 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="dark">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BITRADE Core Dashboard</title>
+    <title>BITRADE Core Dashboard // BAUHAUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700;800&family=Archivo+Black&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="/static/css/bento.css">
+    <link rel="stylesheet" href="/static/css/bauhaus.css">
 </head>
-<body class="p-4 md:p-8">
-    <div class="bento-container max-w-7xl mx-auto">
-        <!-- Header & Top Controls (Wide Tile) -->
-        <header class="bento-tile tile-wide flex flex-col md:flex-row justify-between items-center border-b-4 border-yellow-500">
-            <div>
-                <h1 class="text-5xl font-black text-white archivo tracking-tighter">BITRADE <span class="text-red-600">CORE</span></h1>
-                <p class="text-[10px] text-zinc-500 font-bold mt-1 opacity-80 tracking-widest">FORM FOLLOWS FUNCTION // TRADING_TERMINAL v1.0.5</p>
+<body class="bg-white">
+    <div class="max-w-[1440px] mx-auto">
+        <!-- Header (Acme Style) -->
+        <header class="flex flex-col md:flex-row justify-between items-center px-12 py-8 border-b-4 border-black bg-white sticky top-0 z-50">
+            <div class="flex items-center gap-6">
+                <div class="flex gap-2">
+                    <div class="bau-shape bau-circle w-8 h-8"></div>
+                    <div class="bau-shape bau-square w-8 h-8"></div>
+                    <div class="bau-shape bau-triangle w-8 h-8 border-b-[32px] border-l-[16px] border-r-[16px] border-b-[#FACC15] border-l-transparent border-r-transparent"></div>
+                </div>
+                <h1 class="text-4xl font-black archivo-bold tracking-tighter">BITRADE.<span class="text-red-600">CORE</span></h1>
             </div>
             
-            <div class="flex flex-wrap items-center gap-4 mt-6 md:mt-0">
-                <div class="flex bg-zinc-900 p-1 border border-zinc-800">
-                    <span id="exchange-badge" class="px-5 py-2 text-[11px] font-black text-white bg-blue-900 orbitron">UPBIT</span>
-                    <span id="bot-status-badge" class="px-5 py-2 text-[11px] font-black text-error orbitron border-l border-zinc-800 uppercase">OFFLINE</span>
+            <nav class="flex items-center gap-10 mt-6 md:mt-0 font-bold uppercase text-sm tracking-widest">
+                <div id="exchange-badge" class="flex items-center gap-2">
+                    <div class="bau-shape bau-square w-3 h-3"></div>
+                    <span>UPBIT_NODE</span>
                 </div>
-                <button id="toggle-btn" class="btn btn-info">START SYSTEM</button>
-                <div class="flex gap-2">
-                    <button onclick="document.getElementById('config-modal').showModal()" class="btn btn-square bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700">⚙️</button>
-                    <a href="/logout" class="btn btn-square bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700">🚪</a>
+                <div id="bot-status-badge" class="flex items-center gap-2 text-red-600">
+                    <div class="bau-shape bau-circle w-3 h-3"></div>
+                    <span>SYSTEM_OFFLINE</span>
                 </div>
-            </div>
+                <button id="toggle-btn" class="btn-bau btn-bau-red text-xs py-3 border-4 border-black">START_SYSTEM</button>
+            </nav>
         </header>
 
-        <!-- Main Analytics: Chart (Large Tile) -->
-        <section class="bento-tile tile-large h-[550px] flex flex-col">
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h2 class="label-sub m-0">Profit Performance</h2>
-                    <div id="total-net-profit" class="text-5xl font-bold text-green-400 orbitron tracking-tighter">0 ₩</div>
+        <main class="bau-container">
+            <!-- Main Chart (Side) -->
+            <section class="bau-tile tile-big flex flex-col">
+                <div class="label-bau">
+                    <div class="bau-shape bau-square"></div>
+                    <span>GROSS_PROFIT_REALTIME_ANALYTICS</span>
                 </div>
-                <div class="text-right">
-                    <p class="label-sub m-0">Win Rate</p>
-                    <p id="win-rate" class="text-2xl font-bold text-blue-400">0%</p>
-                    <p id="win-loss-count" class="text-gray-600 text-[9px] font-mono">0W / 0L</p>
+                <div class="flex-grow min-h-[400px] relative">
+                    <canvas id="profitChart"></canvas>
                 </div>
-            </div>
-            <div class="flex-grow w-full relative">
-                <canvas id="profitChart"></canvas>
-            </div>
-        </section>
-
-        <!-- Right Side: Real-time Indicator (Medium Tile) -->
-        <section class="bento-tile tile-medium flex flex-col justify-between">
-            <div>
-                <h2 class="label-sub">Market_Value</h2>
-                <div id="current-price" class="value-main text-blue-500 mb-2">0</div>
-                <p id="price-data-label" class="text-[10px] text-gray-500 font-mono italic">Real-time Data Stream</p>
-            </div>
-
-            <div class="mt-8 border-t border-white/5 pt-8">
-                <div class="flex justify-between items-end mb-4">
+                <div class="mt-8 border-t-2 border-black pt-4 flex justify-between items-end">
                     <div>
-                        <h2 class="label-sub m-0">RSI Indicator</h2>
-                        <div id="current-rsi" class="text-3xl font-bold text-purple-400">0.00</div>
+                        <p class="text-[10px] font-black uppercase text-zinc-400">Total Accumulation</p>
+                        <div id="total-net-profit" class="value-bau">0 ₩</div>
                     </div>
-                    <div class="text-right">
-                        <p class="label-sub m-0 tracking-widest uppercase">Target: <span id="target-rsi" class="text-white">30</span></p>
-                        <p id="rsi-status" class="text-[9px] text-gray-500 font-bold uppercase mt-1">Initializing...</p>
+                    <div class="flex gap-4">
+                        <div class="text-right">
+                            <p class="text-[10px] font-black uppercase text-zinc-400">Win Rate</p>
+                            <p id="win-rate" class="text-2xl font-black">0.0%</p>
+                        </div>
                     </div>
                 </div>
-                <!-- Mini RSI Track -->
-                <div class="w-full bg-white/5 h-[2px] rounded-full overflow-hidden">
-                    <div id="rsi-progress" class="bg-purple-500 h-full transition-all duration-700" style="width: 0%"></div>
+            </section>
+
+            <!-- Status Card (Side) -->
+            <section class="bau-tile tile-side tile-blue-dot flex flex-col justify-between">
+                <div>
+                    <div class="label-bau text-white">
+                        <div class="bau-shape bau-circle border-2 border-white"></div>
+                        <span>ACTIVE_ALGORITHM_STATUS</span>
+                    </div>
+                    <h2 class="text-6xl font-black archivo-bold leading-none mt-4 text-white">SCALPING<br/>CORE.v1</h2>
                 </div>
+                
+                <div id="current-crypto" class="border-4 border-black bg-white p-6 text-black shadow-[4px_4px_0px_#000]">
+                    <div class="label-bau mb-2 text-black"><div class="bau-shape bau-triangle mr-2"></div>MARKET_FOCUS</div>
+                    <div id="target-coin" class="text-5xl font-black archivo-bold">WAITING</div>
+                    <div id="current-price" class="text-xl font-bold mt-2 opacity-60">CONNECTING_API...</div>
+                </div>
+
+                <div class="mt-6">
+                    <p class="text-[11px] font-bold tracking-tighter opacity-80 text-white">PROPRIETARY INTELLIGENCE SYSTEM // FORM_FOLLOWS_FUNCTION</p>
+                </div>
+            </section>
+
+            <!-- Stats Grid -->
+            <div class="bau-tile tile-stats-bau tile-yellow-accent">
+                <div class="label-bau"><div class="bau-shape bau-triangle"></div>RSI_STRENGTH</div>
+                <div id="rsi-value" class="text-5xl font-black">0.00</div>
+                <div id="rsi-status" class="mt-4 text-[10px] font-black p-2 bg-black text-white inline-block">NEUTRAL</div>
             </div>
-        </section>
 
-        <!-- Financial Overview (Small Tiles) -->
-        <div class="bento-tile tile-small flex flex-col justify-center">
-            <h2 class="label-sub text-emerald-500">Asset_Available</h2>
-            <div id="krw-balance" class="text-2xl font-bold font-mono">0</div>
-            <p class="text-[8px] text-zinc-600 mt-2 uppercase font-bold tracking-widest">Trading_Power_Index</p>
-        </div>
-
-        <div class="bento-tile tile-small flex flex-col justify-center">
-            <h2 class="label-sub text-orange-400">Asset_Position</h2>
-            <div id="coin-balance" class="text-2xl font-bold font-mono text-orange-400">0</div>
-            <p class="text-[8px] text-zinc-600 mt-2 uppercase font-bold tracking-widest">BTC_Inventory_Units</p>
-        </div>
-
-        <div class="bento-tile tile-small flex flex-col justify-center">
-            <h2 class="label-sub text-yellow-500">Entry_Logic</h2>
-            <div id="avg-buy-price" class="text-2xl font-bold font-mono text-white">0</div>
-            <div id="profit-rate" class="text-[9px] mt-2 font-bold uppercase tracking-tighter">No_Active_Trade</div>
-        </div>
-
-        <!-- System Logs / History (Wide Tile) -->
-        <section class="bento-tile tile-wide p-0 overflow-hidden">
-            <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center bg-white/5 backdrop-blur-sm">
-                <h2 class="label-sub m-0 neon-glow">Scalping_Terminal_Logs</h2>
-                <div id="last-update" class="text-[9px] text-zinc-600 font-mono tracking-widest uppercase italic">Establishing_Secure_Link...</div>
+            <div class="bau-tile tile-stats-bau tile-red-accent">
+                <div class="label-bau"><div class="bau-shape bau-circle"></div>TRADE_VOLUME</div>
+                <div id="win-loss-count" class="text-2xl font-black">0 W / 0 L</div>
+                <p class="text-[10px] font-bold mt-2 text-zinc-500 uppercase">Cycle Performance</p>
             </div>
-            <div class="overflow-x-auto min-h-[300px]">
-                <table class="table table-sm w-full">
-                    <thead class="bg-black/40">
-                        <tr class="text-zinc-600 border-b border-white/10 text-[9px] uppercase tracking-widest">
-                            <th class="py-4 px-8 border-r border-white/5">ACT</th>
-                            <th>Time_Log</th>
-                            <th>Market_Price</th>
-                            <th>Volume</th>
-                            <th>Total_Value</th>
-                            <th class="text-right px-8">Net_Result</th>
-                        </tr>
-                    </thead>
-                    <tbody id="trade-history-body" class="font-mono text-[10px] text-zinc-500">
-                        <!-- Dynamic Logs -->
-                    </tbody>
-                </table>
-            </div>
-        </section>
 
-        <footer class="tile-wide mt-4 text-center py-8">
-            <span id="footer-strategy" class="text-[9px] text-zinc-700 tracking-[0.3em] font-mono opacity-40 uppercase">
-                System_Core: Digital_Asset_Exchange_Interface // Encrypted_Data_Stream_Active
-            </span>
-        </footer>
+            <div class="bau-tile tile-stats-bau">
+                <div class="label-bau"><div class="bau-shape bau-square"></div>API_LATENCY</div>
+                <div class="text-4xl font-black">12<span class="text-lg">ms</span></div>
+                <p class="text-[10px] font-bold mt-2 text-zinc-500 uppercase">Seoul_Region_Node</p>
+            </div>
+
+            <div class="bau-tile tile-stats-bau flex items-center justify-center gap-4">
+                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau w-full justify-center">CONFIG</button>
+            </div>
+        </main>
     </div>
 
-    <!-- Strategy Config Modal -->
-    <dialog id="config-modal" class="modal">
-        <div class="modal-box glass-card border border-blue-500/30 rounded-3xl p-10 max-w-sm">
-            <h3 class="text-xl font-bold text-white mb-6 orbitron tracking-wider">PROTOCOL SETTINGS</h3>
-            
-            <div class="space-y-6">
-                <div class="form-control">
-                    <label class="label"><span class="label-text text-[10px] text-blue-400 font-bold uppercase tracking-widest">EXCHANGE_SELECT</span></label>
-                    <select id="cfg-exchange" class="select select-bordered bg-black/40 border-blue-500/20 text-center text-blue-400 font-bold orbitron text-xs">
-                        <option value="UPBIT">UPBIT (K-Premium)</option>
-                        <option value="BITHUMB">BITHUMB (Low Fees)</option>
-                    </select>
-                </div>
-
-                <div class="form-control">
-                    <label class="label"><span class="label-text text-[10px] text-gray-400 font-bold uppercase tracking-widest">BUY RSI THRESHOLD</span></label>
-                    <input type="number" id="cfg-rsi" value="30" step="0.5" class="input input-bordered bg-black/40 border-white/5 text-center text-blue-400 font-bold">
-                    <p class="text-[8px] text-gray-600 mt-1">Typical: 25 ~ 35 (Lower is safer dipping)</p>
-                </div>
-
-                <div class="form-control">
-                    <label class="label"><span class="label-text text-[10px] text-gray-400 font-bold uppercase tracking-widest">TARGET PROFIT (%)</span></label>
-                    <input type="number" id="cfg-profit" value="1.0" step="0.1" class="input input-bordered bg-black/40 border-white/5 text-center text-green-400 font-bold">
-                    <p class="text-[8px] text-gray-600 mt-1">Recommended: 0.5 ~ 2.0 (Fast scalping)</p>
-                </div>
-
-                <div class="form-control">
-                    <label class="label"><span class="label-text text-[10px] text-gray-400 font-bold uppercase tracking-widest">STOP LOSS (%)</span></label>
-                    <input type="number" id="cfg-loss" value="-2.0" step="0.1" class="input input-bordered bg-black/40 border-white/5 text-center text-red-500 font-bold">
-                    <p class="text-[8px] text-gray-600 mt-1">Exit immediately if price drops below this %</p>
-                </div>
-
-                <div class="form-control">
-                    <label class="label"><span class="label-text text-[10px] text-gray-400 font-bold uppercase tracking-widest">TRAILING OFFSET (%)</span></label>
-                    <input type="number" id="cfg-trailing" value="0.2" step="0.05" class="input input-bordered bg-black/40 border-white/5 text-center text-orange-400 font-bold">
-                    <p class="text-[8px] text-gray-600 mt-1">Sell after drop from peak (e.g. 0.2)</p>
-                </div>
-
-                <div class="modal-action flex items-center justify-between mt-10">
-                    <form method="dialog"><button class="btn btn-ghost btn-xs text-gray-600">CLOSE</button></form>
-                    <button onclick="saveConfig()" class="btn btn-info btn-sm px-8 rounded-xl font-bold orbitron text-xs">APPLY CHANGES</button>
-                </div>
+    <!-- Modal (Bauhaus Style) -->
+    <dialog id="config-modal" class="modal modal-bottom sm:modal-middle">
+        <div class="modal-box modal-bau max-w-2xl p-10 bg-white">
+            <h3 class="text-4xl font-black archivo-bold mb-8">SYSTEM_CONFIG</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <p class="text-sm font-bold opacity-60">Configuration parameters are managed via .env or System Node.</p>
+            </div>
+            <div class="modal-action mt-10">
+                <form method="dialog">
+                    <button class="btn-bau btn-bau-yellow">CLOSE_SETTINGS</button>
+                </form>
             </div>
         </div>
-        <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-            <button>close</button>
-        </form>
     </dialog>
 
-    <!-- Application Script -->
     <script>
-        // Chart Initialization
         let profitChart;
+        
         function initChart() {
             const ctx = document.getElementById('profitChart').getContext('2d');
             
@@ -189,13 +133,13 @@
                     datasets: [{
                         label: 'Gross Profit',
                         data: [],
-                        borderColor: '#D62828', // Bauhaus Red
-                        backgroundColor: 'rgba(214, 40, 40, 0.05)',
-                        fill: true,
-                        tension: 0, // Straight lines for Bauhaus
-                        borderWidth: 3,
+                        borderColor: '#000000', // Bauhaus Bold Black
+                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                        fill: false,
+                        tension: 0, 
+                        borderWidth: 4,
                         pointRadius: 0,
-                        pointHitRadius: 10
+                        pointHitRadius: 20
                     }]
                 },
                 options: {
@@ -205,19 +149,18 @@
                         legend: { display: false },
                         tooltip: {
                             backgroundColor: '#000',
-                            titleFont: { family: 'Orbitron', size: 10 },
-                            bodyFont: { family: 'Roboto Mono', size: 10 },
-                            padding: 12,
-                            borderColor: 'rgba(255,255,255,0.1)',
-                            borderWidth: 1
+                            titleFont: { family: 'Archivo Black' },
+                            bodyFont: { family: 'Space Grotesk' },
+                            cornerRadius: 0,
+                            displayColors: false
                         }
                     },
                     scales: {
                         y: { 
-                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: true },
+                            grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: true, lineWidth: 1 },
                             ticks: { 
-                                color: 'rgba(255, 255, 255, 0.5)', 
-                                font: { family: 'Space Grotesk', size: 10, weight: 'bold' },
+                                color: '#000', 
+                                font: { family: 'Space Grotesk', size: 11, weight: 'bold' },
                                 callback: value => value.toLocaleString() + ' ₩'
                             }
                         },
@@ -230,198 +173,82 @@
             });
         }
 
-        async function saveConfig() {
-            const rsi = document.getElementById('cfg-rsi').value;
-            const profit = document.getElementById('cfg-profit').value;
-            const loss = document.getElementById('cfg-loss').value;
-            const trailing = document.getElementById('cfg-trailing').value;
-            const exchange = document.getElementById('cfg-exchange').value;
-
-            try {
-                const response = await fetch('/api/settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        rsi_threshold: parseFloat(rsi),
-                        target_profit_rate: parseFloat(profit),
-                        stop_loss_rate: parseFloat(loss),
-                        trailing_offset: parseFloat(trailing),
-                        exchange: exchange
-                    })
-                });
-                if (response.ok) {
-                    alert("PROTOCOL UPDATED SUCCESSFULLY");
-                    document.getElementById('config-modal').close();
-                    updateStatus(); // Sync UI
-                }
-            } catch (err) {
-                console.error("Config Error:", err);
-            }
-        }
-
         async function updateStatus() {
             try {
                 const response = await fetch('/api/status');
                 const data = await response.json();
                 
-                // Update UI values
-                document.getElementById('krw-balance').innerText = new Intl.NumberFormat().format(data.krw_balance) + ' ₩';
-                document.getElementById('coin-balance').innerText = data.coin_balance ? data.coin_balance.toFixed(8) : '0.00000000';
-                document.getElementById('avg-buy-price').innerText = data.avg_buy_price > 0 ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '---';
-                document.getElementById('current-price').innerText = new Intl.NumberFormat().format(data.current_price) + ' ₩';
-                document.getElementById('current-rsi').innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '0.00';
-                document.getElementById('target-rsi').innerText = data.config.rsi_threshold;
-                document.getElementById('exchange-badge').innerText = data.exchange;
-                document.getElementById('price-data-label').innerText = "REAL-TIME " + data.exchange + " STREAM";
-                
-                // RSI Status & Progress
-                const rsiStatus = document.getElementById('rsi-status');
-                const rsiProgress = document.getElementById('rsi-progress');
-                if (data.current_rsi) {
-                    const isSignal = data.current_rsi <= data.config.rsi_threshold;
-                    rsiStatus.innerText = isSignal ? "BUY_SIGNAL_ACTIVE" : "ANALYZING_TREND";
-                    rsiStatus.className = `text-[10px] font-black uppercase mt-2 ${isSignal ? "text-error" : "text-zinc-600"} p-1 ${isSignal ? "bg-red-600/10" : ""}`;
-                    
-                    // Update Progress Bar
-                    rsiProgress.style.width = `${data.current_rsi}%`;
-                    rsiProgress.style.backgroundColor = isSignal ? '#00FFA3' : '#7000FF';
+                // Bot Status Badge
+                const botBadge = document.getElementById('bot-status-badge');
+                if (data.is_running) {
+                    botBadge.innerHTML = '<div class="bau-shape bau-circle bg-green-500 w-3 h-3 border-2 border-black"></div><span>SYSTEM_ACTIVE</span>';
+                    botBadge.className = 'flex items-center gap-2 text-green-600 font-black';
+                    document.getElementById('toggle-btn').innerText = 'STOP_SYSTEM';
+                    document.getElementById('toggle-btn').className = 'btn-bau btn-bau-yellow text-xs py-3 border-4 border-black';
                 } else {
-                    rsiStatus.innerText = "INITIALIZING_STREAM...";
-                    rsiProgress.style.width = '0%';
+                    botBadge.innerHTML = '<div class="bau-shape bau-circle w-3 h-3 border-2 border-black"></div><span>SYSTEM_OFFLINE</span>';
+                    botBadge.className = 'flex items-center gap-2 text-red-600 font-black';
+                    document.getElementById('toggle-btn').innerText = 'START_SYSTEM';
+                    document.getElementById('toggle-btn').className = 'btn-bau btn-bau-red text-xs py-3 border-4 border-black';
                 }
 
-                // Auth Warning Check (Skipped if not in UI)
-                // document.getElementById('auth-warning-badge') removed in Bento Layout
-                
-                // Sync Settings to Modal (Pre-populate)
-                if (!document.getElementById('config-modal').open) {
-                    document.getElementById('cfg-rsi').value = data.config.rsi_threshold;
-                    document.getElementById('cfg-profit').value = data.config.target_profit_rate;
-                    document.getElementById('cfg-loss').value = data.config.stop_loss_rate;
-                    document.getElementById('cfg-trailing').value = data.config.trailing_offset;
-                    document.getElementById('cfg-exchange').value = data.exchange;
-                }
-
-                // Update Footer with current strategy info
-                document.getElementById('footer-strategy').innerText = `STRATEGY: RSI < ${data.config.rsi_threshold} / TARGET: +${data.config.target_profit_rate}% / OFFSET: ${data.config.trailing_offset}% / STOP: ${data.config.stop_loss_rate}%`;
-
-                // Detailed Stats Update
+                // Balance & Profit
                 const netProfitEl = document.getElementById('total-net-profit');
                 netProfitEl.innerText = (data.total_net_profit >= 0 ? '+' : '') + new Intl.NumberFormat().format(data.total_net_profit) + ' ₩';
-                netProfitEl.className = `text-5xl font-black orbitron tracking-tighter ${data.total_net_profit >= 0 ? "text-success" : "text-error"}`;
+                netProfitEl.style.color = data.total_net_profit >= 0 ? '#2563EB' : '#E63946';
                 
                 document.getElementById('win-rate').innerText = data.win_rate.toFixed(1) + '%';
-                document.getElementById('win-loss-count').innerText = `${data.win_count} Wins / ${data.loss_count} Losses`;
-
-                // Update Chart Data
-                if (profitChart && data.chart_data.length > 0) {
-                    profitChart.data.labels = data.chart_data.map(d => d.x);
-                    profitChart.data.datasets[0].data = data.chart_data.map(d => d.y);
-                    profitChart.update('none'); 
-                }
-
-                // Profit Rate display
-                const profitEl = document.getElementById('profit-rate');
-                if (data.avg_buy_price > 0) {
-                    const colorClass = data.profit_rate >= 0 ? "text-green-400" : "text-red-500";
-                    profitEl.innerHTML = `<span class="${colorClass}">ROI: ${data.profit_rate.toFixed(2)}%</span>`;
-                } else {
-                    profitEl.innerText = "NO_ACTIVE_TRADE";
-                    profitEl.className = "text-[9px] mt-2 text-zinc-700 font-bold uppercase";
-                }
-
-                // Update Bot Status Toggle
-                const btn = document.getElementById('toggle-btn');
-                const badge = document.getElementById('bot-status-badge');
+                document.getElementById('win-loss-count').innerText = `${data.win_count} W / ${data.loss_count} L`;
                 
-                if (data.is_running) {
-                    btn.innerText = 'STOP SYSTEM';
-                    btn.classList.replace('btn-info', 'btn-error');
-                    badge.innerText = 'SCALPER_ACTIVE';
-                    badge.classList.replace('text-error', 'text-success');
+                // Market Data
+                document.getElementById('target-coin').innerText = data.target_coin || 'SEARCHING';
+                document.getElementById('current-price').innerText = data.current_price ? new Intl.NumberFormat().format(data.current_price) + ' ₩' : 'API_CONNECTING...';
+                
+                // RSI
+                document.getElementById('rsi-value').innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '0.00';
+                const rsiStatus = document.getElementById('rsi-status');
+                if (data.current_rsi <= data.config.rsi_threshold) {
+                    rsiStatus.innerText = "BUY_SIGNAL_ACTIVE";
+                    rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-red-600 text-white inline-block border-2 border-black";
                 } else {
-                    btn.innerText = 'START SYSTEM';
-                    btn.classList.replace('btn-error', 'btn-info');
-                    badge.innerText = 'STANDBY';
-                    badge.classList.replace('text-success', 'text-error');
+                    rsiStatus.innerText = "MARKET_NEUTRAL";
+                    rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-black text-white inline-block border-2 border-black";
                 }
 
-                // Update Table
-                const tbody = document.getElementById('trade-history-body');
-                tbody.innerHTML = '';
-                data.history.forEach(trade => {
-                    let profitHtml = '<td class="text-right px-8 text-zinc-800">---</td>';
-                    
-                    if (trade.side === 'SELL' && trade.net_profit !== null && trade.net_profit !== undefined) {
-                        const profitFormatted = new Intl.NumberFormat().format(Math.floor(trade.net_profit)) + ' ₩';
-                        if (trade.net_profit > 0) {
-                            profitHtml = `<td class="text-right px-8 text-green-400 font-bold">+${profitFormatted}</td>`;
-                        } else {
-                            profitHtml = `<td class="text-right px-8 text-red-500 font-bold">${profitFormatted}</td>`;
-                        }
-                    }
-
-                    const row = `
-                        <tr class="hover:bg-white/5 border-b border-white/5 transition-colors">
-                            <td class="py-4 px-8 border-r border-white/5">
-                                <span class="px-2 py-1 rounded text-[9px] font-bold ${trade.side === 'BUY' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}">${trade.side}</span>
-                            </td>
-                            <td class="text-zinc-500 font-mono">${trade.timestamp}</td>
-                            <td class="text-white font-bold">${new Intl.NumberFormat().format(trade.price)}</td>
-                            <td>${trade.volume.toFixed(8)}</td>
-                            <td>${new Intl.NumberFormat().format(trade.total_amount)}</td>
-                            ${profitHtml}
-                        </tr>
-                    `;
-
-                    tbody.innerHTML += row;
-                });
-
-                document.getElementById('last-update').innerText = 'LAST REFRESH: ' + new Date().toLocaleTimeString();
-
-            } catch (error) {
-                console.error("Protocol Error:", error);
+                // Update Chart
+                if (data.profit_history && data.profit_history.length > 0) {
+                    profitChart.data.labels = data.profit_history.map((_, i) => i);
+                    profitChart.data.datasets[0].data = data.profit_history;
+                    profitChart.update();
+                }
+            } catch (err) {
+                console.error('Status Update Error:', err);
             }
         }
 
-        // Toggle Button Click
-        document.getElementById('toggle-btn').addEventListener('click', async (e) => {
-            const btn = e.currentTarget;
-            const originalText = btn.innerText;
-            
-            // 즉각적인 피드백 제공 및 중복 클릭 방지
-            btn.innerText = 'PROCESSING...';
+        // Button Event
+        document.getElementById('toggle-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('toggle-btn');
+            btn.innerText = "SYNCING...";
             btn.disabled = true;
-            btn.style.opacity = '0.7';
-
+            
             try {
-                const response = await fetch('/api/toggle', { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                if (!response.ok) throw new Error('SERVER_RESPONSE_ERROR');
-                
-                const result = await response.json();
-                console.log("Toggle Result:", result);
-                
-                // 상태 업데이트 즉시 실행
-                await updateStatus();
-                
+                const response = await fetch('/api/toggle', { method: 'POST' });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    await updateStatus();
+                }
             } catch (err) {
-                console.error("Critical Toggle Error:", err);
-                alert("⚠️ 통신 오류: 서버와 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.");
-                btn.innerText = originalText;
+                alert('Connection Error');
             } finally {
                 btn.disabled = false;
-                btn.style.opacity = '1';
             }
         });
 
-        // Periodic Refresh
+        // Initialize
         initChart();
+        setInterval(updateStatus, 2000);
         updateStatus();
-        setInterval(updateStatus, 5000);
     </script>
 </body>
 </html>
