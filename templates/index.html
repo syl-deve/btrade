@@ -27,7 +27,7 @@
                     <div class="bau-shape bau-square w-3 h-3"></div>
                     <span id="exchange-text">CONNECTING_NODE</span>
                 </div>
-                <div id="bot-status-badge" class="flex items-center gap-2 text-red-600">
+                <div id="bot-status-badge" class="flex items-center gap-2 text-red-600 font-black">
                     <div class="bau-shape bau-circle w-3 h-3"></div>
                     <span id="status-text">SYSTEM_OFFLINE</span>
                 </div>
@@ -35,8 +35,28 @@
             </nav>
         </header>
 
+        <!-- Balance Info (Restored) -->
+        <div class="px-12 py-6 border-b-4 border-black flex flex-wrap gap-8 bg-zinc-50">
+            <div class="flex flex-col">
+                <p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Available Balance (KRW)</p>
+                <div id="krw-balance" class="text-2xl font-black archivo-bold">0 ₩</div>
+            </div>
+            <div class="w-[2px] bg-black/10"></div>
+            <div class="flex flex-col">
+                <p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Currently Held (Unit)</p>
+                <div id="coin-balance" class="text-2xl font-black archivo-bold">0 <span id="coin-unit" class="text-sm opacity-60">BIT</span></div>
+            </div>
+            <div class="ml-auto flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-[10px] font-black text-zinc-400 uppercase">Authorization Status</p>
+                    <p id="auth-status" class="text-sm font-bold text-red-600">UNAUTHORIZED</p>
+                </div>
+                <div class="bau-shape bau-square w-8 h-8 opacity-20"></div>
+            </div>
+        </div>
+
         <main class="bau-container">
-            <!-- Main Chart (Side) -->
+            <!-- Main Chart -->
             <section class="bau-tile tile-big flex flex-col">
                 <div class="label-bau">
                     <div class="bau-shape bau-square"></div>
@@ -63,7 +83,7 @@
                 </div>
             </section>
 
-            <!-- Status Card (Side) -->
+            <!-- Current Performance Section -->
             <section class="bau-tile tile-side tile-blue-dot flex flex-col justify-between">
                 <div>
                     <div class="label-bau text-white">
@@ -72,11 +92,11 @@
                     </div>
                     <!-- Significant Profit Rate Display -->
                     <div id="current-profit-rate" class="text-8xl font-black archivo-bold leading-tight mt-4 text-white tracking-tighter">0.00<span class="text-4xl">%</span></div>
-                    <p class="text-[12px] font-black uppercase text-white mt-2 opacity-80 tracking-widest">Current_Active_Trade_Profit</p>
+                    <p class="text-[12px] font-black uppercase text-white mt-2 opacity-80 tracking-widest">Active_Trade_Yield</p>
                 </div>
                 
                 <div id="current-crypto" class="border-4 border-black bg-white p-6 text-black shadow-[4px_4px_0px_#000]">
-                    <div class="label-bau mb-1 text-black"><div class="bau-shape bau-triangle mr-2"></div>MONITORING_API</div>
+                    <div class="label-bau mb-1 text-black"><div class="bau-shape bau-triangle mr-2"></div>MONITORING_ENGINE</div>
                     <div id="target-coin" class="text-5xl font-black archivo-bold">NONE</div>
                     
                     <div class="mt-6 space-y-2 border-t-2 border-black/10 pt-4">
@@ -92,42 +112,54 @@
                 </div>
 
                 <div class="mt-6">
-                    <p class="text-[11px] font-bold tracking-tighter opacity-80 text-white uppercase italic">Reliability based on Bauhaus Modernism // CORE.v1</p>
+                    <p class="text-[11px] font-bold tracking-tighter opacity-80 text-white uppercase italic">BAUHAUS_TERMINAL_V.8 // CORE.SYSTEM</p>
                 </div>
             </section>
 
-            <!-- Stats Grid -->
+            <!-- RSI Stat -->
             <div class="bau-tile tile-stats-bau tile-yellow-accent">
                 <div class="label-bau"><div class="bau-shape bau-triangle"></div>RSI_STRENGTH</div>
                 <div id="rsi-value" class="text-5xl font-black">0.00</div>
                 <div id="rsi-status" class="mt-4 text-[10px] font-black p-2 bg-black text-white inline-block">NEUTRAL</div>
             </div>
 
+            <!-- Latency Stat -->
             <div class="bau-tile tile-stats-bau tile-red-accent">
-                <div class="label-bau"><div class="bau-shape bau-circle"></div>NETWORK_LATENCY</div>
+                <div class="label-bau"><div class="bau-shape bau-circle"></div>API_LATENCY</div>
                 <div class="text-4xl font-black">12<span class="text-lg uppercase">ms</span></div>
-                <p class="text-[10px] font-bold mt-2 text-zinc-500 uppercase">Seoul_Internal_API</p>
+                <p class="text-[10px] font-bold mt-2 text-zinc-500 uppercase">Node_Stability</p>
             </div>
 
-            <div class="bau-tile tile-stats-bau">
-                <div class="label-bau"><div class="bau-shape bau-square"></div>SYSTEM_UPTIME</div>
-                <div id="uptime_display" class="text-2xl font-black">ONLINE</div>
-                <p class="text-[10px] font-bold mt-2 text-zinc-500 uppercase">Proprietary Node_v1</p>
+            <!-- Config & Logs triggers -->
+            <div class="bau-tile tile-stats-bau flex flex-col gap-4">
+                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau w-full justify-center">GENERAL_CONFIG</button>
+                <div id="uptime_display" class="text-[10px] font-bold text-center opacity-40 uppercase">System Uptime: Online</div>
             </div>
 
-            <div class="bau-tile tile-stats-bau flex items-center justify-center gap-4">
-                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau w-full justify-center">CONFIG_SYSTEM</button>
+            <div class="bau-tile tile-stats-bau bg-zinc-900 text-white flex items-center justify-center">
+                 <a href="#log-terminal" class="text-sm font-black uppercase underline decoration-4 decoration-red-600">View_System_Logs</a>
             </div>
         </main>
+
+        <!-- System Logs Section (Restored) -->
+        <section id="log-terminal" class="px-12 py-12 border-t-4 border-black bg-white">
+            <div class="label-bau mb-6">
+                <div class="bau-shape bau-square bg-black"></div>
+                <span>SYSTEM_REALTIME_DECISION_LOGS</span>
+            </div>
+            <div id="log-display" class="bau-terminal">
+                [SYSTEM] Initializing Bauhaus Terminal Node...
+                [SYSTEM] Waiting for API Sync...
+            </div>
+        </section>
     </div>
 
     <!-- Modal (Bauhaus Style) -->
     <dialog id="config-modal" class="modal modal-bottom sm:modal-middle">
         <div class="modal-box modal-bau max-w-2xl p-10 bg-white">
-            <h3 class="text-4xl font-black archivo-bold mb-8 tracking-tighter uppercase">System_Settings</h3>
+            <h3 class="text-4xl font-black archivo-bold mb-8 tracking-tighter uppercase">SYSTEM_SETTINGS</h3>
             
             <form id="settings-form" class="space-y-6">
-                <!-- Select Exchange -->
                 <div>
                     <label class="bau-label">Target Trading Engine</label>
                     <select id="set-exchange" class="bau-select">
@@ -173,6 +205,7 @@
     <script>
         let profitChart;
         let isConfigPopulated = false;
+        let lastLogLine = "";
         
         function initChart() {
             const ctx = document.getElementById('profitChart').getContext('2d');
@@ -228,10 +261,10 @@
                 const response = await fetch('/api/status');
                 const data = await response.json();
                 
-                // Dynamic Exchange Badge
-                const exBadge = document.getElementById('exchange-badge');
+                // Exchange & Auth
                 const exText = document.getElementById('exchange-text');
-                const exShape = exBadge.querySelector('.bau-shape');
+                const exShape = document.querySelector('#exchange-badge .bau-shape');
+                const authEl = document.getElementById('auth-status');
                 
                 if (data.exchange === 'BITHUMB') {
                     exText.innerText = 'BITHUMB_V1';
@@ -243,7 +276,22 @@
                     exShape.style.backgroundColor = '#2563EB';
                 }
 
-                // Bot Status Badge
+                if (data.authorized) {
+                    authEl.innerText = 'AUTHORIZED_SUCCESS';
+                    authEl.className = 'text-sm font-bold text-green-600';
+                } else {
+                    authEl.innerText = 'UNAUTHORIZED_ERR';
+                    authEl.className = 'text-sm font-bold text-red-600';
+                }
+
+                // Balance Restored
+                if (data.balance) {
+                    document.getElementById('krw-balance').innerText = new Intl.NumberFormat().format(data.balance.krw) + ' ₩';
+                    document.getElementById('coin-balance').innerText = data.balance.coin.toFixed(8);
+                    document.getElementById('coin-unit').innerText = data.target_coin || 'BIT';
+                }
+
+                // Bot Status
                 const botBadge = document.getElementById('bot-status-badge');
                 const statusText = document.getElementById('status-text');
                 const toggleBtn = document.getElementById('toggle-btn');
@@ -262,7 +310,7 @@
                     toggleBtn.className = 'btn-bau btn-bau-red text-xs py-3 border-4 border-black';
                 }
 
-                // Current Profit %
+                // Profit Rate %
                 const profitRateEl = document.getElementById('current-profit-rate');
                 const pRate = data.profit_rate || 0.0;
                 profitRateEl.innerHTML = `${pRate.toFixed(2)}<span class="text-4xl">%</span>`;
@@ -270,7 +318,7 @@
                 else if (pRate < 0) profitRateEl.style.color = '#E63946';
                 else profitRateEl.style.color = '#FFFFFF';
 
-                // Balance & Profit
+                // Accumulation & Wins
                 const netProfitEl = document.getElementById('total-net-profit');
                 netProfitEl.innerText = (data.total_net_profit >= 0 ? '+' : '') + new Intl.NumberFormat().format(data.total_net_profit) + ' ₩';
                 netProfitEl.style.color = data.total_net_profit >= 0 ? '#2563EB' : '#E63946';
@@ -278,7 +326,7 @@
                 document.getElementById('win-rate').innerText = data.win_rate.toFixed(1) + '%';
                 document.getElementById('win-loss-count').innerText = `${data.win_count} W / ${data.loss_count} L`;
                 
-                // Market Data
+                // Market Details
                 document.getElementById('target-coin').innerText = data.target_coin || 'WAITING';
                 document.getElementById('current-price').innerText = data.current_price ? new Intl.NumberFormat().format(data.current_price) + ' ₩' : 'API_CONNECTING...';
                 document.getElementById('avg-buy-price').innerText = (data.avg_buy_price > 0) ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '0 ₩';
@@ -294,7 +342,7 @@
                     rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-black text-white inline-block border-2 border-black";
                 }
 
-                // Populate Config Once
+                // Config Auto-Populate
                 if (!isConfigPopulated) {
                     document.getElementById('set-exchange').value = data.exchange;
                     document.getElementById('set-rsi').value = data.config.rsi_threshold;
@@ -304,15 +352,27 @@
                     isConfigPopulated = true;
                 }
 
-                // Update Chart
+                // Chart Sync
                 if (data.chart_data && data.chart_data.length > 0) {
                     profitChart.data.labels = data.chart_data.map(d => d.x);
                     profitChart.data.datasets[0].data = data.chart_data.map(d => d.y);
                     profitChart.update();
                 }
-            } catch (err) {
-                console.error('Status Update Error:', err);
-            }
+            } catch (err) { console.error('Sync Error:', err); }
+        }
+
+        async function updateLogs() {
+            try {
+                const res = await fetch('/api/logs');
+                const logs = await res.json();
+                const logDisplay = document.getElementById('log-display');
+                
+                if (logs.length > 0) {
+                    logDisplay.innerHTML = logs.map(log => `<div>[LOG] ${log}</div>`).join("");
+                    // Hard scroll to bottom
+                    logDisplay.scrollTop = logDisplay.scrollHeight;
+                }
+            } catch (err) { console.error('Log Sync Error:', err); }
         }
 
         async function saveSettings() {
@@ -330,40 +390,30 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                const result = await res.json();
-                if (result.status === 'success') {
+                if (res.ok) {
                     isConfigPopulated = false; 
                     await updateStatus();
-                    alert('SYSTEM_SETTINGS_UPDATED_SYNCED');
+                    alert('SYSTEM_STATE_UPDATED');
                 }
-            } catch (err) {
-                alert('COMMUNICATION_ERROR');
-            }
+            } catch (err) { alert('SAVE_ERROR'); }
         }
 
-        // Button Event
         document.getElementById('toggle-btn').addEventListener('click', async () => {
             const btn = document.getElementById('toggle-btn');
-            btn.innerText = "SYNCING...";
             btn.disabled = true;
-            
             try {
-                const response = await fetch('/api/toggle', { method: 'POST' });
-                const data = await response.json();
-                if (data.status === 'success') {
-                    await updateStatus();
-                }
-            } catch (err) {
-                alert('Connection Error');
-            } finally {
-                btn.disabled = false;
-            }
+                const res = await fetch('/api/toggle', { method: 'POST' });
+                if (res.ok) await updateStatus();
+            } catch (err) { alert('Connection Error'); }
+            finally { btn.disabled = false; }
         });
 
-        // Initialize
+        // Initialize & Loops
         initChart();
         setInterval(updateStatus, 3000);
+        setInterval(updateLogs, 2000); // 2sec for logs
         updateStatus();
+        updateLogs();
     </script>
 </body>
 </html>

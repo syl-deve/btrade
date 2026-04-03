@@ -161,6 +161,28 @@ h1, .archivo-bold {
     background-size: 1rem;
 }
 
+.bau-terminal {
+    background: #000;
+    color: #FFF;
+    font-family: 'Space Grotesk', monospace;
+    font-size: 0.75rem;
+    padding: 1.5rem;
+    border: var(--border-main);
+    box-shadow: var(--shadow-main);
+    height: 300px;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+.bau-terminal::-webkit-scrollbar { width: 8px; }
+.bau-terminal::-webkit-scrollbar-track { background: #111; }
+.bau-terminal::-webkit-scrollbar-thumb { background: var(--bau-yellow); }
+
+.balance-tile {
+    background: var(--bau-white);
+    border-left: 12px solid var(--bau-blue);
+}
+
 /* Modal Customization */
 .modal-bau {
     background: var(--bau-white);
