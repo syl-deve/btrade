@@ -32,6 +32,8 @@
                     <span id="status-text">OFFLINE</span>
                 </div>
                 <button id="toggle-btn" class="btn-bau btn-bau-red text-xs py-3 border-4 border-black">START_SYSTEM</button>
+                <!-- 언어 토글 버튼 -->
+                <button id="lang-toggle" class="btn-bau text-xs py-3 px-4 border-4 border-black font-black tracking-widest" onclick="toggleLang()">KO</button>
                 <a href="/logout" class="btn-bau text-xs py-3 border-4 border-black hover:bg-black hover:text-white transition-all">EXIT_NODE</a>
             </nav>
         </header>
@@ -39,17 +41,17 @@
         <!-- Balance Info (Enhanced Sync) -->
         <div id="balance-section" class="px-12 py-6 border-b-4 border-black flex flex-wrap gap-8 bg-zinc-50 relative z-10">
             <div class="flex flex-col">
-                <p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Available Balance (KRW)</p>
+                <p data-i18n="label_krw" class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Available Balance (KRW)</p>
                 <div id="krw-balance" class="text-2xl font-black archivo-bold">SYNCING...</div>
             </div>
             <div class="w-[2px] bg-black/10"></div>
             <div class="flex flex-col">
-                <p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Currently Held (Unit)</p>
+                <p data-i18n="label_coin" class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Currently Held (Unit)</p>
                 <div id="coin-balance" class="text-2xl font-black archivo-bold">0.0000 <span id="coin-unit" class="text-sm opacity-60">WAIT</span></div>
             </div>
             <div class="ml-auto flex items-center gap-4">
                 <div class="text-right">
-                    <p class="text-[10px] font-black text-zinc-400 uppercase">Authorization Status</p>
+                    <p data-i18n="label_auth" class="text-[10px] font-black text-zinc-400 uppercase">Authorization Status</p>
                     <p id="auth-status" class="text-sm font-bold text-red-600">NODATA_ERR</p>
                 </div>
                 <div class="bau-shape bau-square w-8 h-8 opacity-20"></div>
@@ -61,23 +63,23 @@
             <section class="bau-tile tile-big flex flex-col">
                 <div class="label-bau">
                     <div class="bau-shape bau-square"></div>
-                    <span>ACCUMULATED_PROFIT_HISTORY (KRW)</span>
+                    <span data-i18n="label_chart">ACCUMULATED_PROFIT_HISTORY (KRW)</span>
                 </div>
                 <div class="flex-grow min-h-[400px] relative">
                     <canvas id="profitChart"></canvas>
                 </div>
                 <div class="mt-8 border-t-2 border-black pt-4 flex justify-between items-end">
                     <div>
-                        <p class="text-[10px] font-black uppercase text-zinc-400 font-black">Gross Accumulation</p>
+                        <p data-i18n="label_gross" class="text-[10px] font-black uppercase text-zinc-400 font-black">Gross Accumulation</p>
                         <div id="total-net-profit" class="value-bau">0 ₩</div>
                     </div>
                     <div class="flex gap-10">
                         <div class="text-right">
-                            <p class="text-[10px] font-black uppercase text-zinc-400 font-black font-black">Success Rate</p>
+                            <p data-i18n="label_winrate" class="text-[10px] font-black uppercase text-zinc-400 font-black font-black">Success Rate</p>
                             <p id="win-rate" class="text-3xl font-black">0.0%</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] font-black uppercase text-zinc-400 font-black font-black">Trade Records</p>
+                            <p data-i18n="label_trades" class="text-[10px] font-black uppercase text-zinc-400 font-black font-black">Trade Records</p>
                             <p id="win-loss-count" class="text-xl font-black">0 W / 0 L</p>
                         </div>
                     </div>
@@ -97,16 +99,16 @@
                 </div>
                 
                 <div id="current-crypto" class="border-4 border-black bg-white p-6 text-black shadow-[4px_4px_0px_#000]">
-                    <div class="label-bau mb-1 text-black"><div class="bau-shape bau-triangle mr-2"></div>MONITORING_ENGINE</div>
+                    <div class="label-bau mb-1 text-black"><div class="bau-shape bau-triangle mr-2"></div><span data-i18n="label_engine">MONITORING_ENGINE</span></div>
                     <div id="target-coin" class="text-5xl font-black archivo-bold">NONE</div>
                     
                     <div class="mt-6 space-y-2 border-t-2 border-black/10 pt-4">
                         <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-black text-zinc-400 uppercase">Current Price</span>
+                            <span data-i18n="label_price" class="text-[10px] font-black text-zinc-400 uppercase">Current Price</span>
                             <span id="current-price" class="text-lg font-black">0 ₩</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-[10px] font-black text-zinc-400 uppercase">Avg Buy Price</span>
+                            <span data-i18n="label_avgbuy" class="text-[10px] font-black text-zinc-400 uppercase">Avg Buy Price</span>
                             <span id="avg-buy-price" class="text-lg font-black text-blue-600">0 ₩</span>
                         </div>
                     </div>
@@ -133,13 +135,13 @@
 
             <!-- Configuration -->
             <div class="bau-tile tile-stats-bau flex flex-col gap-4">
-                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau w-full justify-center py-4 bg-zinc-900 text-white border-black">GENERAL_CONFIG</button>
-                <div id="uptime_display" class="text-[10px] font-bold text-center opacity-40 uppercase">System Status: Online</div>
+                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau w-full justify-center py-4 bg-zinc-900 text-white border-black"><span data-i18n="btn_config">GENERAL_CONFIG</span></button>
+                <div id="uptime_display" data-i18n="label_status" class="text-[10px] font-bold text-center opacity-40 uppercase">System Status: Online</div>
             </div>
 
             <div class="bau-tile tile-stats-bau border-black flex items-center justify-center">
                  <div class="text-center">
-                    <p class="text-[10px] font-black text-zinc-400 uppercase">System Version</p>
+                    <p data-i18n="label_version" class="text-[10px] font-black text-zinc-400 uppercase">System Version</p>
                     <p class="text-lg font-black archivo-bold">INTERNAL_v14</p>
                  </div>
             </div>
@@ -149,11 +151,11 @@
     <!-- Modal (Bauhaus Style) -->
     <dialog id="config-modal" class="modal modal-bottom sm:modal-middle">
         <div class="modal-box modal-bau max-w-2xl p-10 bg-white">
-            <h3 class="text-4xl font-black archivo-bold mb-8 tracking-tighter uppercase">SYSTEM_SETTINGS</h3>
+            <h3 data-i18n="modal_title" class="text-4xl font-black archivo-bold mb-8 tracking-tighter uppercase">SYSTEM_SETTINGS</h3>
             
             <form id="settings-form" class="space-y-6">
                 <div>
-                    <label class="bau-label">Target Trading Engine</label>
+                    <label data-i18n="cfg_exchange" class="bau-label">Target Trading Engine</label>
                     <select id="set-exchange" class="bau-select">
                         <option value="UPBIT">UPBIT_CORP_KOREA</option>
                         <option value="BITHUMB">BITHUMB_API_V1</option>
@@ -162,22 +164,22 @@
 
                 <div class="grid grid-cols-2 gap-6">
                     <div>
-                        <label class="bau-label">RSI Threshold (Buy)</label>
+                        <label data-i18n="cfg_rsi" class="bau-label">RSI Threshold (Buy)</label>
                         <input type="number" id="set-rsi" step="0.1" class="bau-input" placeholder="30.0">
                     </div>
                     <div>
-                        <label class="bau-label">Target Take-Profit (%)</label>
+                        <label data-i18n="cfg_profit" class="bau-label">Target Take-Profit (%)</label>
                         <input type="number" id="set-profit" step="0.1" class="bau-input" placeholder="1.0">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-6">
                     <div>
-                        <label class="bau-label">Emergency Stop-Loss (%)</label>
+                        <label data-i18n="cfg_stoploss" class="bau-label">Emergency Stop-Loss (%)</label>
                         <input type="number" id="set-stoploss" step="0.1" class="bau-input" placeholder="-2.0">
                     </div>
                     <div>
-                        <label class="bau-label">Trailing Stop Offset</label>
+                        <label data-i18n="cfg_offset" class="bau-label">Trailing Stop Offset</label>
                         <input type="number" id="set-offset" step="0.05" class="bau-input" placeholder="0.2">
                     </div>
                 </div>
@@ -186,8 +188,8 @@
             <div class="modal-action mt-10">
                 <form method="dialog">
                     <div class="flex gap-4">
-                        <button class="btn-bau">IGNORE</button>
-                        <button onclick="saveSettings()" class="btn-bau btn-bau-yellow text-black">APPLY_CHANGES</button>
+                        <button data-i18n="btn_ignore" class="btn-bau">IGNORE</button>
+                        <button onclick="saveSettings()" data-i18n="btn_apply" class="btn-bau btn-bau-yellow text-black">APPLY_CHANGES</button>
                     </div>
                 </form>
             </div>
@@ -197,6 +199,75 @@
     <script>
         let profitChart;
         let isConfigPopulated = false;
+
+        // ─── 한/영 번역 딕셔너리 ────────────────────────────────────────
+        const i18n = {
+            en: {
+                label_krw:    'Available Balance (KRW)',
+                label_coin:   'Currently Held (Unit)',
+                label_auth:   'Authorization Status',
+                label_chart:  'ACCUMULATED_PROFIT_HISTORY (KRW)',
+                label_gross:  'Gross Accumulation',
+                label_winrate:'Success Rate',
+                label_trades: 'Trade Records',
+                label_engine: 'MONITORING_ENGINE',
+                label_price:  'Current Price',
+                label_avgbuy: 'Avg Buy Price',
+                btn_config:   'GENERAL_CONFIG',
+                label_status: 'System Status: Online',
+                label_version:'System Version',
+                modal_title:  'SYSTEM_SETTINGS',
+                cfg_exchange: 'Target Trading Engine',
+                cfg_rsi:      'RSI Threshold (Buy)',
+                cfg_profit:   'Target Take-Profit (%)',
+                cfg_stoploss: 'Emergency Stop-Loss (%)',
+                cfg_offset:   'Trailing Stop Offset',
+                btn_ignore:   'IGNORE',
+                btn_apply:    'APPLY_CHANGES',
+            },
+            ko: {
+                label_krw:    '사용 가능 잔고 (원화)',
+                label_coin:   '현재 보유 수량',
+                label_auth:   '인증 상태',
+                label_chart:  '누적 수익 히스토리 (원화)',
+                label_gross:  '총 누적 수익',
+                label_winrate:'승률',
+                label_trades: '거래 기록',
+                label_engine: '감시 대상 코인',
+                label_price:  '현재가',
+                label_avgbuy: '평균 매수가',
+                btn_config:   '시스템 설정',
+                label_status: '시스템 상태: 가동중',
+                label_version:'시스템 버전',
+                modal_title:  '시스템 설정',
+                cfg_exchange: '거래소 선택',
+                cfg_rsi:      'RSI 매수 기준값',
+                cfg_profit:   '목표 익절율 (%)',
+                cfg_stoploss: '긴급 손절율 (%)',
+                cfg_offset:   '트레일링 스탑 오프셋',
+                btn_ignore:   '취소',
+                btn_apply:    '변경사항 적용',
+            }
+        };
+
+        let currentLang = localStorage.getItem('dashboard_lang') || 'en';
+
+        function applyLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('dashboard_lang', lang);
+            const dict = i18n[lang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key] !== undefined) el.textContent = dict[key];
+            });
+            const btn = document.getElementById('lang-toggle');
+            if (btn) btn.textContent = lang === 'ko' ? 'EN' : 'KO';
+        }
+
+        function toggleLang() {
+            applyLang(currentLang === 'en' ? 'ko' : 'en');
+        }
+        // ────────────────────────────────────────────────────────────────
         
         function initChart() {
             const ctx = document.getElementById('profitChart').getContext('2d');
@@ -423,6 +494,7 @@
 
         // Initialize & Loop
         initChart();
+        applyLang(currentLang); // 저장된 언어 적용
         setInterval(updateStatus, 3000);
         updateStatus();
     </script>
