@@ -292,13 +292,13 @@
                     botBadge.className = 'flex items-center gap-2 text-green-600 font-black';
                     botBadge.querySelector('.bau-shape').style.backgroundColor = '#22C55E';
                     toggleBtn.innerText = 'STOP_SYSTEM';
-                    toggleBtn.className = 'btn-bau btn-bau-yellow text-xs py-3 border-4 border-black';
+                    toggleBtn.className = 'btn-bau btn-bau-red text-xs py-3 border-4 border-black';
                 } else {
                     statusText.innerText = 'OFFLINE';
                     botBadge.className = 'flex items-center gap-2 text-red-600 font-black';
                     botBadge.querySelector('.bau-shape').style.backgroundColor = '#E63946';
                     toggleBtn.innerText = 'START_SYSTEM';
-                    toggleBtn.className = 'btn-bau btn-bau-red text-xs py-3 border-4 border-black';
+                    toggleBtn.className = 'btn-bau btn-bau-yellow text-xs py-3 border-4 border-black';
                 }
 
                 // Profit Rate %
@@ -378,6 +378,7 @@
         document.getElementById('toggle-btn').addEventListener('click', async () => {
             const btn = document.getElementById('toggle-btn');
             btn.disabled = true;
+            btn.innerText = 'PROCESS...'; 
             try {
                 const res = await fetch('/api/toggle', { method: 'POST' });
                 if (res.ok) await updateStatus();
