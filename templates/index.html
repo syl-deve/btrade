@@ -208,11 +208,15 @@
                         label: 'Gross Profit',
                         data: [],
                         borderColor: '#000000',
-                        backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
                         fill: false,
                         tension: 0, 
                         borderWidth: 4,
-                        pointRadius: 0,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#000000',
+                        pointBorderColor: '#FFFFFF',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 10,
                         pointHitRadius: 20
                     }]
                 },
@@ -342,7 +346,7 @@
                 // Market Sync
                 safeUpdate('target-coin', coinUnit);
                 safeUpdate('current-price', data.current_price ? new Intl.NumberFormat().format(data.current_price) + ' ₩' : 'API_SYNC...');
-                safeUpdate('avg_buy_price', (data.avg_buy_price > 0) ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '0 ₩');
+                safeUpdate('avg-buy-price', (data.avg_buy_price > 0) ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '0 ₩');
 
                 // RSI
                 const rsiVal = document.getElementById('rsi-value');
