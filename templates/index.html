@@ -294,13 +294,8 @@
                     rsiProgress.style.width = '0%';
                 }
 
-                // Auth Warning Check
-                const authBadge = document.getElementById('auth-warning-badge');
-                if (!data.authorized) {
-                    authBadge.classList.remove('hidden');
-                } else {
-                    authBadge.classList.add('hidden');
-                }
+                // Auth Warning Check (Skipped if not in UI)
+                // document.getElementById('auth-warning-badge') removed in Bento Layout
                 
                 // Sync Settings to Modal (Pre-populate)
                 if (!document.getElementById('config-modal').open) {
@@ -347,12 +342,12 @@
                     btn.innerText = 'STOP SYSTEM';
                     btn.classList.replace('btn-info', 'btn-error');
                     badge.innerText = 'SCALPER_ACTIVE';
-                    badge.classList.replace('badge-error', 'badge-success');
+                    badge.classList.replace('text-error', 'text-success');
                 } else {
                     btn.innerText = 'START SYSTEM';
                     btn.classList.replace('btn-error', 'btn-info');
                     badge.innerText = 'STANDBY';
-                    badge.classList.replace('badge-success', 'badge-error');
+                    badge.classList.replace('text-success', 'text-error');
                 }
 
                 // Update Table
