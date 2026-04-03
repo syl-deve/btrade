@@ -37,7 +37,7 @@
         </header>
 
         <!-- Balance Info (Enhanced Sync) -->
-        <div id="balance-section" class="px-12 py-6 border-b-4 border-black flex flex-wrap gap-8 bg-zinc-50">
+        <div id="balance-section" class="px-12 py-6 border-b-4 border-black flex flex-wrap gap-8 bg-zinc-50 relative z-10">
             <div class="flex flex-col">
                 <p class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Available Balance (KRW)</p>
                 <div id="krw-balance" class="text-2xl font-black archivo-bold">SYNCING...</div>
@@ -250,91 +250,117 @@
         async function updateStatus() {
             try {
                 const response = await fetch('/api/status');
+                if (!response.ok) throw new Error('API_FETCH_ERR');
                 const data = await response.json();
+                
+                // Helper for DOM Safe Update
+                const safeUpdate = (id, html) => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = html;
+                };
                 
                 // Exchange & Auth
                 const exText = document.getElementById('exchange-text');
                 const exShape = document.querySelector('#exchange-badge .bau-shape');
                 const authEl = document.getElementById('auth-status');
                 
-                if (data.exchange === 'BITHUMB') {
-                    exText.innerText = 'BITHUMB_V1';
-                    exText.style.color = '#F37321'; 
-                    exShape.style.backgroundColor = '#F37321';
-                } else {
-                    exText.innerText = 'UPBIT_NODE';
-                    exText.style.color = '#2563EB'; 
-                    exShape.style.backgroundColor = '#2563EB';
+                if (exText && exShape) {
+                    if (data.exchange === 'BITHUMB') {
+                        exText.innerText = 'BITHUMB_V1';
+                        exText.style.color = '#F37321'; 
+                        exShape.style.backgroundColor = '#F37321';
+                    } else {
+                        exText.innerText = 'UPBIT_NODE';
+                        exText.style.color = '#2563EB'; 
+                        exShape.style.backgroundColor = '#2563EB';
+                    }
                 }
 
-                if (data.authorized) {
-                    authEl.innerText = 'AUTHORIZED_SUCCESS';
-                    authEl.className = 'text-sm font-bold text-green-600';
-                } else {
-                    authEl.innerText = 'UNAUTHORIZED_ERR';
-                    authEl.className = 'text-sm font-bold text-red-600';
+                if (authEl) {
+                    if (data.authorized) {
+                        authEl.innerText = 'AUTHORIZED_SUCCESS';
+                        authEl.className = 'text-sm font-bold text-green-600';
+                    } else {
+                        authEl.innerText = 'UNAUTHORIZED_ERR';
+                        authEl.className = 'text-sm font-bold text-red-600';
+                    }
                 }
 
-                // Balance Logic Fixed Path
-                if (data.krw_balance !== undefined) {
-                    document.getElementById('krw-balance').innerText = new Intl.NumberFormat().format(data.krw_balance) + ' ₩';
-                    document.getElementById('coin-balance').innerText = data.coin_balance ? parseFloat(data.coin_balance).toFixed(6) : '0.000000';
-                    document.getElementById('coin-unit').innerText = data.target_coin || 'BIT';
-                }
+                // Balance Mapping (Defensive)
+                const krwVal = data.krw_balance || 0;
+                const coinVal = data.coin_balance || 0;
+                const coinUnit = (data.target_coin && data.target_coin !== 'NONE') ? data.target_coin : 'BTC';
+                
+                safeUpdate('krw-balance', new Intl.NumberFormat().format(krwVal) + ' ₩');
+                safeUpdate('coin-balance', `${parseFloat(coinVal).toFixed(6)} <span id="coin-unit" class="text-sm opacity-60">${coinUnit}</span>`);
 
-                // Bot Status
+                // Bot Status & Button Swap
                 const botBadge = document.getElementById('bot-status-badge');
                 const statusText = document.getElementById('status-text');
                 const toggleBtn = document.getElementById('toggle-btn');
-
+                
                 if (data.is_running) {
-                    statusText.innerText = 'ACTIVE';
-                    botBadge.className = 'flex items-center gap-2 text-green-600 font-black';
-                    botBadge.querySelector('.bau-shape').style.backgroundColor = '#22C55E';
-                    toggleBtn.innerText = 'STOP_SYSTEM';
-                    toggleBtn.className = 'btn-bau btn-bau-red text-xs py-3 border-4 border-black';
+                    if (statusText) statusText.innerText = 'ACTIVE';
+                    if (botBadge) {
+                        botBadge.className = 'flex items-center gap-2 text-green-600 font-black';
+                        botBadge.querySelector('.bau-shape').style.backgroundColor = '#22C55E';
+                    }
+                    if (toggleBtn) {
+                        toggleBtn.innerText = 'STOP_SYSTEM';
+                        toggleBtn.className = 'btn-bau btn-bau-red text-xs py-3 border-4 border-black';
+                    }
                 } else {
-                    statusText.innerText = 'OFFLINE';
-                    botBadge.className = 'flex items-center gap-2 text-red-600 font-black';
-                    botBadge.querySelector('.bau-shape').style.backgroundColor = '#E63946';
-                    toggleBtn.innerText = 'START_SYSTEM';
-                    toggleBtn.className = 'btn-bau btn-bau-yellow text-xs py-3 border-4 border-black';
+                    if (statusText) statusText.innerText = 'OFFLINE';
+                    if (botBadge) {
+                        botBadge.className = 'flex items-center gap-2 text-red-600 font-black';
+                        botBadge.querySelector('.bau-shape').style.backgroundColor = '#E63946';
+                    }
+                    if (toggleBtn) {
+                        toggleBtn.innerText = 'START_SYSTEM';
+                        toggleBtn.className = 'btn-bau btn-bau-yellow text-xs py-3 border-4 border-black';
+                    }
                 }
 
-                // Profit Rate %
-                const profitRateEl = document.getElementById('current-profit-rate');
+                // Profit & Performance
                 const pRate = data.profit_rate || 0.0;
-                profitRateEl.innerHTML = `${pRate.toFixed(2)}<span class="text-4xl">%</span>`;
-                if (pRate > 0) profitRateEl.style.color = '#22C55E';
-                else if (pRate < 0) profitRateEl.style.color = '#E63946';
-                else profitRateEl.style.color = '#FFFFFF';
+                const profitRateEl = document.getElementById('current-profit-rate');
+                if (profitRateEl) {
+                    profitRateEl.innerHTML = `${pRate.toFixed(2)}<span class="text-4xl">%</span>`;
+                    profitRateEl.style.color = pRate > 0 ? '#22C55E' : (pRate < 0 ? '#E63946' : '#FFFFFF');
+                }
 
-                // Accumulation & Wins
                 const netProfitEl = document.getElementById('total-net-profit');
-                netProfitEl.innerText = (data.total_net_profit >= 0 ? '+' : '') + new Intl.NumberFormat().format(data.total_net_profit) + ' ₩';
-                netProfitEl.style.color = data.total_net_profit >= 0 ? '#2563EB' : '#E63946';
+                if (netProfitEl) {
+                    const netP = data.total_net_profit || 0;
+                    netProfitEl.innerText = (netP >= 0 ? '+' : '') + new Intl.NumberFormat().format(netP) + ' ₩';
+                    netProfitEl.style.color = netP >= 0 ? '#2563EB' : '#E63946';
+                }
                 
-                document.getElementById('win-rate').innerText = data.win_rate.toFixed(1) + '%';
-                document.getElementById('win-loss-count').innerText = `${data.win_count} W / ${data.loss_count} L`;
+                safeUpdate('win-rate', (data.win_rate || 0).toFixed(1) + '%');
+                safeUpdate('win-loss-count', `${data.win_count || 0} W / ${data.loss_count || 0} L`);
                 
-                // Market Details
-                document.getElementById('target-coin').innerText = data.target_coin || 'WAITING';
-                document.getElementById('current-price').innerText = data.current_price ? new Intl.NumberFormat().format(data.current_price) + ' ₩' : 'API_CONNECT...';
-                document.getElementById('avg-buy-price').innerText = (data.avg_buy_price > 0) ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '0 ₩';
+                // Market Sync
+                safeUpdate('target-coin', coinUnit);
+                safeUpdate('current-price', data.current_price ? new Intl.NumberFormat().format(data.current_price) + ' ₩' : 'API_SYNC...');
+                safeUpdate('avg_buy_price', (data.avg_buy_price > 0) ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '0 ₩');
 
                 // RSI
-                document.getElementById('rsi-value').innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '0.00';
+                const rsiVal = document.getElementById('rsi-value');
+                if (rsiVal) rsiVal.innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '0.00';
+                
                 const rsiStatus = document.getElementById('rsi-status');
-                if (data.current_rsi <= data.config.rsi_threshold) {
-                    rsiStatus.innerText = "BUY_SIGNAL";
-                    rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-red-600 text-white inline-block border-2 border-black";
-                } else {
-                    rsiStatus.innerText = "NEUTRAL";
-                    rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-black text-white inline-block border-2 border-black";
+                if (rsiStatus && data.config) {
+                    if (data.current_rsi <= data.config.rsi_threshold) {
+                        rsiStatus.innerText = "BUY_SIGNAL";
+                        rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-red-600 text-white inline-block border-2 border-black";
+                    } else {
+                        rsiStatus.innerText = "NEUTRAL";
+                        rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-black text-white inline-block border-2 border-black";
+                    }
                 }
 
                 // Config Auto-Populate
-                if (!isConfigPopulated) {
+                if (!isConfigPopulated && data.config) {
                     document.getElementById('set-exchange').value = data.exchange;
                     document.getElementById('set-rsi').value = data.config.rsi_threshold;
                     document.getElementById('set-profit').value = data.config.target_profit_rate;
@@ -344,12 +370,17 @@
                 }
 
                 // Chart Sync
-                if (data.chart_data && data.chart_data.length > 0) {
+                if (data.chart_data && profitChart) {
                     profitChart.data.labels = data.chart_data.map(d => d.x);
                     profitChart.data.datasets[0].data = data.chart_data.map(d => d.y);
                     profitChart.update();
                 }
-            } catch (err) { console.error('Sync Error:', err); }
+            } catch (err) { 
+                console.error('SYNC_CRASH_PREVENTED:', err); 
+                // Restore button state on crash
+                const btn = document.getElementById('toggle-btn');
+                if (btn && btn.innerText === 'PROCESS...') btn.innerText = 'RETRY_SYNC';
+            }
         }
 
         async function saveSettings() {
