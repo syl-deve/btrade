@@ -1,0 +1,91 @@
+/* Dashboard 2025: Bento Grid & High-Contrast Logic */
+:root {
+    --bg-onyx: #000000;
+    --bg-card: #050505;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-glow: rgba(52, 152, 219, 0.2);
+    --accent-blue: #00A3FF;
+    --accent-green: #00FFA3;
+    --accent-red: #FF005C;
+    --accent-orange: #FF8A00;
+}
+
+body {
+    background-color: var(--bg-onyx);
+    color: #ffffff;
+    font-family: 'Inter', 'Orbitron', sans-serif;
+    letter-spacing: -0.02em;
+}
+
+/* Bento Grid System */
+.bento-container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(100px, auto);
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.bento-tile {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 2rem;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bento-tile::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle at top left, var(--border-glow), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.bento-tile:hover {
+    border-color: rgba(52, 152, 219, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.bento-tile:hover::before {
+    opacity: 0.3;
+}
+
+/* Specific Sizes */
+.tile-large { grid-column: span 8; grid-row: span 3; }
+.tile-medium { grid-column: span 4; grid-row: span 2; }
+.tile-small { grid-column: span 3; grid-row: span 1; }
+.tile-wide { grid-column: span 12; grid-row: span 2; }
+
+/* Typography & Visuals */
+.label-sub {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 0.75rem;
+}
+
+.value-main {
+    font-size: 2.25rem;
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.neon-glow {
+    text-shadow: 0 0 20px var(--border-glow);
+}
+
+/* Chart Customization */
+#profitChart {
+    filter: drop-shadow(0 0 10px rgba(52, 152, 219, 0.2));
+}
+
+@media (max-width: 1024px) {
+    .bento-tile { grid-column: span 12 !important; grid-row: auto !important; }
+}

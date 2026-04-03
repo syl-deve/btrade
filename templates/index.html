@@ -8,118 +8,124 @@
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .neon-text { text-shadow: 0 0 10px rgba(52, 152, 219, 0.8), 0 0 20px rgba(52, 152, 219, 0.4); }
-        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.12); }
-        .bot-on { background: rgba(46, 204, 113, 0.2); border-color: #2ecc71; }
-        .bot-off { background: rgba(231, 76, 60, 0.2); border-color: #e74c3c; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/css/bento.css">
 </head>
-<body class="p-6 md:p-12">
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <header class="flex justify-between items-center mb-12">
-            <h1 class="text-3xl font-bold neon-text text-blue-400">BITRADE CORE v1.0</h1>
-            <div class="flex items-center gap-4">
-                <button onclick="document.getElementById('config-modal').showModal()" class="text-[10px] text-gray-500 hover:text-blue-400 transition-colors tracking-widest uppercase mr-2 border border-blue-500/10 px-3 py-1 rounded-full">⚡ SYSTEM_CONFIG</button>
-                <a href="/logout" class="text-[10px] text-gray-500 hover:text-white transition-colors tracking-widest uppercase mr-2 border border-white/10 px-3 py-1 rounded-full">SIGN_OUT</a>
-                <span id="exchange-badge" class="badge badge-outline gap-2 px-4 py-3 font-bold border-2 border-blue-500/30 text-blue-400">UPBIT</span>
-                <span id="auth-warning-badge" class="badge badge-error gap-2 px-4 py-3 font-bold border-2 hidden">KEYS_REQUIRED</span>
-                <span id="bot-status-badge" class="badge badge-error gap-2 px-4 py-3 font-bold border-2">OFFLINE</span>
-                <button id="toggle-btn" class="btn btn-outline btn-info px-8 font-bold border-2 transition-all hover:scale-105">START SYSTEM</button>
+<body class="p-4 md:p-8">
+    <div class="bento-container max-w-7xl mx-auto">
+        <!-- Header & Top Controls (Wide Tile) -->
+        <header class="bento-tile tile-wide flex flex-col md:flex-row justify-between items-center bg-gradient-to-r from-black via-zinc-950 to-black">
+            <div>
+                <h1 class="text-4xl font-extrabold neon-glow text-white orbitron tracking-tighter">BITRADE <span class="text-blue-500">CORE</span></h1>
+                <p class="text-[9px] text-gray-500 font-mono mt-1 opacity-60">PROPRIETARY_SCALPING_ALGORITHM v1.0.5</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
+                <div class="flex bg-black/40 p-1 rounded-2xl border border-white/5">
+                    <span id="exchange-badge" class="px-4 py-2 text-[10px] font-bold text-blue-400 orbitron">UPBIT</span>
+                    <span id="bot-status-badge" class="px-4 py-2 text-[10px] font-bold text-error orbitron border-l border-white/5 uppercase">OFFLINE</span>
+                </div>
+                <button id="toggle-btn" class="btn btn-sm btn-info rounded-xl font-bold px-6 border-0 shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all">START SYSTEM</button>
+                <div class="flex gap-2">
+                    <button onclick="document.getElementById('config-modal').showModal()" class="btn btn-sm btn-ghost btn-square rounded-xl border border-white/10">⚙️</button>
+                    <a href="/logout" class="btn btn-sm btn-ghost btn-square rounded-xl border border-white/10">🚪</a>
+                </div>
             </div>
         </header>
 
-        <!-- Main Stats Grid -->
-        <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
-            <div class="glass-card rounded-2xl p-6 transition-all hover:border-blue-500/50">
-                <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">KRW BALANCE</p>
-                <div id="krw-balance" class="text-2xl font-bold text-white">0</div>
-                <p class="text-[10px] text-gray-400 mt-2">Available for Trading</p>
-            </div>
-
-            <div class="glass-card rounded-2xl p-6 transition-all hover:border-orange-500/50">
-                <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">POSITION AMOUNT</p>
-                <div id="coin-balance" class="text-2xl font-bold text-orange-400">0</div>
-                <p class="text-[10px] text-gray-400 mt-2">Total Owned BTC</p>
-            </div>
-            
-            <div class="glass-card rounded-2xl p-6 transition-all hover:border-yellow-500/50 border-yellow-500/20">
-                <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">AVG BUY PRICE</p>
-                <div id="avg-buy-price" class="text-2xl font-bold text-yellow-400">0</div>
-                <p id="profit-rate" class="text-[10px] text-gray-400 mt-2">No Position</p>
-            </div>
-
-            <div class="glass-card rounded-2xl p-6 transition-all hover:border-gray-500/50">
-                <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">CURRENT PRICE</p>
-                <div id="current-price" class="text-2xl font-bold text-blue-400">0</div>
-                <p id="price-data-label" class="text-[10px] text-gray-400 mt-2">Real-time Data</p>
-            </div>
-
-            <div class="glass-card rounded-2xl p-6 border-indigo-500/30">
-                <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">CURRENT RSI</p>
-                <div class="flex items-baseline gap-2">
-                    <div id="current-rsi" class="text-2xl font-bold text-purple-400">0</div>
-                    <div class="text-[10px] text-gray-500">/ <span id="target-rsi" class="font-bold">30</span></div>
+        <!-- Main Analytics: Chart (Large Tile) -->
+        <section class="bento-tile tile-large h-[550px] flex flex-col">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="label-sub m-0">Profit Performance</h2>
+                    <div id="total-net-profit" class="text-5xl font-bold text-green-400 orbitron tracking-tighter">0 ₩</div>
                 </div>
-                <p id="rsi-status" class="text-[10px] text-gray-400 mt-2">Initializing...</p>
-            </div>
-        </main>
-
-        <!-- Stats Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            <div class="glass-card rounded-2xl p-6 border-green-500/20">
-                <p class="text-xs text-gray-500 uppercase font-bold mb-2">TOTAL NET PROFIT</p>
-                <div class="flex items-end gap-2">
-                    <span id="total-net-profit" class="text-3xl font-black text-green-400">0 ₩</span>
-                    <span class="text-xs text-gray-400 pb-1">Cum. Return</span>
+                <div class="text-right">
+                    <p class="label-sub m-0">Win Rate</p>
+                    <p id="win-rate" class="text-2xl font-bold text-blue-400">0%</p>
+                    <p id="win-loss-count" class="text-gray-600 text-[9px] font-mono">0W / 0L</p>
                 </div>
             </div>
-            <div class="glass-card rounded-2xl p-6 border-blue-500/20">
-                <p class="text-xs text-gray-500 uppercase font-bold mb-2">WIN RATE</p>
-                <div class="flex items-end gap-3">
-                    <span id="win-rate" class="text-3xl font-black text-blue-400">0%</span>
-                    <span id="win-loss-count" class="text-xs text-gray-400 pb-1">0 Wins / 0 Losses</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Profit Trend Chart Section -->
-        <section class="glass-card rounded-3xl p-8 mb-12 border-blue-500/10">
-            <h2 class="text-xl font-bold text-white border-l-4 border-blue-500 pl-4 mb-6 uppercase tracking-wider">CUMULATIVE PROFIT TREND</h2>
-            <div class="w-full" style="height: 300px;">
+            <div class="flex-grow w-full relative">
                 <canvas id="profitChart"></canvas>
             </div>
         </section>
 
-        <!-- Trade History Section -->
-        <section class="glass-card rounded-3xl overflow-hidden p-8 backdrop-blur-md">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-xl font-bold text-white border-l-4 border-blue-500 pl-4">SCALPING PROTOCOLS</h2>
-                <div id="last-update" class="text-xs text-gray-500">LAST REFRESH: 00:00:00</div>
+        <!-- Right Side: Real-time Indicator (Medium Tile) -->
+        <section class="bento-tile tile-medium flex flex-col justify-between">
+            <div>
+                <h2 class="label-sub">Market_Value</h2>
+                <div id="current-price" class="value-main text-blue-500 mb-2">0</div>
+                <p id="price-data-label" class="text-[10px] text-gray-500 font-mono italic">Real-time Data Stream</p>
             </div>
-            
-            <div class="overflow-x-auto">
-                <table class="table table-zebra table-sm">
-                    <thead>
-                        <tr class="text-gray-500 border-b border-white/5">
-                            <th class="py-4">STATUS</th>
-                            <th>TIMESTAMP</th>
-                            <th>PRICE (KRW)</th>
-                            <th>VOLUME</th>
-                            <th>TOTAL (KRW)</th>
-                            <th class="text-right">PROFIT / LOSS (₩)</th>
+
+            <div class="mt-8 border-t border-white/5 pt-8">
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <h2 class="label-sub m-0">RSI Indicator</h2>
+                        <div id="current-rsi" class="text-3xl font-bold text-purple-400">0.00</div>
+                    </div>
+                    <div class="text-right">
+                        <p class="label-sub m-0 tracking-widest uppercase">Target: <span id="target-rsi" class="text-white">30</span></p>
+                        <p id="rsi-status" class="text-[9px] text-gray-500 font-bold uppercase mt-1">Initializing...</p>
+                    </div>
+                </div>
+                <!-- Mini RSI Track -->
+                <div class="w-full bg-white/5 h-[2px] rounded-full overflow-hidden">
+                    <div id="rsi-progress" class="bg-purple-500 h-full transition-all duration-700" style="width: 0%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Financial Overview (Small Tiles) -->
+        <div class="bento-tile tile-small flex flex-col justify-center">
+            <h2 class="label-sub text-emerald-500">Asset_Available</h2>
+            <div id="krw-balance" class="text-2xl font-bold font-mono">0</div>
+            <p class="text-[8px] text-zinc-600 mt-2 uppercase font-bold tracking-widest">Trading_Power_Index</p>
+        </div>
+
+        <div class="bento-tile tile-small flex flex-col justify-center">
+            <h2 class="label-sub text-orange-400">Asset_Position</h2>
+            <div id="coin-balance" class="text-2xl font-bold font-mono text-orange-400">0</div>
+            <p class="text-[8px] text-zinc-600 mt-2 uppercase font-bold tracking-widest">BTC_Inventory_Units</p>
+        </div>
+
+        <div class="bento-tile tile-small flex flex-col justify-center">
+            <h2 class="label-sub text-yellow-500">Entry_Logic</h2>
+            <div id="avg-buy-price" class="text-2xl font-bold font-mono text-white">0</div>
+            <div id="profit-rate" class="text-[9px] mt-2 font-bold uppercase tracking-tighter">No_Active_Trade</div>
+        </div>
+
+        <!-- System Logs / History (Wide Tile) -->
+        <section class="bento-tile tile-wide p-0 overflow-hidden">
+            <div class="px-8 py-6 border-b border-white/5 flex justify-between items-center bg-white/5 backdrop-blur-sm">
+                <h2 class="label-sub m-0 neon-glow">Scalping_Terminal_Logs</h2>
+                <div id="last-update" class="text-[9px] text-zinc-600 font-mono tracking-widest uppercase italic">Establishing_Secure_Link...</div>
+            </div>
+            <div class="overflow-x-auto min-h-[300px]">
+                <table class="table table-sm w-full">
+                    <thead class="bg-black/40">
+                        <tr class="text-zinc-600 border-b border-white/10 text-[9px] uppercase tracking-widest">
+                            <th class="py-4 px-8 border-r border-white/5">ACT</th>
+                            <th>Time_Log</th>
+                            <th>Market_Price</th>
+                            <th>Volume</th>
+                            <th>Total_Value</th>
+                            <th class="text-right px-8">Net_Result</th>
                         </tr>
                     </thead>
-                    <tbody id="trade-history-body" class="text-gray-200">
-                        <!-- History injected here -->
+                    <tbody id="trade-history-body" class="font-mono text-[10px] text-zinc-500">
+                        <!-- Dynamic Logs -->
                     </tbody>
                 </table>
             </div>
         </section>
-        
-        <footer class="mt-12 text-center text-[10px] text-gray-600 tracking-tighter opacity-50">
-            <span id="footer-strategy">STRATEGY: RSI_SCALPER // ENCRYPTED_CONNECTION_ACTIVE</span>
+
+        <footer class="tile-wide mt-4 text-center py-8">
+            <span id="footer-strategy" class="text-[9px] text-zinc-700 tracking-[0.3em] font-mono opacity-40 uppercase">
+                System_Core: Digital_Asset_Exchange_Interface // Encrypted_Data_Stream_Active
+            </span>
         </footer>
     </div>
 
@@ -178,38 +184,50 @@
         let profitChart;
         function initChart() {
             const ctx = document.getElementById('profitChart').getContext('2d');
-            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(52, 152, 219, 0.4)');
-            gradient.addColorStop(1, 'rgba(52, 152, 219, 0.0)');
-
+            
             profitChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Cumulative Profit (KRW)',
+                        label: 'Gross Profit',
                         data: [],
-                        borderColor: '#3498db',
-                        backgroundColor: gradient,
+                        borderColor: '#00A3FF',
+                        backgroundColor: 'rgba(0, 163, 255, 0.05)',
                         fill: true,
-                        tension: 0.4,
-                        borderWidth: 3,
-                        pointRadius: 2,
-                        pointBackgroundColor: '#3498db'
+                        tension: 0.5,
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHitRadius: 10,
+                        borderCapStyle: 'round'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#000',
+                            titleFont: { family: 'Orbitron', size: 10 },
+                            bodyFont: { family: 'Roboto Mono', size: 10 },
+                            padding: 12,
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1
+                        }
+                    },
                     scales: {
                         y: { 
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: '#718096', font: { size: 10 } }
+                            grid: { color: 'rgba(255, 255, 255, 0.03)', drawBorder: false },
+                            ticks: { 
+                                color: 'rgba(255, 255, 255, 0.3)', 
+                                font: { family: 'Roboto Mono', size: 9 },
+                                callback: value => value.toLocaleString() + ' ₩'
+                            }
                         },
                         x: { 
                             grid: { display: false },
-                            ticks: { color: '#718096', font: { size: 8 } }
+                            ticks: { display: false }
                         }
                     }
                 }
@@ -255,19 +273,25 @@
                 document.getElementById('coin-balance').innerText = data.coin_balance ? data.coin_balance.toFixed(8) : '0.00000000';
                 document.getElementById('avg-buy-price').innerText = data.avg_buy_price > 0 ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '---';
                 document.getElementById('current-price').innerText = new Intl.NumberFormat().format(data.current_price) + ' ₩';
-                document.getElementById('current-rsi').innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '---';
+                document.getElementById('current-rsi').innerText = data.current_rsi ? data.current_rsi.toFixed(2) : '0.00';
                 document.getElementById('target-rsi').innerText = data.config.rsi_threshold;
                 document.getElementById('exchange-badge').innerText = data.exchange;
-                document.getElementById('price-data-label').innerText = "Real-time " + data.exchange + " Data";
+                document.getElementById('price-data-label').innerText = "REAL-TIME " + data.exchange + " STREAM";
                 
-                // RSI Status message
+                // RSI Status & Progress
                 const rsiStatus = document.getElementById('rsi-status');
+                const rsiProgress = document.getElementById('rsi-progress');
                 if (data.current_rsi) {
-                    rsiStatus.innerText = data.current_rsi <= data.config.rsi_threshold ? "BUY SIGNAL ACTIVE" : "Analyzing Trend...";
-                    rsiStatus.className = `text-[10px] mt-2 ${data.current_rsi <= data.config.rsi_threshold ? "text-green-400 font-bold" : "text-gray-400"}`;
+                    const isSignal = data.current_rsi <= data.config.rsi_threshold;
+                    rsiStatus.innerText = isSignal ? "BUY_SIGNAL_ACTIVE" : "ANALYZING_TREND...";
+                    rsiStatus.className = `text-[9px] font-bold uppercase mt-1 ${isSignal ? "text-green-400" : "text-zinc-600"}`;
+                    
+                    // Update Progress Bar
+                    rsiProgress.style.width = `${data.current_rsi}%`;
+                    rsiProgress.style.backgroundColor = isSignal ? '#00FFA3' : '#7000FF';
                 } else {
-                    rsiStatus.innerText = "Initializing Chart Data...";
-                    rsiStatus.className = "text-[10px] text-gray-400 mt-2";
+                    rsiStatus.innerText = "INITIALIZING_STREAM...";
+                    rsiProgress.style.width = '0%';
                 }
 
                 // Auth Warning Check
@@ -293,7 +317,7 @@
                 // Detailed Stats Update
                 const netProfitEl = document.getElementById('total-net-profit');
                 netProfitEl.innerText = (data.total_net_profit >= 0 ? '+' : '') + new Intl.NumberFormat().format(data.total_net_profit) + ' ₩';
-                netProfitEl.className = `text-3xl font-black ${data.total_net_profit >= 0 ? "text-green-400" : "text-red-400"}`;
+                netProfitEl.className = `text-5xl font-bold orbitron tracking-tighter ${data.total_net_profit >= 0 ? "text-green-400" : "text-red-500"}`;
                 
                 document.getElementById('win-rate').innerText = data.win_rate.toFixed(1) + '%';
                 document.getElementById('win-loss-count').innerText = `${data.win_count} Wins / ${data.loss_count} Losses`;
@@ -308,10 +332,11 @@
                 // Profit Rate display
                 const profitEl = document.getElementById('profit-rate');
                 if (data.avg_buy_price > 0) {
-                    const colorClass = data.profit_rate >= 0 ? "text-green-400" : "text-red-400";
-                    profitEl.innerHTML = `ROI: <span class="${colorClass} font-bold">${data.profit_rate.toFixed(2)}%</span> (Target: +1%)`;
+                    const colorClass = data.profit_rate >= 0 ? "text-green-400" : "text-red-500";
+                    profitEl.innerHTML = `<span class="${colorClass}">ROI: ${data.profit_rate.toFixed(2)}%</span>`;
                 } else {
-                    profitEl.innerText = "No Open Position";
+                    profitEl.innerText = "NO_ACTIVE_TRADE";
+                    profitEl.className = "text-[9px] mt-2 text-zinc-700 font-bold uppercase";
                 }
 
                 // Update Bot Status Toggle
@@ -334,24 +359,24 @@
                 const tbody = document.getElementById('trade-history-body');
                 tbody.innerHTML = '';
                 data.history.forEach(trade => {
-                    let profitHtml = '<td class="text-right text-gray-500">---</td>';
+                    let profitHtml = '<td class="text-right px-8 text-zinc-800">---</td>';
                     
                     if (trade.side === 'SELL' && trade.net_profit !== null && trade.net_profit !== undefined) {
                         const profitFormatted = new Intl.NumberFormat().format(Math.floor(trade.net_profit)) + ' ₩';
                         if (trade.net_profit > 0) {
-                            profitHtml = `<td class="text-right text-green-400 font-bold">+${profitFormatted}</td>`;
+                            profitHtml = `<td class="text-right px-8 text-green-400 font-bold">+${profitFormatted}</td>`;
                         } else {
-                            profitHtml = `<td class="text-right text-red-500 font-bold">${profitFormatted}</td>`;
+                            profitHtml = `<td class="text-right px-8 text-red-500 font-bold">${profitFormatted}</td>`;
                         }
                     }
 
                     const row = `
-                        <tr class="hover:bg-white/5 border-b border-white/5">
-                            <td class="py-4">
-                                <span class="badge ${trade.side === 'BUY' ? 'badge-success' : 'badge-error'} badge-sm font-bold">${trade.side}</span>
+                        <tr class="hover:bg-white/5 border-b border-white/5 transition-colors">
+                            <td class="py-4 px-8 border-r border-white/5">
+                                <span class="px-2 py-1 rounded text-[9px] font-bold ${trade.side === 'BUY' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}">${trade.side}</span>
                             </td>
-                            <td class="text-gray-400 font-mono">${trade.timestamp}</td>
-                            <td>${new Intl.NumberFormat().format(trade.price)}</td>
+                            <td class="text-zinc-500 font-mono">${trade.timestamp}</td>
+                            <td class="text-white font-bold">${new Intl.NumberFormat().format(trade.price)}</td>
                             <td>${trade.volume.toFixed(8)}</td>
                             <td>${new Intl.NumberFormat().format(trade.total_amount)}</td>
                             ${profitHtml}
