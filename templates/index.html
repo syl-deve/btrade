@@ -121,16 +121,16 @@
 
             <!-- RSI Stat -->
             <div class="bau-tile tile-stats-bau tile-yellow-accent">
-                <div class="label-bau"><div class="bau-shape bau-triangle"></div>RSI_STRENGTH</div>
+                <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_rsi">RSI_STRENGTH</span></div>
                 <div id="rsi-value" class="text-5xl font-black">0.00</div>
                 <div id="rsi-status" class="mt-4 text-[10px] font-black p-2 bg-black text-white inline-block">NEUTRAL</div>
             </div>
 
             <!-- Latency Stat -->
             <div class="bau-tile tile-stats-bau tile-red-accent">
-                <div class="label-bau"><div class="bau-shape bau-circle"></div>API_LATENCY</div>
+                <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_latency">API_LATENCY</span></div>
                 <div class="text-4xl font-black">12<span class="text-lg uppercase">ms</span></div>
-                <p class="text-[10px] font-bold mt-2 text-zinc-700 font-black uppercase">Node_Stability</p>
+                <p data-i18n="label_stability" class="text-[10px] font-bold mt-2 text-zinc-700 font-black uppercase">Node_Stability</p>
             </div>
 
             <!-- Configuration -->
@@ -262,6 +262,10 @@
                 btn_start: 'START_SYSTEM', btn_stop: 'STOP_SYSTEM',
                 rsi_buy: 'BUY_SIGNAL', rsi_neutral: 'NEUTRAL',
                 no_trade: 'NO_TRADE_HISTORY',
+                label_rsi: 'RSI_STRENGTH',
+                label_latency: 'API_LATENCY',
+                label_stability: 'NODE_STABILITY',
+                side_buy: 'BUY', side_sell: 'SELL',
             },
             ko: {
                 label_krw:    '사용 가능 잔고 (원화)',
@@ -296,6 +300,10 @@
                 btn_start: '시작', btn_stop: '정지',
                 rsi_buy: '매수신호', rsi_neutral: '관망',
                 no_trade: '거래 내역 없음',
+                label_rsi: 'RSI 강도',
+                label_latency: 'API 응답속도',
+                label_stability: '노드 안정성',
+                side_buy: '매수', side_sell: '매도',
             }
         };
 
@@ -511,7 +519,7 @@
                         return `<tr class="border-b-2 border-black/10 hover:bg-zinc-50 transition-colors">
                             <td class="py-3 px-2 font-mono text-xs text-zinc-700 font-bold">${h.timestamp}</td>
                             <td class="py-3 px-2">
-                                <span style="background:${isBuy ? '#FACC15' : '#E63946'};color:${isBuy ? '#000' : '#fff'}" class="text-[10px] font-black px-2 py-1 border-2 border-black inline-block">${h.side}</span>
+                                <span style="background:${isBuy ? '#FACC15' : '#E63946'};color:${isBuy ? '#000' : '#fff'}" class="text-[10px] font-black px-2 py-1 border-2 border-black inline-block">${isBuy ? i18n[currentLang].side_buy : i18n[currentLang].side_sell}</span>
                             </td>
                             <td class="py-3 px-2 text-right font-bold">${h.price.toLocaleString()} ₩</td>
                             <td class="py-3 px-2 text-right font-bold">${parseFloat(h.volume).toFixed(6)}</td>
