@@ -5,31 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BITRADE Core Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700;800&family=Archivo+Black&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/static/css/bento.css">
 </head>
 <body class="p-4 md:p-8">
     <div class="bento-container max-w-7xl mx-auto">
         <!-- Header & Top Controls (Wide Tile) -->
-        <header class="bento-tile tile-wide flex flex-col md:flex-row justify-between items-center bg-gradient-to-r from-black via-zinc-950 to-black">
+        <header class="bento-tile tile-wide flex flex-col md:flex-row justify-between items-center border-b-4 border-yellow-500">
             <div>
-                <h1 class="text-4xl font-extrabold neon-glow text-white orbitron tracking-tighter">BITRADE <span class="text-blue-500">CORE</span></h1>
-                <p class="text-[9px] text-gray-500 font-mono mt-1 opacity-60">PROPRIETARY_SCALPING_ALGORITHM v1.0.5</p>
+                <h1 class="text-5xl font-black text-white archivo tracking-tighter">BITRADE <span class="text-red-600">CORE</span></h1>
+                <p class="text-[10px] text-zinc-500 font-bold mt-1 opacity-80 tracking-widest">FORM FOLLOWS FUNCTION // TRADING_TERMINAL v1.0.5</p>
             </div>
             
-            <div class="flex flex-wrap items-center gap-3 mt-4 md:mt-0">
-                <div class="flex bg-black/40 p-1 rounded-2xl border border-white/5">
-                    <span id="exchange-badge" class="px-4 py-2 text-[10px] font-bold text-blue-400 orbitron">UPBIT</span>
-                    <span id="bot-status-badge" class="px-4 py-2 text-[10px] font-bold text-error orbitron border-l border-white/5 uppercase">OFFLINE</span>
+            <div class="flex flex-wrap items-center gap-4 mt-6 md:mt-0">
+                <div class="flex bg-zinc-900 p-1 border border-zinc-800">
+                    <span id="exchange-badge" class="px-5 py-2 text-[11px] font-black text-white bg-blue-900 orbitron">UPBIT</span>
+                    <span id="bot-status-badge" class="px-5 py-2 text-[11px] font-black text-error orbitron border-l border-zinc-800 uppercase">OFFLINE</span>
                 </div>
-                <button id="toggle-btn" class="btn btn-sm btn-info rounded-xl font-bold px-6 border-0 shadow-lg shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all">START SYSTEM</button>
+                <button id="toggle-btn" class="btn btn-info">START SYSTEM</button>
                 <div class="flex gap-2">
-                    <button onclick="document.getElementById('config-modal').showModal()" class="btn btn-sm btn-ghost btn-square rounded-xl border border-white/10">⚙️</button>
-                    <a href="/logout" class="btn btn-sm btn-ghost btn-square rounded-xl border border-white/10">🚪</a>
+                    <button onclick="document.getElementById('config-modal').showModal()" class="btn btn-square bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700">⚙️</button>
+                    <a href="/logout" class="btn btn-square bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700">🚪</a>
                 </div>
             </div>
         </header>
@@ -192,14 +189,13 @@
                     datasets: [{
                         label: 'Gross Profit',
                         data: [],
-                        borderColor: '#00A3FF',
-                        backgroundColor: 'rgba(0, 163, 255, 0.05)',
+                        borderColor: '#D62828', // Bauhaus Red
+                        backgroundColor: 'rgba(214, 40, 40, 0.05)',
                         fill: true,
-                        tension: 0.5,
-                        borderWidth: 2,
+                        tension: 0, // Straight lines for Bauhaus
+                        borderWidth: 3,
                         pointRadius: 0,
-                        pointHitRadius: 10,
-                        borderCapStyle: 'round'
+                        pointHitRadius: 10
                     }]
                 },
                 options: {
@@ -218,10 +214,10 @@
                     },
                     scales: {
                         y: { 
-                            grid: { color: 'rgba(255, 255, 255, 0.03)', drawBorder: false },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: true },
                             ticks: { 
-                                color: 'rgba(255, 255, 255, 0.3)', 
-                                font: { family: 'Roboto Mono', size: 9 },
+                                color: 'rgba(255, 255, 255, 0.5)', 
+                                font: { family: 'Space Grotesk', size: 10, weight: 'bold' },
                                 callback: value => value.toLocaleString() + ' ₩'
                             }
                         },
@@ -283,8 +279,8 @@
                 const rsiProgress = document.getElementById('rsi-progress');
                 if (data.current_rsi) {
                     const isSignal = data.current_rsi <= data.config.rsi_threshold;
-                    rsiStatus.innerText = isSignal ? "BUY_SIGNAL_ACTIVE" : "ANALYZING_TREND...";
-                    rsiStatus.className = `text-[9px] font-bold uppercase mt-1 ${isSignal ? "text-green-400" : "text-zinc-600"}`;
+                    rsiStatus.innerText = isSignal ? "BUY_SIGNAL_ACTIVE" : "ANALYZING_TREND";
+                    rsiStatus.className = `text-[10px] font-black uppercase mt-2 ${isSignal ? "text-error" : "text-zinc-600"} p-1 ${isSignal ? "bg-red-600/10" : ""}`;
                     
                     // Update Progress Bar
                     rsiProgress.style.width = `${data.current_rsi}%`;
@@ -312,7 +308,7 @@
                 // Detailed Stats Update
                 const netProfitEl = document.getElementById('total-net-profit');
                 netProfitEl.innerText = (data.total_net_profit >= 0 ? '+' : '') + new Intl.NumberFormat().format(data.total_net_profit) + ' ₩';
-                netProfitEl.className = `text-5xl font-bold orbitron tracking-tighter ${data.total_net_profit >= 0 ? "text-green-400" : "text-red-500"}`;
+                netProfitEl.className = `text-5xl font-black orbitron tracking-tighter ${data.total_net_profit >= 0 ? "text-success" : "text-error"}`;
                 
                 document.getElementById('win-rate').innerText = data.win_rate.toFixed(1) + '%';
                 document.getElementById('win-loss-count').innerText = `${data.win_count} Wins / ${data.loss_count} Losses`;

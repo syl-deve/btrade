@@ -1,61 +1,59 @@
-/* Dashboard 2025: Bento Grid & High-Contrast Logic (Refined) */
+/* Dashboard 2025: Bauhaus Modernism - Geometry & Function */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700;800&family=Archivo+Black&display=swap');
+
 :root {
-    --bg-onyx: #0C0C0E;  /* 미세하게 밝게 보정하여 가독성 향상 */
-    --bg-card: #121214;  /* 카드 배경색 보정 */
-    --border-subtle: rgba(255, 255, 255, 0.12); /* 테두리 대비 상향 */
-    --border-glow: rgba(0, 163, 255, 0.25);
-    --accent-blue: #00A3FF;
-    --accent-green: #00FFA3;
-    --accent-red: #FF3B30;
-    --accent-orange: #FF9F0A;
+    --bh-red: #D62828;      /* Bauhaus Red */
+    --bh-yellow: #FCBF49;   /* Bauhaus Yellow */
+    --bh-blue: #00304E;     /* Bauhaus Primary Blue */
+    --bh-white: #F8F9FA;
+    --bh-black: #121214;    /* Matte Charcoal Black */
+    --bh-accent: #EAE2B7;
+    
+    --bg-main: var(--bh-black);
+    --border-thick: 2px solid #2A2A2E;
+    --grid-line: #1E1E20;
 }
 
 body {
-    background-color: var(--bg-onyx);
-    color: #f5f5f7;
-    font-family: 'Inter', 'Orbitron', sans-serif;
-    letter-spacing: -0.015em;
+    background-color: var(--bg-main);
+    color: var(--bh-white);
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
 }
 
-/* Bento Grid System */
+/* Bauhaus Grid Layout */
 .bento-container {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    grid-auto-rows: minmax(110px, auto);
-    gap: 1.25rem;
-    padding: 2.5rem;
+    grid-auto-rows: minmax(120px, auto);
+    gap: 1.5rem;
+    padding: 3rem;
 }
 
 .bento-tile {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 1.5rem;
-    padding: 1.75rem;
+    background: #18181A;
+    border: var(--border-thick);
+    border-radius: 0; /* Bauhaus must be sharp */
+    padding: 1.5rem;
     position: relative;
     overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bento-tile:hover {
-    border-color: rgba(0, 163, 255, 0.4);
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    border-color: var(--bh-red);
+    box-shadow: 6px 6px 0px var(--bh-red); /* Bauhaus Offset Shadow */
+    transform: translate(-4px, -4px);
 }
 
-/* Button & Interactive Feedback */
-.btn:active {
-    transform: scale(0.96);
-    filter: brightness(0.9);
+/* Typography & Titles */
+h1, .orbitron {
+    font-family: 'Archivo Black', sans-serif !important;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
 }
 
-/* Specific Sizes */
-.tile-large { grid-column: span 8; grid-row: span 3; }
-.tile-medium { grid-column: span 4; grid-row: span 2; }
-.tile-small { grid-column: span 3; grid-row: span 1; }
-.tile-wide { grid-column: span 12; grid-row: span 2; }
-
-/* Typography & Visuals */
 .label-sub {
     font-size: 0.65rem;
     font-weight: 800;
@@ -63,22 +61,63 @@ body {
     letter-spacing: 0.15em;
     color: rgba(255, 255, 255, 0.4);
     margin-bottom: 0.75rem;
+    border-left: 3px solid var(--bh-yellow);
+    padding-left: 0.5rem;
 }
 
 .value-main {
-    font-size: 2.25rem;
-    font-weight: 700;
-    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    font-family: 'Space Grotesk', sans-serif;
 }
 
-.neon-glow {
-    text-shadow: 0 0 20px var(--border-glow);
+/* Custom Accents */
+.text-error { color: var(--bh-red) !important; }
+.text-success { color: var(--bh-yellow) !important; } /* Bauhaus uses Yellow/Accent for success/warning */
+.neon-glow { text-shadow: none; }
+
+/* Buttons: Bauhaus Block Style */
+.btn {
+    border-radius: 0 !important;
+    border: 2px solid currentColor !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1.5rem;
 }
 
-/* Chart Customization */
-#profitChart {
-    filter: drop-shadow(0 0 10px rgba(52, 152, 219, 0.2));
+.btn-info {
+    background: var(--bh-yellow) !important;
+    color: var(--bh-black) !important;
+    border-color: var(--bh-black) !important;
+    box-shadow: 4px 4px 0px #000;
 }
+
+.btn-error {
+    background: var(--bh-red) !important;
+    color: var(--bh-white) !important;
+    border-color: var(--bh-white) !important;
+    box-shadow: 4px 4px 0px var(--bh-black);
+}
+
+.btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px transparent;
+}
+
+/* Modal Styling */
+.modal-box {
+    border-radius: 0;
+    border: 4px solid var(--bh-black);
+    background: var(--bh-white);
+    color: var(--bh-black);
+}
+
+/* Specific Sizes Mapping */
+.tile-large { grid-column: span 8; grid-row: span 3; }
+.tile-medium { grid-column: span 4; grid-row: span 2; }
+.tile-small { grid-column: span 3; grid-row: span 1; }
+.tile-wide { grid-column: span 12; grid-row: span 2; }
 
 @media (max-width: 1024px) {
     .bento-tile { grid-column: span 12 !important; grid-row: auto !important; }
