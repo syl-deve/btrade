@@ -124,6 +124,43 @@ h1, .archivo-bold {
 .btn-bau-red { background: var(--bau-red); color: white; }
 .btn-bau-yellow { background: var(--bau-yellow); color: black; }
 
+/* Bauhaus Input System */
+.bau-label {
+    font-size: 0.7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--bau-black);
+}
+
+.bau-input, .bau-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: var(--border-main);
+    box-shadow: 4px 4px 0px #000;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    background: white;
+    outline: none;
+    transition: all 0.1s;
+}
+
+.bau-input:focus, .bau-select:focus {
+    box-shadow: 6px 6px 0px var(--bau-red);
+    transform: translate(-2px, -2px);
+}
+
+.bau-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='4' stroke-linecap='square' stroke-linejoin='miter'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+}
+
 /* Modal Customization */
 .modal-bau {
     background: var(--bau-white);

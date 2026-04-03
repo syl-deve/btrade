@@ -25,11 +25,11 @@
             <nav class="flex items-center gap-10 mt-6 md:mt-0 font-bold uppercase text-sm tracking-widest">
                 <div id="exchange-badge" class="flex items-center gap-2">
                     <div class="bau-shape bau-square w-3 h-3"></div>
-                    <span>UPBIT_NODE</span>
+                    <span id="exchange-text">UPBIT_NODE</span>
                 </div>
                 <div id="bot-status-badge" class="flex items-center gap-2 text-red-600">
                     <div class="bau-shape bau-circle w-3 h-3"></div>
-                    <span>SYSTEM_OFFLINE</span>
+                    <span id="status-text">SYSTEM_OFFLINE</span>
                 </div>
                 <button id="toggle-btn" class="btn-bau btn-bau-red text-xs py-3 border-4 border-black">START_SYSTEM</button>
             </nav>
@@ -84,7 +84,7 @@
             <div class="bau-tile tile-stats-bau tile-yellow-accent">
                 <div class="label-bau"><div class="bau-shape bau-triangle"></div>RSI_STRENGTH</div>
                 <div id="rsi-value" class="text-5xl font-black">0.00</div>
-                <div id="rsi-status" class="mt-4 text-[10px] font-black p-2 bg-black text-white inline-block">NEUTRAL</div>
+                <div id="rsi-status" class="mt-4 text-[10px] font-black p-2 bg-black text-white inline-block border-2 border-black">NEUTRAL</div>
             </div>
 
             <div class="bau-tile tile-stats-bau tile-red-accent">
@@ -105,16 +105,50 @@
         </main>
     </div>
 
-    <!-- Modal (Bauhaus Style) -->
+    <!-- Modal (Bauhaus Style Restoration) -->
     <dialog id="config-modal" class="modal modal-bottom sm:modal-middle">
         <div class="modal-box modal-bau max-w-2xl p-10 bg-white">
-            <h3 class="text-4xl font-black archivo-bold mb-8">SYSTEM_CONFIG</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <p class="text-sm font-bold opacity-60">Configuration parameters are managed via .env or System Node.</p>
-            </div>
+            <h3 class="text-4xl font-black archivo-bold mb-8 tracking-tighter">SYSTEM_SETTINGS</h3>
+            
+            <form id="settings-form" class="space-y-6">
+                <!-- Select Exchange -->
+                <div>
+                    <label class="bau-label">Target Exchange</label>
+                    <select id="set-exchange" class="bau-select">
+                        <option value="UPBIT">UPBIT_KOREA</option>
+                        <option value="BITHUMB">BITHUMB_V1</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="bau-label">RSI Buy Threshold</label>
+                        <input type="number" id="set-rsi" step="0.5" class="bau-input" placeholder="30.0">
+                    </div>
+                    <div>
+                        <label class="bau-label">Target Profit (%)</label>
+                        <input type="number" id="set-profit" step="0.1" class="bau-input" placeholder="1.0">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="bau-label">Stop-Loss (%)</label>
+                        <input type="number" id="set-stoploss" step="0.1" class="bau-input" placeholder="-2.0">
+                    </div>
+                    <div>
+                        <label class="bau-label">Trailing Offset</label>
+                        <input type="number" id="set-offset" step="0.05" class="bau-input" placeholder="0.2">
+                    </div>
+                </div>
+            </form>
+
             <div class="modal-action mt-10">
                 <form method="dialog">
-                    <button class="btn-bau btn-bau-yellow">CLOSE_SETTINGS</button>
+                    <div class="flex gap-4">
+                        <button class="btn-bau">CLOSE</button>
+                        <button onclick="saveSettings()" class="btn-bau btn-bau-yellow">APPLY_SETTINGS</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -122,10 +156,10 @@
 
     <script>
         let profitChart;
+        let isConfigPopulated = false;
         
         function initChart() {
             const ctx = document.getElementById('profitChart').getContext('2d');
-            
             profitChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -133,7 +167,7 @@
                     datasets: [{
                         label: 'Gross Profit',
                         data: [],
-                        borderColor: '#000000', // Bauhaus Bold Black
+                        borderColor: '#000000',
                         backgroundColor: 'rgba(0, 0, 0, 0.02)',
                         fill: false,
                         tension: 0, 
@@ -178,18 +212,38 @@
                 const response = await fetch('/api/status');
                 const data = await response.json();
                 
+                // Dynamic Exchange Badge
+                const exBadge = document.getElementById('exchange-badge');
+                const exText = document.getElementById('exchange-text');
+                const exShape = exBadge.querySelector('.bau-shape');
+                
+                if (data.exchange === 'BITHUMB') {
+                    exText.innerText = 'BITHUMB_V1';
+                    exText.style.color = '#F37321'; // Bithumb Orange
+                    exShape.style.backgroundColor = '#F37321';
+                } else {
+                    exText.innerText = 'UPBIT_NODE';
+                    exText.style.color = '#2563EB'; // Upbit Blue
+                    exShape.style.backgroundColor = '#2563EB';
+                }
+
                 // Bot Status Badge
                 const botBadge = document.getElementById('bot-status-badge');
+                const statusText = document.getElementById('status-text');
+                const toggleBtn = document.getElementById('toggle-btn');
+
                 if (data.is_running) {
-                    botBadge.innerHTML = '<div class="bau-shape bau-circle bg-green-500 w-3 h-3 border-2 border-black"></div><span>SYSTEM_ACTIVE</span>';
+                    statusText.innerText = 'SYSTEM_ACTIVE';
                     botBadge.className = 'flex items-center gap-2 text-green-600 font-black';
-                    document.getElementById('toggle-btn').innerText = 'STOP_SYSTEM';
-                    document.getElementById('toggle-btn').className = 'btn-bau btn-bau-yellow text-xs py-3 border-4 border-black';
+                    botBadge.querySelector('.bau-shape').style.backgroundColor = '#22C55E';
+                    toggleBtn.innerText = 'STOP_SYSTEM';
+                    toggleBtn.className = 'btn-bau btn-bau-yellow text-xs py-3 border-4 border-black';
                 } else {
-                    botBadge.innerHTML = '<div class="bau-shape bau-circle w-3 h-3 border-2 border-black"></div><span>SYSTEM_OFFLINE</span>';
+                    statusText.innerText = 'SYSTEM_OFFLINE';
                     botBadge.className = 'flex items-center gap-2 text-red-600 font-black';
-                    document.getElementById('toggle-btn').innerText = 'START_SYSTEM';
-                    document.getElementById('toggle-btn').className = 'btn-bau btn-bau-red text-xs py-3 border-4 border-black';
+                    botBadge.querySelector('.bau-shape').style.backgroundColor = '#E63946';
+                    toggleBtn.innerText = 'START_SYSTEM';
+                    toggleBtn.className = 'btn-bau btn-bau-red text-xs py-3 border-4 border-black';
                 }
 
                 // Balance & Profit
@@ -215,14 +269,50 @@
                     rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-black text-white inline-block border-2 border-black";
                 }
 
+                // Populate Config Once
+                if (!isConfigPopulated) {
+                    document.getElementById('set-exchange').value = data.exchange;
+                    document.getElementById('set-rsi').value = data.config.rsi_threshold;
+                    document.getElementById('set-profit').value = data.config.target_profit_rate;
+                    document.getElementById('set-stoploss').value = data.config.stop_loss_rate;
+                    document.getElementById('set-offset').value = data.config.trailing_offset;
+                    isConfigPopulated = true;
+                }
+
                 // Update Chart
-                if (data.profit_history && data.profit_history.length > 0) {
-                    profitChart.data.labels = data.profit_history.map((_, i) => i);
-                    profitChart.data.datasets[0].data = data.profit_history;
+                if (data.chart_data && data.chart_data.length > 0) {
+                    profitChart.data.labels = data.chart_data.map(d => d.x);
+                    profitChart.data.datasets[0].data = data.chart_data.map(d => d.y);
                     profitChart.update();
                 }
             } catch (err) {
                 console.error('Status Update Error:', err);
+            }
+        }
+
+        async function saveSettings() {
+            const data = {
+                exchange: document.getElementById('set-exchange').value,
+                rsi_threshold: parseFloat(document.getElementById('set-rsi').value),
+                target_profit_rate: parseFloat(document.getElementById('set-profit').value),
+                stop_loss_rate: parseFloat(document.getElementById('set-stoploss').value),
+                trailing_offset: parseFloat(document.getElementById('set-offset').value)
+            };
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    isConfigPopulated = false; // Trigger re-populate
+                    await updateStatus();
+                    alert('SETTINGS_APPLIED_SUCCESSFULLY');
+                }
+            } catch (err) {
+                alert('SAVE_ERROR');
             }
         }
 
@@ -247,7 +337,7 @@
 
         // Initialize
         initChart();
-        setInterval(updateStatus, 2000);
+        setInterval(updateStatus, 3000);
         updateStatus();
     </script>
 </body>
