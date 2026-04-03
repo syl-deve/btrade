@@ -41,17 +41,17 @@
         <!-- Balance Info (Enhanced Sync) -->
         <div id="balance-section" class="px-12 py-6 border-b-4 border-black flex flex-wrap gap-8 bg-zinc-50 relative z-10">
             <div class="flex flex-col">
-                <p data-i18n="label_krw" class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Available Balance (KRW)</p>
+                <p data-i18n="label_krw" class="meta-label">Available Balance (KRW)</p>
                 <div id="krw-balance" class="text-2xl font-black archivo-bold">SYNCING...</div>
             </div>
             <div class="w-[2px] bg-black/10"></div>
             <div class="flex flex-col">
-                <p data-i18n="label_coin" class="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Currently Held (Unit)</p>
+                <p data-i18n="label_coin" class="meta-label">Currently Held (Unit)</p>
                 <div id="coin-balance" class="text-2xl font-black archivo-bold">0.0000 <span id="coin-unit" class="text-sm opacity-60">WAIT</span></div>
             </div>
             <div class="ml-auto flex items-center gap-4">
                 <div class="text-right">
-                    <p data-i18n="label_auth" class="text-[10px] font-black text-zinc-400 uppercase">Authorization Status</p>
+                    <p data-i18n="label_auth" class="meta-label">Authorization Status</p>
                     <p id="auth-status" class="text-sm font-bold text-red-600">NODATA_ERR</p>
                 </div>
                 <div class="bau-shape bau-square w-8 h-8 opacity-20"></div>
@@ -70,16 +70,16 @@
                 </div>
                 <div class="mt-8 border-t-2 border-black pt-4 flex justify-between items-end">
                     <div>
-                        <p data-i18n="label_gross" class="text-[10px] font-black uppercase text-zinc-400 font-black">Gross Accumulation</p>
+                        <p data-i18n="label_gross" class="meta-label">Gross Accumulation</p>
                         <div id="total-net-profit" class="value-bau">0 ₩</div>
                     </div>
                     <div class="flex gap-10">
                         <div class="text-right">
-                            <p data-i18n="label_winrate" class="text-[10px] font-black uppercase text-zinc-400 font-black font-black">Success Rate</p>
+                            <p data-i18n="label_winrate" class="meta-label">Success Rate</p>
                             <p id="win-rate" class="text-3xl font-black">0.0%</p>
                         </div>
                         <div class="text-right">
-                            <p data-i18n="label_trades" class="text-[10px] font-black uppercase text-zinc-400 font-black font-black">Trade Records</p>
+                            <p data-i18n="label_trades" class="meta-label">Trade Records</p>
                             <p id="win-loss-count" class="text-xl font-black">0 W / 0 L</p>
                         </div>
                     </div>
@@ -104,11 +104,11 @@
                     
                     <div class="mt-6 space-y-2 border-t-2 border-black/10 pt-4">
                         <div class="flex justify-between items-center">
-                            <span data-i18n="label_price" class="text-[10px] font-black text-zinc-400 uppercase">Current Price</span>
+                            <span data-i18n="label_price" class="meta-label">Current Price</span>
                             <span id="current-price" class="text-lg font-black">0 ₩</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span data-i18n="label_avgbuy" class="text-[10px] font-black text-zinc-400 uppercase">Avg Buy Price</span>
+                            <span data-i18n="label_avgbuy" class="meta-label">Avg Buy Price</span>
                             <span id="avg-buy-price" class="text-lg font-black text-blue-600">0 ₩</span>
                         </div>
                     </div>
@@ -130,7 +130,7 @@
             <div class="bau-tile tile-stats-bau tile-red-accent">
                 <div class="label-bau"><div class="bau-shape bau-circle"></div>API_LATENCY</div>
                 <div class="text-4xl font-black">12<span class="text-lg uppercase">ms</span></div>
-                <p class="text-[10px] font-bold mt-2 text-zinc-500 uppercase">Node_Stability</p>
+                <p class="text-[10px] font-bold mt-2 text-zinc-700 font-black uppercase">Node_Stability</p>
             </div>
 
             <!-- Configuration -->
@@ -141,7 +141,7 @@
 
             <div class="bau-tile tile-stats-bau border-black flex items-center justify-center">
                  <div class="text-center">
-                    <p data-i18n="label_version" class="text-[10px] font-black text-zinc-400 uppercase">System Version</p>
+                    <p data-i18n="label_version" class="meta-label">System Version</p>
                     <p class="text-lg font-black archivo-bold">INTERNAL_v14</p>
                  </div>
             </div>
@@ -156,12 +156,12 @@
                     <table class="w-full text-sm border-collapse">
                         <thead>
                             <tr class="border-b-4 border-black">
-                                <th class="text-left py-3 px-2 text-[10px] font-black uppercase tracking-widest" data-i18n="th_time">Time</th>
-                                <th class="text-left py-3 px-2 text-[10px] font-black uppercase tracking-widest" data-i18n="th_side">Side</th>
-                                <th class="text-right py-3 px-2 text-[10px] font-black uppercase tracking-widest" data-i18n="th_price">Price</th>
-                                <th class="text-right py-3 px-2 text-[10px] font-black uppercase tracking-widest" data-i18n="th_volume">Volume</th>
-                                <th class="text-right py-3 px-2 text-[10px] font-black uppercase tracking-widest" data-i18n="th_amount">Amount</th>
-                                <th class="text-right py-3 px-2 text-[10px] font-black uppercase tracking-widest" data-i18n="th_profit">Net P&L</th>
+                                <th class="text-left py-3 px-2 meta-label" data-i18n="th_time">Time</th>
+                                <th class="text-left py-3 px-2 meta-label" data-i18n="th_side">Side</th>
+                                <th class="text-right py-3 px-2 meta-label" data-i18n="th_price">Price</th>
+                                <th class="text-right py-3 px-2 meta-label" data-i18n="th_volume">Volume</th>
+                                <th class="text-right py-3 px-2 meta-label" data-i18n="th_amount">Amount</th>
+                                <th class="text-right py-3 px-2 meta-label" data-i18n="th_profit">Net P&L</th>
                             </tr>
                         </thead>
                         <tbody id="trade-history-body">
@@ -509,7 +509,7 @@
                         const profitColor = h.net_profit > 0 ? 'color:#2563EB' : (h.net_profit < 0 ? 'color:#E63946' : 'color:#000');
                         const profitSign  = h.net_profit > 0 ? '+' : '';
                         return `<tr class="border-b-2 border-black/10 hover:bg-zinc-50 transition-colors">
-                            <td class="py-3 px-2 font-mono text-xs text-zinc-500">${h.timestamp}</td>
+                            <td class="py-3 px-2 font-mono text-xs text-zinc-700 font-bold">${h.timestamp}</td>
                             <td class="py-3 px-2">
                                 <span style="background:${isBuy ? '#FACC15' : '#E63946'};color:${isBuy ? '#000' : '#fff'}" class="text-[10px] font-black px-2 py-1 border-2 border-black inline-block">${h.side}</span>
                             </td>

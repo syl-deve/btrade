@@ -71,14 +71,15 @@ h1, .archivo-bold {
 }
 
 .label-bau {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    color: #111;
 }
 
 /* Geometric Symbols (Reference Style) */
@@ -132,13 +133,24 @@ h1, .archivo-bold {
 
 /* Bauhaus Input System */
 .bau-label {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     font-weight: 900;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     display: block;
     margin-bottom: 0.5rem;
-    color: var(--bau-black);
+    color: #111;
+}
+
+/* 가독성 개선: 소형 라벨 전역 기준 
+   HTML의 text-[10px] text-zinc-400 패턴을 교체합니다 */
+.meta-label {
+    font-size: 0.75rem;      /* 12px - 최소 시인성 */
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #3f3f46;          /* zinc-700 수준 */
+    line-height: 1.4;
 }
 
 .bau-input, .bau-select {
