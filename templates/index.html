@@ -337,12 +337,24 @@
         }
         // ────────────────────────────────────────────────────────────────
         
+        const darkBgPlugin = {
+            id: 'darkBg',
+            beforeDraw(chart) {
+                const { ctx, chartArea } = chart;
+                ctx.save();
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 0, chart.width, chart.height);
+                ctx.restore();
+            }
+        };
+
         function initChart() {
             const ctx = document.getElementById('profitChart').getContext('2d');
             const grad = ctx.createLinearGradient(0, 0, 0, 400);
             grad.addColorStop(0, 'rgba(37, 99, 235, 0.5)');
             grad.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
             profitChart = new Chart(ctx, {
+                plugins: [darkBgPlugin],
                 type: 'line',
                 data: {
                     labels: [],
