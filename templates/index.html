@@ -61,7 +61,7 @@
                     <div class="bau-shape bau-square"></div>
                     <span data-i18n="label_chart">ACCUMULATED_PROFIT_HISTORY (KRW)</span>
                 </div>
-                <div class="flex-grow min-h-[400px] relative">
+                <div class="flex-grow min-h-[400px] relative" style="background:#0f172a; border: 2px solid #000; margin-top: 0.5rem;">
                     <canvas id="profitChart"></canvas>
                 </div>
                 <div class="mt-8 border-t-2 border-black pt-4 flex justify-between items-end">
@@ -339,6 +339,9 @@
         
         function initChart() {
             const ctx = document.getElementById('profitChart').getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 0, 400);
+            grad.addColorStop(0, 'rgba(37, 99, 235, 0.5)');
+            grad.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
             profitChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -346,26 +349,30 @@
                     datasets: [{
                         label: 'Gross Profit',
                         data: [],
-                        borderColor: '#000000',
-                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                        fill: false,
-                        tension: 0, 
-                        borderWidth: 4,
-                        pointRadius: 6,
-                        pointBackgroundColor: '#000000',
-                        pointBorderColor: '#FFFFFF',
+                        borderColor: '#2563EB',
+                        backgroundColor: grad,
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#FACC15',
+                        pointBorderColor: '#000',
                         pointBorderWidth: 2,
-                        pointHoverRadius: 10,
+                        pointHoverRadius: 9,
                         pointHitRadius: 20
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { 
+                    plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: '#000',
+                            backgroundColor: '#0f172a',
+                            borderColor: '#2563EB',
+                            borderWidth: 2,
+                            titleColor: '#FACC15',
+                            bodyColor: '#fff',
                             titleFont: { family: 'Archivo Black' },
                             bodyFont: { family: 'Space Grotesk' },
                             cornerRadius: 0,
@@ -373,15 +380,16 @@
                         }
                     },
                     scales: {
-                        y: { 
-                            grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: true, lineWidth: 1 },
-                            ticks: { 
-                                color: '#000', 
+                        y: {
+                            background: '#0f172a',
+                            grid: { color: 'rgba(255,255,255,0.08)', lineWidth: 1 },
+                            ticks: {
+                                color: '#94a3b8',
                                 font: { family: 'Space Grotesk', size: 11, weight: 'bold' },
                                 callback: value => value.toLocaleString() + ' ₩'
                             }
                         },
-                        x: { 
+                        x: {
                             grid: { display: false },
                             ticks: { display: false }
                         }

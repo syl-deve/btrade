@@ -211,7 +211,8 @@ h1, .archivo-bold {
 
 /* Chart Styles */
 #profitChart {
-    background: var(--bau-white);
+    background: #0f172a;
+    border-radius: 0;
 }
 
 /* Specific Sizes Mapping */
