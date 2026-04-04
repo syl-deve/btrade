@@ -26,13 +26,17 @@ class BotSettings(Base):
     
     id = Column(Integer, primary_key=True)
     is_running = Column(Boolean, default=False)
-    avg_buy_price = Column(Float, default=0.0) # 매수 평단가 저장
-    rsi_threshold = Column(Float, default=30.0) # 매수 진입 RSI 기준
-    target_profit_rate = Column(Float, default=1.0) # 익절 기준 (%)
-    stop_loss_rate = Column(Float, default=-2.0) # 손절 기준 (%)
-    highest_profit_rate = Column(Float, default=0.0) # 매수 후 도달한 최고 수익률 (%)
-    trailing_stop_offset = Column(Float, default=0.2) # 최고점 대비 하락 시 익절할 간격 (%)
-    exchange = Column(String, default="UPBIT") # 현재 활성화된 거래소 (UPBIT, BITHUMB)
+    avg_buy_price = Column(Float, default=0.0)
+    rsi_threshold = Column(Float, default=35.0)      # 1차 매수 RSI 기준
+    rsi_threshold_2 = Column(Float, default=28.0)    # 2차 매수 RSI 기준 (추가매수)
+    target_profit_rate = Column(Float, default=1.5)  # 익절 기준 (%)
+    stop_loss_rate = Column(Float, default=-1.0)     # 손절 기준 (%)
+    highest_profit_rate = Column(Float, default=0.0)
+    trailing_stop_offset = Column(Float, default=0.3) # 트레일링 오프셋 (%)
+    exchange = Column(String, default="UPBIT")
+    buy_count = Column(Integer, default=0)           # 현재 포지션 분할매수 횟수
+    use_bollinger = Column(Boolean, default=True)    # 볼린저밴드 필터 사용 여부
+    first_buy_ratio = Column(Float, default=0.6)     # 1차 매수 비율 (잔고의 60%)
 
 # Database Setup
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})

@@ -29,28 +29,41 @@ async def lifespan(app: FastAPI):
     
     # Ensure BotSettings exist
     db = SessionLocal()
-    # --- Auto Migration for 'exchange' column ---
-    try:
-        from sqlalchemy import text
-        db.execute(text("SELECT exchange FROM bot_settings LIMIT 1"))
-    except Exception:
-        logger.info("[Migration] Adding 'exchange' column to bot_settings table...")
+    from sqlalchemy import text
+
+    # --- Auto Migration ---
+    migrations = [
+        ("exchange",          "ALTER TABLE bot_settings ADD COLUMN exchange VARCHAR DEFAULT 'UPBIT'"),
+        ("rsi_threshold_2",   "ALTER TABLE bot_settings ADD COLUMN rsi_threshold_2 FLOAT DEFAULT 28.0"),
+        ("buy_count",         "ALTER TABLE bot_settings ADD COLUMN buy_count INTEGER DEFAULT 0"),
+        ("use_bollinger",     "ALTER TABLE bot_settings ADD COLUMN use_bollinger BOOLEAN DEFAULT 1"),
+        ("first_buy_ratio",   "ALTER TABLE bot_settings ADD COLUMN first_buy_ratio FLOAT DEFAULT 0.6"),
+    ]
+    for col, sql in migrations:
         try:
-            db.execute(text("ALTER TABLE bot_settings ADD COLUMN exchange VARCHAR DEFAULT 'UPBIT'"))
-            db.commit()
-        except Exception as e:
-            logger.error(f"[Migration Error] Could not add column: {e}")
-    # --------------------------------------------
+            db.execute(text(f"SELECT {col} FROM bot_settings LIMIT 1"))
+        except Exception:
+            logger.info(f"[Migration] Adding '{col}' column...")
+            try:
+                db.execute(text(sql))
+                db.commit()
+            except Exception as e:
+                logger.error(f"[Migration Error] {col}: {e}")
+    # ---------------------
 
     if not db.query(BotSettings).first():
         db.add(BotSettings(
-            is_running=False, 
-            avg_buy_price=0.0, 
-            rsi_threshold=30.0,
-            target_profit_rate=1.0, 
-            stop_loss_rate=-2.0,
+            is_running=False,
+            avg_buy_price=0.0,
+            rsi_threshold=35.0,
+            rsi_threshold_2=28.0,
+            target_profit_rate=1.5,
+            stop_loss_rate=-1.0,
             highest_profit_rate=0.0,
-            trailing_stop_offset=0.2
+            trailing_stop_offset=0.3,
+            buy_count=0,
+            use_bollinger=True,
+            first_buy_ratio=0.6,
         ))
         db.commit()
     db.close()
@@ -118,10 +131,31 @@ def get_db():
         db.close()
 
 # --- Background Trading Task ---
+def _reset_position(bot_settings):
+    bot_settings.avg_buy_price = 0.0
+    bot_settings.highest_profit_rate = 0.0
+    bot_settings.buy_count = 0
+
+def _record_sell(db, current_price, coin_balance, bot_settings):
+    buy_principle = bot_settings.avg_buy_price * coin_balance
+    sell_total = current_price * coin_balance
+    net_profit = sell_total - buy_principle
+    db.add(TradeHistory(
+        symbol=SYMBOL, side="SELL", price=current_price,
+        volume=coin_balance, total_amount=sell_total, net_profit=net_profit
+    ))
+    _reset_position(bot_settings)
+    db.commit()
+    return net_profit
+
+def _record_buy(db, current_price, buy_amount):
+    db.add(TradeHistory(
+        symbol=SYMBOL, side="BUY", price=current_price,
+        volume=buy_amount / current_price, total_amount=buy_amount
+    ))
+    db.commit()
+
 async def trading_loop():
-    """
-    Main loop that periodically checks the market and executes trades.
-    """
     logger.info("[Trading] Starting background loop...")
     while True:
         try:
@@ -134,131 +168,110 @@ async def trading_loop():
                     db.commit()
                     db.refresh(bot_settings)
 
-                if bot_settings.is_running:
-                    # 0. Select Client
-                    target_exchange = bot_settings.exchange or "UPBIT"
-                    current_client = get_client(target_exchange)
-                    
-                    if not is_client_authorized(target_exchange):
-                        logger.warning(f"🚨 API Key for {target_exchange} is NOT AUTHENTICATED.")
-                        await asyncio.sleep(60)
-                        continue
-
-                    # 1. Fetch current data
-                    current_price = current_client.get_current_price(SYMBOL)
-                    current_rsi = strategy.get_rsi(target_exchange)
-                    coin_balance = current_client.get_coin_balance(SYMBOL)
-                    
-                    if current_price is None or coin_balance is None:
-                        await asyncio.sleep(10)
-                        continue
-
-                    rsi_display = f"{current_rsi:.2f}" if current_rsi else "0.00"
-                    logger.info(f"[Checking] {SYMBOL} @ {current_price:,.0f} | RSI: {rsi_display} | Balance: {coin_balance:.6f}")
-
-                    if coin_balance > 0.0001: 
-                        if bot_settings.avg_buy_price > 0:
-                            profit_rate = ((current_price / bot_settings.avg_buy_price) - 1) * 100
-                            # Stop Loss & Take Profit Logic (Same as before)
-                            # ... (Keep existing logic here)
-                            pass
-                    else:
-                        # BUY Logic (Same as before)
-                        pass
-                else:
-                    # Bot is not running, sleep
+                if not bot_settings.is_running:
                     await asyncio.sleep(5)
+                    continue
+
+                target_exchange = bot_settings.exchange or "UPBIT"
+                current_client = get_client(target_exchange)
+
+                if not is_client_authorized(target_exchange):
+                    logger.warning(f"🚨 API Key for {target_exchange} NOT AUTHENTICATED.")
+                    await asyncio.sleep(60)
+                    continue
+
+                current_price = current_client.get_current_price(SYMBOL)
+                current_rsi = strategy.get_rsi(target_exchange)
+                coin_balance = current_client.get_coin_balance(SYMBOL)
+
+                if current_price is None or coin_balance is None:
+                    await asyncio.sleep(10)
+                    continue
+
+                rsi_display = f"{current_rsi:.2f}" if current_rsi else "N/A"
+                logger.info(f"[Loop] {SYMBOL} @ {current_price:,.0f} | RSI: {rsi_display} | Held: {coin_balance:.6f} | Buys: {bot_settings.buy_count}")
+
+                # ── 보유 중 ──────────────────────────────────────────
+                if coin_balance > 0.0001 and bot_settings.avg_buy_price > 0:
+                    profit_rate = ((current_price / bot_settings.avg_buy_price) - 1) * 100
+
+                    # 1. 긴급 손절
+                    if profit_rate <= bot_settings.stop_loss_rate:
+                        res = current_client.sell_market_order(coin_balance)
+                        if res:
+                            net_profit = _record_sell(db, current_price, coin_balance, bot_settings)
+                            logger.warning(f"🚨 Stop-Loss: SOLD @ {current_price:,.0f} ({profit_rate:.2f}%) | P&L: {net_profit:,.0f} KRW")
+                            send_discord_message("🚨 긴급 손절", f"{profit_rate:.2f}% 손절\n체결가: {current_price:,.0f}\n손실: {net_profit:,.0f} KRW", color=0x0000ff)
+
+                    else:
+                        # 2. 2차 추가매수 — RSI 더 내려갔고 평단보다 낮을 때
+                        if bot_settings.buy_count == 1 and current_rsi and current_rsi <= bot_settings.rsi_threshold_2 and current_price < bot_settings.avg_buy_price:
+                            krw_balance = current_client.get_krw_balance()
+                            if krw_balance > 5000:
+                                buy_amount = krw_balance * 0.995
+                                res = current_client.buy_market_order(buy_amount)
+                                if res:
+                                    # 평단 재계산
+                                    total_coin = coin_balance + buy_amount / current_price
+                                    total_cost = bot_settings.avg_buy_price * coin_balance + buy_amount
+                                    bot_settings.avg_buy_price = total_cost / total_coin
+                                    bot_settings.buy_count = 2
+                                    bot_settings.highest_profit_rate = 0.0
+                                    db.commit()
+                                    _record_buy(db, current_price, buy_amount)
+                                    logger.info(f"💎 2차 매수: {current_price:,.0f} | RSI: {current_rsi:.2f} | 새 평단: {bot_settings.avg_buy_price:,.0f}")
+                                    send_discord_message("💎 2차 추가매수", f"RSI {current_rsi:.2f} → 추가매수\n체결가: {current_price:,.0f}\n새 평단: {bot_settings.avg_buy_price:,.0f}", color=0x8b5cf6)
+
+                        # 3. 트레일링 익절
+                        if profit_rate > bot_settings.highest_profit_rate:
+                            bot_settings.highest_profit_rate = profit_rate
+                            db.commit()
+
+                        if bot_settings.highest_profit_rate >= bot_settings.target_profit_rate:
+                            if profit_rate <= (bot_settings.highest_profit_rate - bot_settings.trailing_stop_offset):
+                                res = current_client.sell_market_order(coin_balance)
+                                if res:
+                                    net_profit = _record_sell(db, current_price, coin_balance, bot_settings)
+                                    logger.info(f"🎣 트레일링 익절: SOLD @ {current_price:,.0f} (고점: {bot_settings.highest_profit_rate:.2f}% → 현재: {profit_rate:.2f}%) | P&L: +{net_profit:,.0f} KRW")
+                                    send_discord_message("🎣 트레일링 익절", f"고점 {bot_settings.highest_profit_rate:.2f}% → {profit_rate:.2f}%로 하락\n체결가: {current_price:,.0f}\n수익: +{net_profit:,.0f} KRW", color=0xff0000)
+                        else:
+                            logger.info(f"[홀딩] 수익률: {profit_rate:.2f}% | 고점: {bot_settings.highest_profit_rate:.2f}% | 목표: {bot_settings.target_profit_rate}%")
+
+                # ── 미보유 — 1차 매수 ────────────────────────────────
+                elif coin_balance <= 0.0001:
+                    if current_rsi and current_rsi <= bot_settings.rsi_threshold:
+                        # 볼린저밴드 필터
+                        boll_ok = True
+                        if bot_settings.use_bollinger:
+                            boll_ok = strategy.is_below_bollinger_lower(target_exchange)
+
+                        if boll_ok:
+                            krw_balance = current_client.get_krw_balance()
+                            if krw_balance > 5000:
+                                ratio = bot_settings.first_buy_ratio or 0.6
+                                buy_amount = krw_balance * ratio * 0.995
+                                res = current_client.buy_market_order(buy_amount)
+                                if res:
+                                    bot_settings.avg_buy_price = current_price
+                                    bot_settings.highest_profit_rate = 0.0
+                                    bot_settings.buy_count = 1
+                                    db.commit()
+                                    _record_buy(db, current_price, buy_amount)
+                                    logger.info(f"🛒 1차 매수: {current_price:,.0f} | RSI: {current_rsi:.2f} | 금액: {buy_amount:,.0f} KRW")
+                                    send_discord_message("🛒 1차 매수", f"RSI {current_rsi:.2f} + 볼린저 하단 돌파\n체결가: {current_price:,.0f}\n매수금액: {buy_amount:,.0f} KRW", color=0x00ff00)
+                                else:
+                                    logger.error("❌ 1차 매수 실패")
+                        else:
+                            logger.info(f"[대기] RSI {current_rsi:.2f} 조건 충족, 볼린저 미달 → 진입 보류")
+
             finally:
                 db.close()
 
-                # Check if we currently hold coins
-                if coin_balance > 0.0001: 
-                    if bot_settings.avg_buy_price > 0:
-                        profit_rate = ((current_price / bot_settings.avg_buy_price) - 1) * 100
-                        
-                        # 1. Stop Loss (Emergency - Highest Priority)
-                        if profit_rate <= bot_settings.stop_loss_rate:
-                            res = current_client.sell_market_order(coin_balance)
-                            if res:
-                                buy_principle = bot_settings.avg_buy_price * coin_balance
-                                sell_total = current_price * coin_balance
-                                net_profit = sell_total - buy_principle
-                                
-                                new_trade = TradeHistory(
-                                    symbol=SYMBOL, side="SELL", price=current_price, 
-                                    volume=coin_balance, total_amount=sell_total,
-                                    net_profit=net_profit
-                                )
-                                db.add(new_trade)
-                                bot_settings.avg_buy_price = 0.0
-                                bot_settings.highest_profit_rate = 0.0
-                                db.commit()
-                                logger.warning(f"🚨 Stop-Loss Triggered: SOLD at {current_price} (Loss: {profit_rate:.2f}%)")
-                                send_discord_message(f"🚨 Emergency Stop-Loss: SELL", 
-                                                    f"Panic sold at {current_price} due to {profit_rate:.2f}% loss. (Loss: {net_profit:,.0f} KRW)", 
-                                                    color=0x0000ff)
-                        
-                        else:
-                            # 2. Trailing Stop Logic (If not in Stop-Loss)
-                            if profit_rate > bot_settings.highest_profit_rate:
-                                bot_settings.highest_profit_rate = profit_rate
-                                db.commit()
-
-                            # Take Profit (Trailing Mode)
-                            if bot_settings.highest_profit_rate >= bot_settings.target_profit_rate:
-                                if profit_rate <= (bot_settings.highest_profit_rate - bot_settings.trailing_stop_offset):
-                                    res = current_client.sell_market_order(coin_balance)
-                                    if res:
-                                        buy_principle = bot_settings.avg_buy_price * coin_balance
-                                        sell_total = current_price * coin_balance
-                                        net_profit = sell_total - buy_principle
-                                        
-                                        new_trade = TradeHistory(
-                                            symbol=SYMBOL, side="SELL", price=current_price, 
-                                            volume=coin_balance, total_amount=sell_total,
-                                            net_profit=net_profit
-                                        )
-                                        db.add(new_trade)
-                                        bot_settings.avg_buy_price = 0.0
-                                        bot_settings.highest_profit_rate = 0.0
-                                        db.commit()
-                                        logger.info(f"🎣 Trailing Take-Profit: SOLD at {current_price} (Profit: {profit_rate:.2f}%)")
-                                        send_discord_message(f"🎣 Trailing Take-Profit: SELL", 
-                                                            f"Peak: {bot_settings.highest_profit_rate:.2f}%. Sold at {current_price} with {profit_rate:.2f}% profit. (Profit: +{net_profit:,.0f} KRW)", 
-                                                            color=0xff0000)
-                            else:
-                                logger.info(f"[Holding] Current Profit: {profit_rate:.2f}% | Peak: {bot_settings.highest_profit_rate:.2f}% | Target: {bot_settings.target_profit_rate}%")
-                else:
-                    # 🛒 BUY Condition: RSI is low (Dynamic)
-                    if current_rsi and current_rsi <= bot_settings.rsi_threshold:
-                        logger.info(f"💎 BUY Signal Detected: RSI {current_rsi:.2f} <= {bot_settings.rsi_threshold}")
-                        krw_balance = current_client.get_krw_balance()
-                        if krw_balance > 5000:
-                            # Use 99.5% of balance to safely account for both Upbit(0.05%) and Bithumb(0.25%) fees
-                            buy_amount = krw_balance * 0.995
-                            res = current_client.buy_market_order(buy_amount)
-                            if res:
-                                bot_settings.avg_buy_price = current_price
-                                bot_settings.highest_profit_rate = 0.0 # Force peak reset
-                                db.commit()
-                                new_trade = TradeHistory(
-                                    symbol=SYMBOL, side="BUY", price=current_price, 
-                                    volume=buy_amount/current_price, total_amount=buy_amount
-                                )
-                                db.add(new_trade)
-                                db.commit()
-                                logger.info(f"🛒 BUY Entry Success: {SYMBOL} at {current_price} (Amount: {buy_amount:,.0f} KRW) | API Response: {res}")
-                                send_discord_message(f"🛒 BUY Entry: {SYMBOL}", 
-                                                    f"Bought at {current_price} due to RSI {current_rsi:.2f}\nResponse: {res}", 
-                                                    color=0x00ff00)
-                            else:
-                                logger.error(f"❌ BUY Entry Failed: {SYMBOL} | Check Bithumb API response above.")
-            db.close()
         except Exception as e:
             logger.error(f"[Trading Loop Error] {e}")
-            send_discord_message("⚠️ Bot Error", f"An error occurred in the trading loop: {e}", color=0xffa500)
-        
-        await asyncio.sleep(60) # 1-minute interval for responsiveness
+            send_discord_message("⚠️ 봇 오류", str(e), color=0xffa500)
+
+        await asyncio.sleep(60)
 
 # --- Auth Dependency ---
 def get_current_user(request: Request):
@@ -386,11 +399,15 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             "today_net_profit": today_net_profit,
             "last_trade_elapsed_minutes": elapsed_minutes,
             "chart_data": cumulative_profits,
+            "buy_count": bot_settings.buy_count if bot_settings else 0,
             "config": {
-                "rsi_threshold": bot_settings.rsi_threshold if bot_settings else 30.0,
-                "target_profit_rate": bot_settings.target_profit_rate if bot_settings else 1.0,
-                "stop_loss_rate": bot_settings.stop_loss_rate if bot_settings else -2.0,
-                "trailing_offset": bot_settings.trailing_stop_offset if bot_settings else 0.2
+                "rsi_threshold": bot_settings.rsi_threshold if bot_settings else 35.0,
+                "rsi_threshold_2": bot_settings.rsi_threshold_2 if bot_settings else 28.0,
+                "target_profit_rate": bot_settings.target_profit_rate if bot_settings else 1.5,
+                "stop_loss_rate": bot_settings.stop_loss_rate if bot_settings else -1.0,
+                "trailing_offset": bot_settings.trailing_stop_offset if bot_settings else 0.3,
+                "use_bollinger": bot_settings.use_bollinger if bot_settings else True,
+                "first_buy_ratio": bot_settings.first_buy_ratio if bot_settings else 0.6,
             },
             "history": [{
                 "id": h.id, "side": h.side, "price": int(h.price), "volume": h.volume,
@@ -409,11 +426,14 @@ async def update_settings(data: dict, db: Session = Depends(get_db), user=Depend
     
     bot_settings = db.query(BotSettings).first()
     if bot_settings:
-        bot_settings.rsi_threshold = data.get("rsi_threshold", 30.0)
-        bot_settings.target_profit_rate = data.get("target_profit_rate", 1.0)
-        bot_settings.stop_loss_rate = data.get("stop_loss_rate", -2.0)
-        bot_settings.trailing_stop_offset = data.get("trailing_offset", 0.2)
+        bot_settings.rsi_threshold = data.get("rsi_threshold", 35.0)
+        bot_settings.rsi_threshold_2 = data.get("rsi_threshold_2", 28.0)
+        bot_settings.target_profit_rate = data.get("target_profit_rate", 1.5)
+        bot_settings.stop_loss_rate = data.get("stop_loss_rate", -1.0)
+        bot_settings.trailing_stop_offset = data.get("trailing_offset", 0.3)
         bot_settings.exchange = data.get("exchange", "UPBIT")
+        bot_settings.use_bollinger = data.get("use_bollinger", True)
+        bot_settings.first_buy_ratio = data.get("first_buy_ratio", 0.6)
         db.commit()
         return {"status": "success"}
     return {"status": "error"}

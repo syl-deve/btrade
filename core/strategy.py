@@ -5,96 +5,88 @@ from config import SYMBOL, EXCHANGE
 
 class ScalperStrategy:
     """
-    RSI-based 'Buy the Dip' & 1% Take-Profit Strategy.
-    Exchange-agnostic (Supports Upbit & Bithumb).
+    RSI + Bollinger Band 'Buy the Dip' 전략.
+    - 1차 매수: 볼린저 하단 이탈 + RSI ≤ rsi_threshold (잔고의 first_buy_ratio%)
+    - 2차 매수: RSI ≤ rsi_threshold_2 + 현재가 < 평단 (잔고 전량)
+    - 트레일링 익절: target_profit_rate 도달 후 trailing_stop_offset 하락 시 매도
+    - 손절: stop_loss_rate 이하 시 즉시 매도
     """
-    def __init__(self, ticker=SYMBOL, buy_rsi_threshold=30, target_profit_rate=1.01, stop_loss_rate=0.98):
+    def __init__(self, ticker=SYMBOL):
         self.ticker = ticker
         self.exchange = EXCHANGE
-        self.buy_rsi_threshold = buy_rsi_threshold
-        self.target_profit_rate = target_profit_rate
-        self.stop_loss_rate = stop_loss_rate
-
-    def _get_api(self, exchange):
-        return pyupbit if exchange == "UPBIT" else pybithumb
 
     def _normalize_ticker(self, ticker, exchange):
         if exchange == "BITHUMB" and "-" in ticker:
             return ticker.split("-")[1]
         return ticker
 
-    def get_rsi(self, exchange="UPBIT", interval="minute15", count=100):
-        """
-        Calculates the Relative Strength Index (RSI) for the current ticker.
-        """
+    def get_ohlcv(self, exchange="UPBIT", interval="minute15", count=100):
         try:
             if exchange == "BITHUMB":
-                # Use our custom BithumbClient for v1 API OHLCV
-                if interval == "minute15": interval = "15m"
-                elif interval == "minute1": interval = "1m"
-                elif interval == "minute3": interval = "3m"
-                elif interval == "minute5": interval = "5m"
-                elif interval == "minute10": interval = "10m"
-                elif interval == "minute30": interval = "30m"
-                elif interval == "minute60": interval = "1h"
-                elif interval == "day": interval = "24h"
-                
-                df = BithumbClient.get_ohlcv(self.ticker, interval=interval, count=count)
+                interval_map = {
+                    "minute1": "1m", "minute3": "3m", "minute5": "5m",
+                    "minute10": "10m", "minute15": "15m", "minute30": "30m",
+                    "minute60": "1h", "day": "24h"
+                }
+                bithumb_interval = interval_map.get(interval, "15m")
+                return BithumbClient.get_ohlcv(self.ticker, interval=bithumb_interval, count=count)
             else:
-                # Use pyupbit for Upbit
-                df = pyupbit.get_ohlcv(self.ticker, interval=interval, count=count)
+                return pyupbit.get_ohlcv(self.ticker, interval=interval, count=count)
+        except Exception:
+            return None
 
+    def get_rsi(self, exchange="UPBIT", interval="minute15", count=100):
+        try:
+            df = self.get_ohlcv(exchange, interval, count)
             if df is None or df.empty:
                 return None
-            
-            # Ensure 'close' column exists (already handled by BithumbClient.get_ohlcv)
+
             delta = df['close'].diff()
-            ups, downs = delta.copy(), delta.copy()
-            ups[ups < 0] = 0
-            downs[downs > 0] = 0
+            ups = delta.clip(lower=0)
+            downs = (-delta).clip(lower=0)
 
             period = 14
             au = ups.rolling(window=period).mean()
-            ad = downs.abs().rolling(window=period).mean()
-            
+            ad = downs.rolling(window=period).mean()
+
             rs = au / ad
             rsi = 100 - (100 / (1 + rs))
             return rsi.iloc[-1]
         except Exception:
             return None
 
-    def should_buy(self, current_rsi):
+    def get_bollinger(self, exchange="UPBIT", interval="minute15", count=100, period=20, std_mult=2.0):
         """
-        Returns True if RSI is below the threshold (Oversold condition).
+        볼린저밴드 계산.
+        Returns: (upper, middle, lower) or (None, None, None)
         """
-        if current_rsi is None:
-            return False
-        return current_rsi <= self.buy_rsi_threshold
+        try:
+            df = self.get_ohlcv(exchange, interval, count)
+            if df is None or df.empty:
+                return None, None, None
 
-    def should_sell(self, current_price, entry_price):
-        """
-        Returns True if the current price is at least 1% higher than the entry price.
-        """
-        if entry_price is None or entry_price == 0:
-            return False
-        
-        profit_rate = current_price / entry_price
-        return profit_rate >= self.target_profit_rate
+            close = df['close']
+            middle = close.rolling(window=period).mean()
+            std = close.rolling(window=period).std()
+            upper = middle + std_mult * std
+            lower = middle - std_mult * std
 
-    def should_stop_loss(self, current_price, entry_price):
-        """
-        Returns True if the current price is below the stop loss threshold (e.g., -2%).
-        """
-        if entry_price is None or entry_price == 0:
-            return False
-        
-        profit_rate = current_price / entry_price
-        return profit_rate <= self.stop_loss_rate
+            return upper.iloc[-1], middle.iloc[-1], lower.iloc[-1]
+        except Exception:
+            return None, None, None
 
-    def get_profit_status(self, current_price, entry_price):
-        """
-        Calculates current profit percentage and amount.
-        """
-        if not entry_price:
-            return 0.0
-        return ((current_price / entry_price) - 1) * 100
+    def is_below_bollinger_lower(self, exchange="UPBIT", interval="minute15"):
+        """현재가가 볼린저 하단 이하인지 확인."""
+        try:
+            df = self.get_ohlcv(exchange, interval, 100)
+            if df is None or df.empty:
+                return False
+
+            current_price = df['close'].iloc[-1]
+            _, _, lower = self.get_bollinger(exchange, interval)
+            if lower is None:
+                return False
+
+            return current_price <= lower
+        except Exception:
+            return False

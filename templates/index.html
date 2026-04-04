@@ -92,6 +92,7 @@
                     <!-- Significant Profit Rate Display -->
                     <div id="current-profit-rate" class="text-8xl font-black archivo-bold leading-tight mt-4 text-white tracking-tighter">0.00<span class="text-4xl">%</span></div>
                     <div id="holding-profit-krw" class="text-3xl font-black text-white mt-1 tracking-tighter opacity-90">0 ₩</div>
+                    <div id="buy-count-badge" class="mt-2 text-[11px] font-black tracking-widest text-white opacity-60 uppercase" style="display:none;"></div>
                 </div>
                 
                 <div id="current-crypto" class="border-4 border-black bg-white p-6 text-black shadow-[4px_4px_0px_#000]">
@@ -194,24 +195,40 @@
 
                 <div class="grid grid-cols-2 gap-6">
                     <div>
-                        <label data-i18n="cfg_rsi" class="bau-label">RSI Threshold (Buy)</label>
-                        <input type="number" id="set-rsi" step="0.1" class="bau-input" placeholder="30.0">
+                        <label data-i18n="cfg_rsi" class="bau-label">RSI 1차 매수 기준</label>
+                        <input type="number" id="set-rsi" step="0.1" class="bau-input" placeholder="35.0">
                     </div>
                     <div>
-                        <label data-i18n="cfg_profit" class="bau-label">Target Take-Profit (%)</label>
-                        <input type="number" id="set-profit" step="0.1" class="bau-input" placeholder="1.0">
+                        <label data-i18n="cfg_rsi2" class="bau-label">RSI 2차 매수 기준</label>
+                        <input type="number" id="set-rsi2" step="0.1" class="bau-input" placeholder="28.0">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-6">
                     <div>
-                        <label data-i18n="cfg_stoploss" class="bau-label">Emergency Stop-Loss (%)</label>
-                        <input type="number" id="set-stoploss" step="0.1" class="bau-input" placeholder="-2.0">
+                        <label data-i18n="cfg_profit" class="bau-label">목표 익절율 (%)</label>
+                        <input type="number" id="set-profit" step="0.1" class="bau-input" placeholder="1.5">
                     </div>
                     <div>
-                        <label data-i18n="cfg_offset" class="bau-label">Trailing Stop Offset</label>
-                        <input type="number" id="set-offset" step="0.05" class="bau-input" placeholder="0.2">
+                        <label data-i18n="cfg_stoploss" class="bau-label">손절율 (%)</label>
+                        <input type="number" id="set-stoploss" step="0.1" class="bau-input" placeholder="-1.0">
                     </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label data-i18n="cfg_offset" class="bau-label">트레일링 오프셋 (%)</label>
+                        <input type="number" id="set-offset" step="0.05" class="bau-input" placeholder="0.3">
+                    </div>
+                    <div>
+                        <label data-i18n="cfg_buy_ratio" class="bau-label">1차 매수 비율 (0~1)</label>
+                        <input type="number" id="set-buy-ratio" step="0.05" min="0.1" max="1.0" class="bau-input" placeholder="0.6">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 border-t-2 border-black/10 pt-4">
+                    <input type="checkbox" id="set-bollinger" class="w-5 h-5 border-2 border-black cursor-pointer">
+                    <label for="set-bollinger" data-i18n="cfg_bollinger" class="bau-label mb-0 cursor-pointer">볼린저밴드 하단 필터 사용</label>
                 </div>
             </form>
 
@@ -249,10 +266,13 @@
                 label_version:'System Version',
                 modal_title:  'TRADE_CONFIG',
                 cfg_exchange: 'Target Trading Engine',
-                cfg_rsi:      'RSI Threshold (Buy)',
+                cfg_rsi:      'RSI 1st Buy Threshold',
+                cfg_rsi2:     'RSI 2nd Buy Threshold',
                 cfg_profit:   'Target Take-Profit (%)',
-                cfg_stoploss: 'Emergency Stop-Loss (%)',
-                cfg_offset:   'Trailing Stop Offset',
+                cfg_stoploss: 'Stop-Loss (%)',
+                cfg_offset:   'Trailing Stop Offset (%)',
+                cfg_buy_ratio:'1st Buy Ratio (0~1)',
+                cfg_bollinger:'Bollinger Band Filter',
                 btn_ignore:   'IGNORE',
                 btn_apply:    'APPLY_CHANGES',
                 label_history:'TRADE_HISTORY (ALL)',
@@ -291,10 +311,13 @@
                 label_version:'시스템 버전',
                 modal_title:  '거래 설정',
                 cfg_exchange: '거래소 선택',
-                cfg_rsi:      'RSI 매수 기준값',
+                cfg_rsi:      'RSI 1차 매수 기준',
+                cfg_rsi2:     'RSI 2차 매수 기준',
                 cfg_profit:   '목표 익절율 (%)',
-                cfg_stoploss: '긴급 손절율 (%)',
-                cfg_offset:   '트레일링 스탑 오프셋',
+                cfg_stoploss: '손절율 (%)',
+                cfg_offset:   '트레일링 오프셋 (%)',
+                cfg_buy_ratio:'1차 매수 비율 (0~1)',
+                cfg_bollinger:'볼린저밴드 하단 필터',
                 btn_ignore:   '취소',
                 btn_apply:    '변경사항 적용',
                 label_history:'거래 내역 (전체)',
@@ -484,16 +507,23 @@
 
                 const holdingProfitKrwEl = document.getElementById('holding-profit-krw');
                 const sellNowBtn = document.getElementById('sell-now-btn');
+                const buyCountBadge = document.getElementById('buy-count-badge');
                 if (holdingProfitKrwEl) {
                     if (data.coin_balance > 0.0001 && data.avg_buy_price > 0) {
                         const holdingProfit = (data.current_price - data.avg_buy_price) * data.coin_balance;
                         holdingProfitKrwEl.innerText = (holdingProfit >= 0 ? '+' : '') + new Intl.NumberFormat().format(Math.floor(holdingProfit)) + ' ₩';
                         holdingProfitKrwEl.style.color = holdingProfit > 0 ? '#22C55E' : (holdingProfit < 0 ? '#E63946' : '#FFFFFF');
                         if (sellNowBtn) sellNowBtn.style.display = '';
+                        if (buyCountBadge) {
+                            const cnt = data.buy_count || 0;
+                            buyCountBadge.style.display = '';
+                            buyCountBadge.innerText = currentLang === 'ko' ? `${cnt}차 매수 포지션` : `POSITION: BUY ${cnt}`;
+                        }
                     } else {
                         holdingProfitKrwEl.innerText = '0 ₩';
                         holdingProfitKrwEl.style.color = '#FFFFFF';
                         if (sellNowBtn) sellNowBtn.style.display = 'none';
+                        if (buyCountBadge) buyCountBadge.style.display = 'none';
                     }
                 }
 
@@ -564,9 +594,12 @@
                 if (!isConfigPopulated && data.config) {
                     document.getElementById('set-exchange').value = data.exchange;
                     document.getElementById('set-rsi').value = data.config.rsi_threshold;
+                    document.getElementById('set-rsi2').value = data.config.rsi_threshold_2;
                     document.getElementById('set-profit').value = data.config.target_profit_rate;
                     document.getElementById('set-stoploss').value = data.config.stop_loss_rate;
                     document.getElementById('set-offset').value = data.config.trailing_offset;
+                    document.getElementById('set-buy-ratio').value = data.config.first_buy_ratio;
+                    document.getElementById('set-bollinger').checked = data.config.use_bollinger;
                     isConfigPopulated = true;
                 }
 
@@ -614,9 +647,12 @@
             const data = {
                 exchange: document.getElementById('set-exchange').value,
                 rsi_threshold: parseFloat(document.getElementById('set-rsi').value),
+                rsi_threshold_2: parseFloat(document.getElementById('set-rsi2').value),
                 target_profit_rate: parseFloat(document.getElementById('set-profit').value),
                 stop_loss_rate: parseFloat(document.getElementById('set-stoploss').value),
-                trailing_offset: parseFloat(document.getElementById('set-offset').value)
+                trailing_offset: parseFloat(document.getElementById('set-offset').value),
+                first_buy_ratio: parseFloat(document.getElementById('set-buy-ratio').value),
+                use_bollinger: document.getElementById('set-bollinger').checked,
             };
 
             try {
