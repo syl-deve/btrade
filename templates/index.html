@@ -488,7 +488,9 @@
                 }
                 
                 safeUpdate('win-rate', (data.win_rate || 0).toFixed(1) + '%');
-                safeUpdate('win-loss-count', `${data.win_count || 0} W / ${data.loss_count || 0} L`);
+                const wLabel = currentLang === 'ko' ? '승리' : 'win';
+                const lLabel = currentLang === 'ko' ? '패배' : 'lose';
+                safeUpdate('win-loss-count', `${data.win_count || 0} ${wLabel} / ${data.loss_count || 0} ${lLabel}`);
                 
                 // Market Sync
                 safeUpdate('target-coin', coinUnit);
