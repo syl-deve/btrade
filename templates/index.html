@@ -50,11 +50,7 @@
                 <div id="coin-balance" class="text-2xl font-black archivo-bold">0.0000 <span id="coin-unit" class="text-sm opacity-60">WAIT</span></div>
             </div>
             <div class="ml-auto flex items-center gap-4">
-                <div class="text-right">
-                    <p data-i18n="label_auth" class="meta-label">Authorization Status</p>
-                    <p id="auth-status" class="text-sm font-bold text-red-600">NODATA_ERR</p>
-                </div>
-                <div class="bau-shape bau-square w-8 h-8 opacity-20"></div>
+                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau py-3 px-6 bg-zinc-900 text-white border-4 border-black font-black tracking-widest text-xs"><span data-i18n="btn_config">GENERAL_CONFIG</span></button>
             </div>
         </div>
 
@@ -128,24 +124,25 @@
                 <div id="rsi-status" class="mt-4 text-[10px] font-black p-2 bg-black text-white inline-block">NEUTRAL</div>
             </div>
 
-            <!-- Latency Stat -->
+            <!-- 평균 매매 단가 -->
             <div class="bau-tile tile-stats-bau tile-red-accent">
-                <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_latency">API_LATENCY</span></div>
-                <div class="text-4xl font-black">12<span class="text-lg uppercase">ms</span></div>
-                <p data-i18n="label_stability" class="text-[10px] font-bold mt-2 text-zinc-700 font-black uppercase">Node_Stability</p>
+                <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_avg_profit">AVG_PROFIT/TRADE</span></div>
+                <div id="avg-profit-per-trade" class="text-4xl font-black">0 ₩</div>
+                <p data-i18n="label_avg_profit_sub" class="text-[10px] font-bold mt-2 text-zinc-700 uppercase">매도당 평균 순익</p>
             </div>
 
-            <!-- Configuration -->
-            <div class="bau-tile tile-stats-bau flex flex-col gap-4">
-                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau w-full justify-center py-4 bg-zinc-900 text-white border-black"><span data-i18n="btn_config">GENERAL_CONFIG</span></button>
-                <div id="uptime_display" data-i18n="label_status" class="text-[10px] font-bold text-center opacity-40 uppercase">System Status: Online</div>
+            <!-- 오늘 손익 -->
+            <div class="bau-tile tile-stats-bau flex flex-col gap-2">
+                <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_today_profit">TODAY_P&L</span></div>
+                <div id="today-net-profit" class="text-4xl font-black">0 ₩</div>
+                <p data-i18n="label_today_profit_sub" class="text-[10px] font-bold mt-2 text-zinc-700 uppercase">오늘 실현 손익</p>
             </div>
 
-            <div class="bau-tile tile-stats-bau border-black flex items-center justify-center">
-                 <div class="text-center">
-                    <p data-i18n="label_version" class="meta-label">System Version</p>
-                    <p class="text-lg font-black archivo-bold">INTERNAL_v14</p>
-                 </div>
+            <!-- 마지막 매매 경과시간 -->
+            <div class="bau-tile tile-stats-bau border-black flex flex-col justify-between">
+                <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_last_trade">LAST_TRADE</span></div>
+                <div id="last-trade-elapsed" class="text-4xl font-black">-</div>
+                <p data-i18n="label_last_trade_sub" class="text-[10px] font-bold mt-2 text-zinc-700 uppercase">마지막 거래 경과</p>
             </div>
 
             <!-- 거래내역 전체폭 섹션 -->
@@ -268,8 +265,12 @@
                 rsi_buy: 'BUY_SIGNAL', rsi_neutral: 'NEUTRAL',
                 no_trade: 'NO_TRADE_HISTORY',
                 label_rsi: 'RSI_STRENGTH',
-                label_latency: 'API_LATENCY',
-                label_stability: 'NODE_STABILITY',
+                label_avg_profit: 'AVG_PROFIT/TRADE',
+                label_avg_profit_sub: 'Avg Net Per Sell',
+                label_today_profit: 'TODAY_P&L',
+                label_today_profit_sub: "Today's Realized P&L",
+                label_last_trade: 'LAST_TRADE',
+                label_last_trade_sub: 'Time Since Last Trade',
                 side_buy: 'BUY', side_sell: 'SELL',
                 btn_sell_now: 'INSTANT_SELL',
             },
@@ -306,8 +307,12 @@
                 rsi_buy: '매수신호', rsi_neutral: '관망',
                 no_trade: '거래 내역 없음',
                 label_rsi: 'RSI 강도',
-                label_latency: 'API 응답속도',
-                label_stability: '노드 안정성',
+                label_avg_profit: '매매당 평균 손익',
+                label_avg_profit_sub: '매도당 평균 순익',
+                label_today_profit: '오늘 손익',
+                label_today_profit_sub: '오늘 실현 손익',
+                label_last_trade: '마지막 거래',
+                label_last_trade_sub: '마지막 거래 경과',
                 side_buy: '매수', side_sell: '매도',
                 btn_sell_now: '즉시 매도',
             }
@@ -397,10 +402,9 @@
                     if (el) el.innerHTML = html;
                 };
                 
-                // Exchange & Auth
+                // Exchange
                 const exText = document.getElementById('exchange-text');
                 const exShape = document.querySelector('#exchange-badge .bau-shape');
-                const authEl = document.getElementById('auth-status');
                 
                 if (exText && exShape) {
                     if (data.exchange === 'BITHUMB') {
@@ -414,16 +418,6 @@
                     }
                 }
 
-                if (authEl) {
-                    const t = i18n[currentLang];
-                    if (data.authorized) {
-                        authEl.innerText = t.auth_ok;
-                        authEl.className = 'text-sm font-bold text-green-600';
-                    } else {
-                        authEl.innerText = t.auth_err;
-                        authEl.className = 'text-sm font-bold text-red-600';
-                    }
-                }
 
                 // Balance Mapping (Defensive)
                 const krwVal = data.krw_balance || 0;
@@ -496,6 +490,37 @@
                 safeUpdate('target-coin', coinUnit);
                 safeUpdate('current-price', data.current_price ? new Intl.NumberFormat().format(data.current_price) + ' ₩' : 'API_SYNC...');
                 safeUpdate('avg-buy-price', (data.avg_buy_price > 0) ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '0 ₩');
+
+                // 평균 매매 단가
+                const avgProfitEl = document.getElementById('avg-profit-per-trade');
+                if (avgProfitEl) {
+                    const v = data.avg_profit_per_trade || 0;
+                    avgProfitEl.innerText = (v >= 0 ? '+' : '') + new Intl.NumberFormat().format(v) + ' ₩';
+                    avgProfitEl.style.color = v > 0 ? '#22C55E' : (v < 0 ? '#E63946' : '#000');
+                }
+
+                // 오늘 손익
+                const todayEl = document.getElementById('today-net-profit');
+                if (todayEl) {
+                    const v = data.today_net_profit || 0;
+                    todayEl.innerText = (v >= 0 ? '+' : '') + new Intl.NumberFormat().format(v) + ' ₩';
+                    todayEl.style.color = v > 0 ? '#22C55E' : (v < 0 ? '#E63946' : '#000');
+                }
+
+                // 마지막 거래 경과
+                const elapsedEl = document.getElementById('last-trade-elapsed');
+                if (elapsedEl) {
+                    const m = data.last_trade_elapsed_minutes;
+                    if (m === null || m === undefined) {
+                        elapsedEl.innerText = '-';
+                    } else if (m < 60) {
+                        elapsedEl.innerText = m + (currentLang === 'ko' ? '분 전' : 'm ago');
+                    } else if (m < 1440) {
+                        elapsedEl.innerText = Math.floor(m / 60) + (currentLang === 'ko' ? '시간 전' : 'h ago');
+                    } else {
+                        elapsedEl.innerText = Math.floor(m / 1440) + (currentLang === 'ko' ? '일 전' : 'd ago');
+                    }
+                }
 
                 // RSI
                 const rsiVal = document.getElementById('rsi-value');

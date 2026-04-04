@@ -334,6 +334,24 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         win_count = len([t for t in all_trades if t.net_profit is not None and t.net_profit > 0])
         loss_count = len([t for t in all_trades if t.net_profit is not None and t.net_profit < 0])
         win_rate = (win_count / (win_count + loss_count) * 100) if (win_count + loss_count) > 0 else 0.0
+
+        # 평균 매매 단가 (매도당 평균 순익)
+        trade_count = win_count + loss_count
+        avg_profit_per_trade = int(total_net_profit / trade_count) if trade_count > 0 else 0
+
+        # 오늘 손익
+        import datetime as dt
+        today_start = dt.datetime.combine(dt.date.today(), dt.time.min)
+        today_trades = [t for t in all_trades if t.timestamp >= today_start and t.net_profit is not None]
+        today_net_profit = int(sum(t.net_profit for t in today_trades))
+
+        # 마지막 매매 경과시간
+        last_trade = db.query(TradeHistory).order_by(TradeHistory.timestamp.desc()).first()
+        if last_trade:
+            elapsed = dt.datetime.utcnow() - last_trade.timestamp
+            elapsed_minutes = int(elapsed.total_seconds() / 60)
+        else:
+            elapsed_minutes = None
         
         # Prepare Chart Data (Cumulative Profit Over Time)
         cumulative_profits = []
@@ -364,6 +382,9 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             "win_rate": win_rate,
             "win_count": win_count,
             "loss_count": loss_count,
+            "avg_profit_per_trade": avg_profit_per_trade,
+            "today_net_profit": today_net_profit,
+            "last_trade_elapsed_minutes": elapsed_minutes,
             "chart_data": cumulative_profits,
             "config": {
                 "rsi_threshold": bot_settings.rsi_threshold if bot_settings else 30.0,
