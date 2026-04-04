@@ -221,6 +221,25 @@ h1, .archivo-bold {
 .tile-side { grid-column: span 4; grid-row: span 3; }
 .tile-stats-bau { grid-column: span 3; grid-row: span 1; }
 
+/* Tablet (≤1024px) */
 @media (max-width: 1024px) {
-    .bau-tile { grid-column: span 12 !important; grid-row: auto !important; }
+    .bau-container {
+        padding: 1.5rem;
+        gap: 1.25rem;
+    }
+    .tile-big  { grid-column: span 12; grid-row: auto; }
+    .tile-side { grid-column: span 12; grid-row: auto; }
+    .tile-stats-bau { grid-column: span 6; grid-row: auto; }
+    .tile-full { grid-column: span 12; }
+}
+
+/* Mobile (≤640px) */
+@media (max-width: 640px) {
+    .bau-container {
+        padding: 1rem;
+        gap: 1rem;
+    }
+    .tile-stats-bau { grid-column: span 12; }
+    .bau-tile { padding: 1.25rem; }
+    .value-bau { font-size: 2rem; }
 }
