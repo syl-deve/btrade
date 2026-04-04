@@ -122,7 +122,8 @@
             <div class="bau-tile tile-stats-bau tile-yellow-accent">
                 <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_rsi">RSI_STRENGTH</span></div>
                 <div id="rsi-value" class="text-5xl font-black">0.00</div>
-                <div id="rsi-status" class="mt-4 text-[10px] font-black p-2 bg-black text-white inline-block">NEUTRAL</div>
+                <div id="rsi-status" class="mt-3 text-[10px] font-black p-2 bg-black text-white inline-block">NEUTRAL</div>
+                <div id="rsi-thresholds" class="mt-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">1차 — / 2차 —</div>
             </div>
 
             <!-- 평균 매매 단가 -->
@@ -581,12 +582,22 @@
                 
                 const rsiStatus = document.getElementById('rsi-status');
                 if (rsiStatus && data.config) {
-                    if (data.current_rsi <= data.config.rsi_threshold) {
-                        rsiStatus.innerText = i18n[currentLang].rsi_buy;
-                        rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-red-600 text-white inline-block border-2 border-black";
+                    if (data.current_rsi <= data.config.rsi_threshold_2) {
+                        rsiStatus.innerText = currentLang === 'ko' ? '2차매수 신호' : '2ND_BUY_SIGNAL';
+                        rsiStatus.className = "mt-3 text-[10px] font-black p-2 bg-purple-600 text-white inline-block border-2 border-black";
+                    } else if (data.current_rsi <= data.config.rsi_threshold) {
+                        rsiStatus.innerText = currentLang === 'ko' ? '1차매수 신호' : '1ST_BUY_SIGNAL';
+                        rsiStatus.className = "mt-3 text-[10px] font-black p-2 bg-red-600 text-white inline-block border-2 border-black";
                     } else {
                         rsiStatus.innerText = i18n[currentLang].rsi_neutral;
-                        rsiStatus.className = "mt-4 text-[10px] font-black p-2 bg-black text-white inline-block border-2 border-black";
+                        rsiStatus.className = "mt-3 text-[10px] font-black p-2 bg-black text-white inline-block border-2 border-black";
+                    }
+
+                    const rsiThresh = document.getElementById('rsi-thresholds');
+                    if (rsiThresh) {
+                        rsiThresh.innerText = currentLang === 'ko'
+                            ? `1차 ≤${data.config.rsi_threshold} / 2차 ≤${data.config.rsi_threshold_2}`
+                            : `1ST ≤${data.config.rsi_threshold} / 2ND ≤${data.config.rsi_threshold_2}`;
                     }
                 }
 
