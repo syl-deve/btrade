@@ -95,7 +95,7 @@
                     </div>
                     <!-- Significant Profit Rate Display -->
                     <div id="current-profit-rate" class="text-8xl font-black archivo-bold leading-tight mt-4 text-white tracking-tighter">0.00<span class="text-4xl">%</span></div>
-                    <p data-i18n="label_yield_sub" class="text-[12px] font-black uppercase text-white mt-2 opacity-80 tracking-widest">Active_Trade_Yield</p>
+                    <div id="holding-profit-krw" class="text-3xl font-black text-white mt-1 tracking-tighter opacity-90">0 ₩</div>
                 </div>
                 
                 <div id="current-crypto" class="border-4 border-black bg-white p-6 text-black shadow-[4px_4px_0px_#000]">
@@ -245,7 +245,6 @@
                 label_price:  'Current Price',
                 label_avgbuy: 'Avg Buy Price',
                 label_yield:  'REALTIME_YIELD_PERFORMANCE',
-                label_yield_sub: 'Active_Trade_Yield',
                 btn_config:   'GENERAL_CONFIG',
                 label_status: 'System Status: Online',
                 label_version:'System Version',
@@ -283,7 +282,6 @@
                 label_price:  '현재가',
                 label_avgbuy: '평균 매수가',
                 label_yield:  '실시간 수익률',
-                label_yield_sub: '현재 보유 수익률',
                 btn_config:   '시스템 설정',
                 label_status: '시스템 상태: 가동중',
                 label_version:'시스템 버전',
@@ -464,6 +462,18 @@
                 if (profitRateEl) {
                     profitRateEl.innerHTML = `${pRate.toFixed(2)}<span class="text-4xl">%</span>`;
                     profitRateEl.style.color = pRate > 0 ? '#22C55E' : (pRate < 0 ? '#E63946' : '#FFFFFF');
+                }
+
+                const holdingProfitKrwEl = document.getElementById('holding-profit-krw');
+                if (holdingProfitKrwEl) {
+                    if (data.coin_balance > 0.0001 && data.avg_buy_price > 0) {
+                        const holdingProfit = (data.current_price - data.avg_buy_price) * data.coin_balance;
+                        holdingProfitKrwEl.innerText = (holdingProfit >= 0 ? '+' : '') + new Intl.NumberFormat().format(Math.floor(holdingProfit)) + ' ₩';
+                        holdingProfitKrwEl.style.color = holdingProfit > 0 ? '#22C55E' : (holdingProfit < 0 ? '#E63946' : '#FFFFFF');
+                    } else {
+                        holdingProfitKrwEl.innerText = '0 ₩';
+                        holdingProfitKrwEl.style.color = '#FFFFFF';
+                    }
                 }
 
                 const netProfitEl = document.getElementById('total-net-profit');
