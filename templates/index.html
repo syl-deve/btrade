@@ -614,7 +614,7 @@
             const btn = document.getElementById('sell-now-btn');
             if (!confirm(currentLang === 'ko' ? '보유 코인을 즉시 시장가 매도하시겠습니까?' : 'Sell all holdings at market price now?')) return;
             btn.disabled = true;
-            btn.innerText = currentLang === 'ko' ? '매도 중...' : 'SELLING...';
+            btn.innerText = currentLang === 'ko' ? '분석중...' : 'ANALYZING...';
             try {
                 const res = await fetch('/api/sell_now', { method: 'POST' });
                 const data = await res.json();
