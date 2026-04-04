@@ -3,56 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BITRADE LOGIN // AUTHORIZED ACCESS ONLY</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <title>BITRADE // ACCESS</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1a 100%);
-            height: 100vh;
-            overflow: hidden;
-        }
-        .orbitron { font-family: 'Orbitron', sans-serif; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700;800;900&family=Archivo+Black&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/bauhaus.css">
 </head>
-<body class="flex items-center justify-center p-4">
-    <div class="glass-card w-full max-w-sm rounded-3xl p-10 text-center animate-fade-in">
-        <div class="mb-8">
-            <h1 class="orbitron text-2xl font-bold text-blue-500 tracking-tighter mb-2">BITRADE CORE</h1>
-            <p class="text-[10px] text-gray-500 tracking-widest uppercase opacity-60">Authentication Required</p>
+<body class="bg-white min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-md px-6">
+
+        <!-- 로고 헤더 -->
+        <div class="flex items-center gap-4 mb-10">
+            <div class="flex gap-2">
+                <div class="bau-shape bau-circle w-6 h-6"></div>
+                <div class="bau-shape bau-square w-6 h-6"></div>
+                <div class="bau-shape bau-triangle w-6 h-6 border-b-[24px] border-l-[12px] border-r-[12px] border-b-[#FACC15] border-l-transparent border-r-transparent"></div>
+            </div>
+            <h1 class="text-3xl font-black archivo-bold tracking-tighter uppercase">BITRADE.<span class="text-red-600">CORE</span></h1>
         </div>
 
-        <form action="/login" method="post" class="space-y-6">
-            <div class="form-control">
-                <input type="password" name="password" placeholder="ENTER MASTER PASSCODE" 
-                       class="input input-bordered w-full bg-black/40 border-white/10 text-center text-white placeholder:text-gray-700 focus:border-blue-500 rounded-xl"
-                       required autofocus>
+        <!-- 로그인 카드 -->
+        <div class="bau-tile p-10">
+            <div class="label-bau mb-6">
+                <div class="bau-shape bau-square"></div>
+                <span class="uppercase tracking-widest">ACCESS_CONTROL</span>
             </div>
 
-            {% if error %}
-            <p class="text-xs text-red-500 font-medium">{{ error }}</p>
-            {% endif %}
+            <h2 class="text-4xl font-black archivo-bold tracking-tighter uppercase leading-none mb-8">SECURE<br><span class="text-red-600">LOGIN</span></h2>
 
-            <button type="submit" class="btn btn-info w-full rounded-xl orbitron text-xs tracking-widest hover:scale-105 transition-transform">
-                SECURE ACCESS
-            </button>
-        </form>
+            <form action="/login" method="post" class="space-y-6">
+                <div>
+                    <label class="bau-label">MASTER PASSCODE</label>
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="••••••••"
+                        class="bau-input w-full text-center tracking-[0.3em] text-xl"
+                        required
+                        autofocus
+                    >
+                </div>
 
-        <div class="mt-12">
-            <p class="text-[8px] text-gray-700 tracking-tighter uppercase">
-                Hardware ID: ENCRYPTED // Session Status: LOCKED
-            </p>
+                {% if error %}
+                <div class="border-4 border-red-600 bg-red-50 p-3">
+                    <p class="text-xs font-black text-red-600 uppercase tracking-widest">{{ error }}</p>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn-bau btn-bau-yellow w-full justify-center py-4 text-sm tracking-widest font-black">
+                    AUTHENTICATE →
+                </button>
+            </form>
         </div>
+
+        <!-- 하단 데코 -->
+        <div class="mt-6 flex items-center justify-between px-1">
+            <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">BITRADE CORE // AUTHORIZED ACCESS ONLY</p>
+            <div class="flex gap-1">
+                <div class="w-2 h-2 bg-black"></div>
+                <div class="w-2 h-2 bg-red-600"></div>
+                <div class="w-2 h-2 bg-yellow-400"></div>
+            </div>
+        </div>
+
     </div>
 </body>
 </html>
