@@ -397,6 +397,45 @@ async def update_settings(data: dict, db: Session = Depends(get_db), user=Depend
         return {"status": "success"}
     return {"status": "error"}
 
+@app.post("/api/sell_now")
+async def sell_now(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    bot_settings = db.query(BotSettings).first()
+    target_exchange = bot_settings.exchange or "UPBIT" if bot_settings else "UPBIT"
+    current_client = get_client(target_exchange)
+
+    if not is_client_authorized(target_exchange):
+        return {"status": "error", "message": "API not authorized"}
+
+    coin_balance = current_client.get_coin_balance(SYMBOL)
+    if not coin_balance or coin_balance <= 0.0001:
+        return {"status": "error", "message": "No coin balance to sell"}
+
+    current_price = current_client.get_current_price(SYMBOL)
+    res = current_client.sell_market_order(coin_balance)
+    if res:
+        buy_principle = bot_settings.avg_buy_price * coin_balance if bot_settings and bot_settings.avg_buy_price > 0 else 0
+        sell_total = current_price * coin_balance if current_price else 0
+        net_profit = sell_total - buy_principle
+
+        new_trade = TradeHistory(
+            symbol=SYMBOL, side="SELL", price=current_price or 0,
+            volume=coin_balance, total_amount=sell_total,
+            net_profit=net_profit
+        )
+        db.add(new_trade)
+        if bot_settings:
+            bot_settings.avg_buy_price = 0.0
+            bot_settings.highest_profit_rate = 0.0
+        db.commit()
+        logger.info(f"[즉시매도] SOLD {coin_balance} at {current_price} (P&L: {net_profit:,.0f} KRW)")
+        send_discord_message("🔴 즉시매도 실행", f"{SYMBOL} {coin_balance} 전량 매도\n체결가: {current_price}\n손익: {net_profit:,.0f} KRW", color=0xe63946)
+        return {"status": "success", "net_profit": int(net_profit)}
+
+    return {"status": "error", "message": "Order failed"}
+
 @app.post("/api/toggle")
 async def toggle_bot(db: Session = Depends(get_db), user=Depends(get_current_user)):
     if not user:

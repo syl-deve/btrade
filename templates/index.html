@@ -115,7 +115,9 @@
                 </div>
 
                 <div class="mt-6">
-                    <p class="text-[11px] font-bold tracking-tighter opacity-80 text-white uppercase italic">BAUHAUS_UTILITY_V.10 // EXIT_ENABLED</p>
+                    <button id="sell-now-btn" onclick="sellNow()" class="btn-bau w-full justify-center py-4 bg-red-600 text-white border-4 border-black font-black tracking-widest text-sm hover:bg-red-700 transition-colors shadow-[4px_4px_0px_#000]">
+                        <span data-i18n="btn_sell_now">즉시 매도</span>
+                    </button>
                 </div>
             </section>
 
@@ -269,6 +271,7 @@
                 label_latency: 'API_LATENCY',
                 label_stability: 'NODE_STABILITY',
                 side_buy: 'BUY', side_sell: 'SELL',
+                btn_sell_now: 'INSTANT_SELL',
             },
             ko: {
                 label_krw:    '사용 가능 잔고 (원화)',
@@ -306,6 +309,7 @@
                 label_latency: 'API 응답속도',
                 label_stability: '노드 안정성',
                 side_buy: '매수', side_sell: '매도',
+                btn_sell_now: '즉시 매도',
             }
         };
 
@@ -577,6 +581,28 @@
                     alert('SYSTEM_STATE_UPDATED');
                 }
             } catch (err) { alert('SAVE_ERROR'); }
+        }
+
+        async function sellNow() {
+            const btn = document.getElementById('sell-now-btn');
+            if (!confirm(currentLang === 'ko' ? '보유 코인을 즉시 시장가 매도하시겠습니까?' : 'Sell all holdings at market price now?')) return;
+            btn.disabled = true;
+            btn.innerText = currentLang === 'ko' ? '매도 중...' : 'SELLING...';
+            try {
+                const res = await fetch('/api/sell_now', { method: 'POST' });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    await updateStatus();
+                } else {
+                    alert(data.message || 'SELL_FAILED');
+                }
+            } catch (err) {
+                alert('Connection Error');
+            } finally {
+                btn.disabled = false;
+                const t = i18n[currentLang];
+                btn.querySelector('[data-i18n]').textContent = t.btn_sell_now;
+            }
         }
 
         document.getElementById('toggle-btn').addEventListener('click', async () => {
