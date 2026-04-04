@@ -111,7 +111,7 @@
                 </div>
 
                 <div class="mt-6">
-                    <button id="sell-now-btn" onclick="sellNow()" class="btn-bau w-full justify-center py-4 bg-red-600 text-white border-4 border-black font-black tracking-widest text-sm hover:bg-red-700 transition-colors shadow-[4px_4px_0px_#000]">
+                    <button id="sell-now-btn" onclick="sellNow()" class="btn-bau w-full justify-center py-4 bg-red-600 text-white border-4 border-black font-black tracking-widest text-sm hover:bg-red-700 transition-colors shadow-[4px_4px_0px_#000]" style="display:none;">
                         <span data-i18n="btn_sell_now">즉시 매도</span>
                     </button>
                 </div>
@@ -463,14 +463,17 @@
                 }
 
                 const holdingProfitKrwEl = document.getElementById('holding-profit-krw');
+                const sellNowBtn = document.getElementById('sell-now-btn');
                 if (holdingProfitKrwEl) {
                     if (data.coin_balance > 0.0001 && data.avg_buy_price > 0) {
                         const holdingProfit = (data.current_price - data.avg_buy_price) * data.coin_balance;
                         holdingProfitKrwEl.innerText = (holdingProfit >= 0 ? '+' : '') + new Intl.NumberFormat().format(Math.floor(holdingProfit)) + ' ₩';
                         holdingProfitKrwEl.style.color = holdingProfit > 0 ? '#22C55E' : (holdingProfit < 0 ? '#E63946' : '#FFFFFF');
+                        if (sellNowBtn) sellNowBtn.style.display = '';
                     } else {
                         holdingProfitKrwEl.innerText = '0 ₩';
                         holdingProfitKrwEl.style.color = '#FFFFFF';
+                        if (sellNowBtn) sellNowBtn.style.display = 'none';
                     }
                 }
 
