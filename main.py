@@ -33,11 +33,21 @@ async def lifespan(app: FastAPI):
 
     # --- Auto Migration ---
     migrations = [
-        ("exchange",          "ALTER TABLE bot_settings ADD COLUMN exchange VARCHAR DEFAULT 'UPBIT'"),
-        ("rsi_threshold_2",   "ALTER TABLE bot_settings ADD COLUMN rsi_threshold_2 FLOAT DEFAULT 28.0"),
-        ("buy_count",         "ALTER TABLE bot_settings ADD COLUMN buy_count INTEGER DEFAULT 0"),
-        ("use_bollinger",     "ALTER TABLE bot_settings ADD COLUMN use_bollinger BOOLEAN DEFAULT 1"),
-        ("first_buy_ratio",   "ALTER TABLE bot_settings ADD COLUMN first_buy_ratio FLOAT DEFAULT 0.6"),
+        ("exchange",               "ALTER TABLE bot_settings ADD COLUMN exchange VARCHAR DEFAULT 'UPBIT'"),
+        ("rsi_threshold_2",        "ALTER TABLE bot_settings ADD COLUMN rsi_threshold_2 FLOAT DEFAULT 28.0"),
+        ("buy_count",              "ALTER TABLE bot_settings ADD COLUMN buy_count INTEGER DEFAULT 0"),
+        ("use_bollinger",          "ALTER TABLE bot_settings ADD COLUMN use_bollinger BOOLEAN DEFAULT 1"),
+        ("first_buy_ratio",        "ALTER TABLE bot_settings ADD COLUMN first_buy_ratio FLOAT DEFAULT 0.6"),
+        ("use_macd",               "ALTER TABLE bot_settings ADD COLUMN use_macd BOOLEAN DEFAULT 1"),
+        ("use_volume_filter",      "ALTER TABLE bot_settings ADD COLUMN use_volume_filter BOOLEAN DEFAULT 1"),
+        ("volume_multiplier",      "ALTER TABLE bot_settings ADD COLUMN volume_multiplier FLOAT DEFAULT 1.5"),
+        ("atr_multiplier",         "ALTER TABLE bot_settings ADD COLUMN atr_multiplier FLOAT DEFAULT 1.5"),
+        ("max_hold_hours",         "ALTER TABLE bot_settings ADD COLUMN max_hold_hours FLOAT DEFAULT 4.0"),
+        ("position_opened_at",     "ALTER TABLE bot_settings ADD COLUMN position_opened_at DATETIME"),
+        ("daily_loss_limit",       "ALTER TABLE bot_settings ADD COLUMN daily_loss_limit FLOAT DEFAULT -50000.0"),
+        ("max_consecutive_loss",   "ALTER TABLE bot_settings ADD COLUMN max_consecutive_loss INTEGER DEFAULT 3"),
+        ("cooldown_minutes",       "ALTER TABLE bot_settings ADD COLUMN cooldown_minutes INTEGER DEFAULT 60"),
+        ("cooldown_until",         "ALTER TABLE bot_settings ADD COLUMN cooldown_until DATETIME"),
     ]
     for col, sql in migrations:
         try:
@@ -64,6 +74,14 @@ async def lifespan(app: FastAPI):
             buy_count=0,
             use_bollinger=True,
             first_buy_ratio=0.6,
+            use_macd=True,
+            use_volume_filter=True,
+            volume_multiplier=1.5,
+            atr_multiplier=1.5,
+            max_hold_hours=4.0,
+            daily_loss_limit=-50000.0,
+            max_consecutive_loss=3,
+            cooldown_minutes=60,
         ))
         db.commit()
     db.close()
@@ -135,6 +153,7 @@ def _reset_position(bot_settings):
     bot_settings.avg_buy_price = 0.0
     bot_settings.highest_profit_rate = 0.0
     bot_settings.buy_count = 0
+    bot_settings.position_opened_at = None
 
 def _record_sell(db, current_price, coin_balance, bot_settings):
     buy_principle = bot_settings.avg_buy_price * coin_balance
@@ -155,12 +174,56 @@ def _record_buy(db, current_price, buy_amount):
     ))
     db.commit()
 
+def _check_daily_loss(db, bot_settings):
+    """당일 실현 손실이 한도 초과 시 봇 정지. True 반환 시 정지됨."""
+    import datetime as dt
+    today_start = dt.datetime.combine(dt.date.today(), dt.time.min)
+    today_sells = db.query(TradeHistory).filter(
+        TradeHistory.side == "SELL",
+        TradeHistory.timestamp >= today_start,
+        TradeHistory.net_profit < 0
+    ).all()
+    today_loss = sum(t.net_profit for t in today_sells if t.net_profit)
+    limit = bot_settings.daily_loss_limit or -50000.0
+    if today_loss <= limit:
+        bot_settings.is_running = False
+        db.commit()
+        logger.warning(f"🛑 일일 손실 한도 초과: {today_loss:,.0f} KRW ≤ {limit:,.0f} KRW → 봇 자동 정지")
+        send_discord_message("🛑 일일 손실 한도 초과", f"오늘 손실: {today_loss:,.0f} KRW\n한도: {limit:,.0f} KRW\n봇 자동 정지됨", color=0xff0000)
+        return True
+    return False
+
+def _check_consecutive_loss(db, bot_settings):
+    """연속 손절 횟수 초과 시 쿨다운 설정. True 반환 시 쿨다운 중."""
+    import datetime as dt
+    now = dt.datetime.utcnow()
+    # 이미 쿨다운 중
+    if bot_settings.cooldown_until and now < bot_settings.cooldown_until:
+        remaining = int((bot_settings.cooldown_until - now).total_seconds() / 60)
+        logger.info(f"[쿨다운] 매수 금지 중 — {remaining}분 남음")
+        return True
+
+    max_loss = bot_settings.max_consecutive_loss or 3
+    recent_sells = db.query(TradeHistory).filter(
+        TradeHistory.side == "SELL"
+    ).order_by(TradeHistory.timestamp.desc()).limit(max_loss).all()
+
+    if len(recent_sells) >= max_loss and all(t.net_profit < 0 for t in recent_sells):
+        cooldown_min = bot_settings.cooldown_minutes or 60
+        bot_settings.cooldown_until = now + dt.timedelta(minutes=cooldown_min)
+        db.commit()
+        logger.warning(f"⏸️ {max_loss}연속 손절 감지 → {cooldown_min}분 쿨다운 시작")
+        send_discord_message("⏸️ 연속 손절 쿨다운", f"{max_loss}회 연속 손절\n{cooldown_min}분간 매수 금지", color=0xffa500)
+        return True
+    return False
+
 async def trading_loop():
     logger.info("[Trading] Starting background loop...")
     while True:
         try:
             db = SessionLocal()
             try:
+                import datetime as dt
                 bot_settings = db.query(BotSettings).first()
                 if not bot_settings:
                     bot_settings = BotSettings(is_running=False)
@@ -195,23 +258,39 @@ async def trading_loop():
                 if coin_balance > 0.0001 and bot_settings.avg_buy_price > 0:
                     profit_rate = ((current_price / bot_settings.avg_buy_price) - 1) * 100
 
-                    # 1. 긴급 손절
-                    if profit_rate <= bot_settings.stop_loss_rate:
+                    # B. ATR 동적 손절율 계산
+                    dynamic_sl = strategy.get_dynamic_stop_loss(
+                        target_exchange, current_price, bot_settings.atr_multiplier or 1.5
+                    )
+                    effective_sl = dynamic_sl if dynamic_sl is not None else bot_settings.stop_loss_rate
+
+                    # B. 보유 시간 초과 강제 청산
+                    max_hours = bot_settings.max_hold_hours or 4.0
+                    hold_expired = False
+                    if bot_settings.position_opened_at:
+                        hold_hours = (dt.datetime.utcnow() - bot_settings.position_opened_at).total_seconds() / 3600
+                        if hold_hours >= max_hours and profit_rate < 0:
+                            hold_expired = True
+                            logger.warning(f"⏰ 보유시간 초과 ({hold_hours:.1f}h ≥ {max_hours}h) + 수익률 {profit_rate:.2f}% → 강제 청산")
+
+                    # 1. 긴급 손절 (ATR 동적 손절 적용) or 보유시간 초과
+                    if profit_rate <= effective_sl or hold_expired:
                         res = current_client.sell_market_order(coin_balance)
                         if res:
                             net_profit = _record_sell(db, current_price, coin_balance, bot_settings)
-                            logger.warning(f"🚨 Stop-Loss: SOLD @ {current_price:,.0f} ({profit_rate:.2f}%) | P&L: {net_profit:,.0f} KRW")
-                            send_discord_message("🚨 긴급 손절", f"{profit_rate:.2f}% 손절\n체결가: {current_price:,.0f}\n손실: {net_profit:,.0f} KRW", color=0x0000ff)
+                            reason = "⏰ 보유시간 초과" if hold_expired else "🚨 ATR 손절"
+                            logger.warning(f"{reason}: SOLD @ {current_price:,.0f} ({profit_rate:.2f}%, SL: {effective_sl:.2f}%) | P&L: {net_profit:,.0f} KRW")
+                            send_discord_message(reason, f"손절율: {effective_sl:.2f}% (ATR 동적)\n체결가: {current_price:,.0f}\n손실: {net_profit:,.0f} KRW", color=0x0000ff)
+                            _check_daily_loss(db, bot_settings)
 
                     else:
-                        # 2. 2차 추가매수 — RSI 더 내려갔고 평단보다 낮을 때
+                        # 2. 2차 추가매수
                         if bot_settings.buy_count == 1 and current_rsi and current_rsi <= bot_settings.rsi_threshold_2 and current_price < bot_settings.avg_buy_price:
                             krw_balance = current_client.get_krw_balance()
                             if krw_balance > 5000:
                                 buy_amount = krw_balance * 0.995
                                 res = current_client.buy_market_order(buy_amount)
                                 if res:
-                                    # 평단 재계산
                                     total_coin = coin_balance + buy_amount / current_price
                                     total_cost = bot_settings.avg_buy_price * coin_balance + buy_amount
                                     bot_settings.avg_buy_price = total_cost / total_coin
@@ -232,20 +311,36 @@ async def trading_loop():
                                 res = current_client.sell_market_order(coin_balance)
                                 if res:
                                     net_profit = _record_sell(db, current_price, coin_balance, bot_settings)
-                                    logger.info(f"🎣 트레일링 익절: SOLD @ {current_price:,.0f} (고점: {bot_settings.highest_profit_rate:.2f}% → 현재: {profit_rate:.2f}%) | P&L: +{net_profit:,.0f} KRW")
-                                    send_discord_message("🎣 트레일링 익절", f"고점 {bot_settings.highest_profit_rate:.2f}% → {profit_rate:.2f}%로 하락\n체결가: {current_price:,.0f}\n수익: +{net_profit:,.0f} KRW", color=0xff0000)
+                                    logger.info(f"🎣 트레일링 익절: SOLD @ {current_price:,.0f} (고점: {bot_settings.highest_profit_rate:.2f}% → {profit_rate:.2f}%) | P&L: +{net_profit:,.0f} KRW")
+                                    send_discord_message("🎣 트레일링 익절", f"고점 {bot_settings.highest_profit_rate:.2f}% → {profit_rate:.2f}%\n체결가: {current_price:,.0f}\n수익: +{net_profit:,.0f} KRW", color=0xff0000)
+                                    _check_daily_loss(db, bot_settings)
                         else:
-                            logger.info(f"[홀딩] 수익률: {profit_rate:.2f}% | 고점: {bot_settings.highest_profit_rate:.2f}% | 목표: {bot_settings.target_profit_rate}%")
+                            logger.info(f"[홀딩] 수익률: {profit_rate:.2f}% | 고점: {bot_settings.highest_profit_rate:.2f}% | SL: {effective_sl:.2f}%")
 
                 # ── 미보유 — 1차 매수 ────────────────────────────────
                 elif coin_balance <= 0.0001:
-                    if current_rsi and current_rsi <= bot_settings.rsi_threshold:
-                        # 볼린저밴드 필터
-                        boll_ok = True
-                        if bot_settings.use_bollinger:
-                            boll_ok = strategy.is_below_bollinger_lower(target_exchange)
+                    # C. 일일 손실 한도 체크
+                    if _check_daily_loss(db, bot_settings):
+                        continue
+                    # C. 연속 손절 쿨다운 체크
+                    if _check_consecutive_loss(db, bot_settings):
+                        continue
 
-                        if boll_ok:
+                    if current_rsi and current_rsi <= bot_settings.rsi_threshold:
+                        # A. 볼린저밴드 필터
+                        boll_ok = not bot_settings.use_bollinger or strategy.is_below_bollinger_lower(target_exchange)
+                        # A. MACD 반전 필터
+                        macd_ok = not bot_settings.use_macd or strategy.is_macd_reversing(target_exchange)
+                        # A. 거래량 급증 필터
+                        vol_ok = not bot_settings.use_volume_filter or strategy.is_volume_surging(
+                            target_exchange, multiplier=bot_settings.volume_multiplier or 1.5
+                        )
+
+                        filters = {"볼린저": boll_ok, "MACD": macd_ok, "거래량": vol_ok}
+                        failed = [k for k, v in filters.items() if not v]
+                        if failed:
+                            logger.info(f"[대기] RSI {current_rsi:.2f} 충족, 필터 미달: {', '.join(failed)}")
+                        else:
                             krw_balance = current_client.get_krw_balance()
                             if krw_balance > 5000:
                                 ratio = bot_settings.first_buy_ratio or 0.6
@@ -255,14 +350,13 @@ async def trading_loop():
                                     bot_settings.avg_buy_price = current_price
                                     bot_settings.highest_profit_rate = 0.0
                                     bot_settings.buy_count = 1
+                                    bot_settings.position_opened_at = dt.datetime.utcnow()
                                     db.commit()
                                     _record_buy(db, current_price, buy_amount)
                                     logger.info(f"🛒 1차 매수: {current_price:,.0f} | RSI: {current_rsi:.2f} | 금액: {buy_amount:,.0f} KRW")
-                                    send_discord_message("🛒 1차 매수", f"RSI {current_rsi:.2f} + 볼린저 하단 돌파\n체결가: {current_price:,.0f}\n매수금액: {buy_amount:,.0f} KRW", color=0x00ff00)
+                                    send_discord_message("🛒 1차 매수", f"RSI {current_rsi:.2f} | 볼린저✓ MACD✓ 거래량✓\n체결가: {current_price:,.0f}\n매수금액: {buy_amount:,.0f} KRW", color=0x00ff00)
                                 else:
                                     logger.error("❌ 1차 매수 실패")
-                        else:
-                            logger.info(f"[대기] RSI {current_rsi:.2f} 조건 충족, 볼린저 미달 → 진입 보류")
 
             finally:
                 db.close()
@@ -408,6 +502,14 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                 "trailing_offset": bot_settings.trailing_stop_offset if bot_settings else 0.3,
                 "use_bollinger": bot_settings.use_bollinger if bot_settings else True,
                 "first_buy_ratio": bot_settings.first_buy_ratio if bot_settings else 0.6,
+                "use_macd": bot_settings.use_macd if bot_settings else True,
+                "use_volume_filter": bot_settings.use_volume_filter if bot_settings else True,
+                "volume_multiplier": bot_settings.volume_multiplier if bot_settings else 1.5,
+                "atr_multiplier": bot_settings.atr_multiplier if bot_settings else 1.5,
+                "max_hold_hours": bot_settings.max_hold_hours if bot_settings else 4.0,
+                "daily_loss_limit": bot_settings.daily_loss_limit if bot_settings else -50000.0,
+                "max_consecutive_loss": bot_settings.max_consecutive_loss if bot_settings else 3,
+                "cooldown_minutes": bot_settings.cooldown_minutes if bot_settings else 60,
             },
             "history": [{
                 "id": h.id, "side": h.side, "price": int(h.price), "volume": h.volume,
@@ -434,6 +536,14 @@ async def update_settings(data: dict, db: Session = Depends(get_db), user=Depend
         bot_settings.exchange = data.get("exchange", "UPBIT")
         bot_settings.use_bollinger = data.get("use_bollinger", True)
         bot_settings.first_buy_ratio = data.get("first_buy_ratio", 0.6)
+        bot_settings.use_macd = data.get("use_macd", True)
+        bot_settings.use_volume_filter = data.get("use_volume_filter", True)
+        bot_settings.volume_multiplier = data.get("volume_multiplier", 1.5)
+        bot_settings.atr_multiplier = data.get("atr_multiplier", 1.5)
+        bot_settings.max_hold_hours = data.get("max_hold_hours", 4.0)
+        bot_settings.daily_loss_limit = data.get("daily_loss_limit", -50000.0)
+        bot_settings.max_consecutive_loss = data.get("max_consecutive_loss", 3)
+        bot_settings.cooldown_minutes = data.get("cooldown_minutes", 60)
         db.commit()
         return {"status": "success"}
     return {"status": "error"}
