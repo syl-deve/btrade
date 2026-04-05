@@ -22,18 +22,18 @@
                 <h1 class="text-2xl md:text-4xl font-black archivo-bold tracking-tighter uppercase">BITRADE.<span class="text-red-600">DASHBOARD</span></h1>
             </div>
 
-            <nav class="flex flex-wrap items-center gap-3 md:gap-8 font-bold uppercase text-sm tracking-widest w-full md:w-auto">
+            <nav class="flex flex-wrap items-center gap-3 md:gap-8 font-bold uppercase text-base tracking-widest w-full md:w-auto">
                 <div id="exchange-badge" class="flex items-center gap-2">
                     <div class="bau-shape bau-square w-3 h-3"></div>
-                    <span id="exchange-text" class="text-xs md:text-sm">AUTO_CONNECT</span>
+                    <span id="exchange-text" class="text-xs md:text-base">AUTO_CONNECT</span>
                 </div>
                 <div id="bot-status-badge" class="flex items-center gap-2 text-red-600 font-black">
                     <div class="bau-shape bau-circle w-3 h-3"></div>
-                    <span id="status-text" class="text-xs md:text-sm">OFFLINE</span>
+                    <span id="status-text" class="text-xs md:text-base">OFFLINE</span>
                 </div>
-                <button id="toggle-btn" class="btn-bau btn-bau-red text-sm py-2 md:py-3 border-4 border-black">START_SYSTEM</button>
-                <button id="lang-toggle" class="btn-bau text-sm py-2 md:py-3 px-3 md:px-4 border-4 border-black font-black tracking-widest" onclick="toggleLang()">KO</button>
-                <a href="/logout" class="btn-bau text-sm py-2 md:py-3 border-4 border-black hover:bg-black hover:text-white transition-all">EXIT_NODE</a>
+                <button id="toggle-btn" class="btn-bau btn-bau-red text-base py-2 md:py-3 border-4 border-black">START_SYSTEM</button>
+                <button id="lang-toggle" class="btn-bau text-base py-2 md:py-3 px-3 md:px-4 border-4 border-black font-black tracking-widest" onclick="toggleLang()">KO</button>
+                <a href="/logout" class="btn-bau text-base py-2 md:py-3 border-4 border-black hover:bg-black hover:text-white transition-all">EXIT_NODE</a>
             </nav>
         </header>
 
@@ -46,10 +46,10 @@
             <div class="w-[2px] bg-black/10"></div>
             <div class="flex flex-col">
                 <p data-i18n="label_coin" class="meta-label">Currently Held (Unit)</p>
-                <div id="coin-balance" class="text-2xl font-black archivo-bold">0.0000 <span id="coin-unit" class="text-sm opacity-60">WAIT</span></div>
+                <div id="coin-balance" class="text-2xl font-black archivo-bold">0.0000 <span id="coin-unit" class="text-xl opacity-60">WAIT</span></div>
             </div>
             <div class="ml-auto flex items-center gap-4">
-                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau py-3 px-6 bg-zinc-900 text-white border-4 border-black font-black tracking-widest text-sm"><span data-i18n="btn_config">GENERAL_CONFIG</span></button>
+                <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau py-3 px-6 bg-zinc-900 text-white border-4 border-black font-black tracking-widest text-xl"><span data-i18n="btn_config">GENERAL_CONFIG</span></button>
             </div>
         </div>
 
@@ -111,7 +111,7 @@
                 </div>
 
                 <div class="mt-6">
-                    <button id="sell-now-btn" onclick="sellNow()" class="btn-bau w-full justify-center py-4 bg-red-600 text-white border-4 border-black font-black tracking-widest text-sm hover:bg-red-700 transition-colors shadow-[4px_4px_0px_#000]" style="display:none;">
+                    <button id="sell-now-btn" onclick="sellNow()" class="btn-bau w-full justify-center py-4 bg-red-600 text-white border-4 border-black font-black tracking-widest text-xl hover:bg-red-700 transition-colors shadow-[4px_4px_0px_#000]" style="display:none;">
                         <span data-i18n="btn_sell_now">즉시 매도</span>
                     </button>
                 </div>
@@ -125,8 +125,8 @@
                     <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_rsi">RSI_STRENGTH</span></div>
                     <div id="rsi-value" class="text-4xl font-black leading-none">0.00</div>
                     <div>
-                        <div id="rsi-status" class="mt-2 text-sm font-black px-2 py-1 bg-black text-white inline-block border-2 border-black">NEUTRAL</div>
-                        <div id="rsi-thresholds" class="mt-1 text-sm font-bold text-zinc-500 uppercase tracking-wider">1차 — / 2차 —</div>
+                        <div id="rsi-status" class="mt-2 text-xl font-black px-2 py-1 bg-black text-white inline-block border-2 border-black">NEUTRAL</div>
+                        <div id="rsi-thresholds" class="mt-1 text-xl font-bold text-zinc-500 uppercase tracking-wider">1차 — / 2차 —</div>
                     </div>
                 </div>
 
@@ -134,50 +134,50 @@
                 <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px;">
                     <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_avg_profit">AVG_PROFIT/TRADE</span></div>
                     <div id="avg-profit-per-trade" class="text-3xl font-black leading-none">0 ₩</div>
-                    <p data-i18n="label_avg_profit_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">매도당 평균 순익</p>
+                    <p data-i18n="label_avg_profit_sub" class="text-xl font-bold mt-1 text-zinc-700 uppercase">매도당 평균 순익</p>
                 </div>
 
                 <!-- 오늘 손익 -->
                 <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px;">
                     <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_today_profit">TODAY_P&L</span></div>
                     <div id="today-net-profit" class="text-3xl font-black leading-none">0 ₩</div>
-                    <p data-i18n="label_today_profit_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">오늘 실현 손익</p>
+                    <p data-i18n="label_today_profit_sub" class="text-xl font-bold mt-1 text-zinc-700 uppercase">오늘 실현 손익</p>
                 </div>
 
                 <!-- 마지막 거래 -->
                 <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px;">
                     <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_last_trade">LAST_TRADE</span></div>
                     <div id="last-trade-elapsed" class="text-3xl font-black leading-none">-</div>
-                    <p data-i18n="label_last_trade_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">마지막 거래 경과</p>
+                    <p data-i18n="label_last_trade_sub" class="text-xl font-bold mt-1 text-zinc-700 uppercase">마지막 거래 경과</p>
                 </div>
 
                 <!-- MACD -->
                 <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px;">
                     <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_macd">MACD</span></div>
-                    <div id="macd-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
+                    <div id="macd-status" class="text-xl font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
                     <div class="flex flex-col gap-0">
-                        <span data-i18n="label_macd_hist" class="text-sm font-bold uppercase text-zinc-400">히스토그램</span>
+                        <span data-i18n="label_macd_hist" class="text-xl font-bold uppercase text-zinc-400">히스토그램</span>
                         <span class="font-black text-xl leading-tight" id="macd-hist">—</span>
-                        <span class="text-sm font-bold text-zinc-400" id="macd-hist-prev">이전: —</span>
+                        <span class="text-xl font-bold text-zinc-400" id="macd-hist-prev">이전: —</span>
                     </div>
                 </div>
 
                 <!-- 거래량 -->
                 <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px;">
                     <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_volume_filter">VOLUME</span></div>
-                    <div id="vol-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
+                    <div id="vol-status" class="text-xl font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
                     <div class="flex flex-col gap-0">
-                        <span data-i18n="label_vol_ratio" class="text-sm font-bold uppercase text-zinc-400">평균 대비</span>
+                        <span data-i18n="label_vol_ratio" class="text-xl font-bold uppercase text-zinc-400">평균 대비</span>
                         <span class="font-black text-xl leading-tight" id="vol-ratio">—</span>
-                        <span class="text-sm font-bold text-zinc-400" id="vol-threshold">기준: —</span>
+                        <span class="text-xl font-bold text-zinc-400" id="vol-threshold">기준: —</span>
                     </div>
                 </div>
 
                 <!-- 볼린저밴드 -->
                 <div class="bau-tile tile-blue-dot flex flex-col justify-between" style="flex:1; min-width:160px;">
                     <div class="label-bau text-white/80"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER</span></div>
-                    <div id="boll-status" class="text-sm font-black text-white inline-block px-2 py-1 border-2 border-white">--</div>
-                    <div class="flex flex-col gap-0.5 text-sm font-bold text-white/90">
+                    <div id="boll-status" class="text-xl font-black text-white inline-block px-2 py-1 border-2 border-white">--</div>
+                    <div class="flex flex-col gap-0.5 text-xl font-bold text-white/90">
                         <span>↑ <span id="boll-upper">—</span></span>
                         <span>— <span id="boll-middle">—</span></span>
                         <span class="text-yellow-300 font-black">↓ <span id="boll-lower">—</span></span>
@@ -200,12 +200,12 @@
                     <table class="w-full text-base border-collapse" style="min-width: 640px;">
                         <thead style="position: sticky; top: 0; background: #fff; z-index: 10; border-bottom: 4px solid #000; box-shadow: 0 2px 0 #000;">
                             <tr>
-                                <th class="text-left py-3 px-3 meta-label" data-i18n="th_time">Time</th>
-                                <th class="text-left py-3 px-3 meta-label" data-i18n="th_side">Side</th>
-                                <th class="text-right py-3 px-3 meta-label" data-i18n="th_price">Price</th>
-                                <th class="text-right py-3 px-3 meta-label" data-i18n="th_volume">Volume</th>
-                                <th class="text-right py-3 px-3 meta-label" data-i18n="th_amount">Amount</th>
-                                <th class="text-right py-3 px-3 meta-label" data-i18n="th_profit">Net P&L</th>
+                                <th class="text-left py-3 px-3 meta-label !text-base" data-i18n="th_time">Time</th>
+                                <th class="text-left py-3 px-3 meta-label !text-base" data-i18n="th_side">Side</th>
+                                <th class="text-right py-3 px-3 meta-label !text-base" data-i18n="th_price">Price</th>
+                                <th class="text-right py-3 px-3 meta-label !text-base" data-i18n="th_volume">Volume</th>
+                                <th class="text-right py-3 px-3 meta-label !text-base" data-i18n="th_amount">Amount</th>
+                                <th class="text-right py-3 px-3 meta-label !text-base" data-i18n="th_profit">Net P&L</th>
                             </tr>
                         </thead>
                         <tbody id="trade-history-body">
@@ -588,7 +588,7 @@
                 const coinUnit = (data.target_coin && data.target_coin !== 'NONE') ? data.target_coin : 'BTC';
                 
                 safeUpdate('krw-balance', new Intl.NumberFormat().format(krwVal) + ' ₩');
-                safeUpdate('coin-balance', `${parseFloat(coinVal).toFixed(6)} <span id="coin-unit" class="text-sm opacity-60">${coinUnit}</span>`);
+                safeUpdate('coin-balance', `${parseFloat(coinVal).toFixed(6)} <span id="coin-unit" class="text-xl opacity-60">${coinUnit}</span>`);
 
                 // Bot Status & Button Swap
                 const botBadge = document.getElementById('bot-status-badge');
@@ -703,13 +703,13 @@
                 if (rsiStatus && data.config) {
                     if (data.current_rsi <= data.config.rsi_threshold_2) {
                         rsiStatus.innerText = currentLang === 'ko' ? '2차매수 신호' : '2ND_BUY_SIGNAL';
-                        rsiStatus.className = "mt-3 text-sm font-black p-2 bg-purple-600 text-white inline-block border-2 border-black";
+                        rsiStatus.className = "mt-3 text-xl font-black p-2 bg-purple-600 text-white inline-block border-2 border-black";
                     } else if (data.current_rsi <= data.config.rsi_threshold) {
                         rsiStatus.innerText = currentLang === 'ko' ? '1차매수 신호' : '1ST_BUY_SIGNAL';
-                        rsiStatus.className = "mt-3 text-sm font-black p-2 bg-red-600 text-white inline-block border-2 border-black";
+                        rsiStatus.className = "mt-3 text-xl font-black p-2 bg-red-600 text-white inline-block border-2 border-black";
                     } else {
                         rsiStatus.innerText = i18n[currentLang].rsi_neutral;
-                        rsiStatus.className = "mt-3 text-sm font-black p-2 bg-black text-white inline-block border-2 border-black";
+                        rsiStatus.className = "mt-3 text-xl font-black p-2 bg-black text-white inline-block border-2 border-black";
                     }
 
                     const rsiThresh = document.getElementById('rsi-thresholds');
@@ -731,13 +731,13 @@
                     if (mStatusEl) {
                         if (m.is_reversing === true) {
                             mStatusEl.innerText = currentLang === 'ko' ? '반전 신호 ↑' : 'REVERSING ↑';
-                            mStatusEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-red-600 text-white";
+                            mStatusEl.className = "text-xl font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-red-600 text-white";
                         } else if (m.histogram !== null && m.histogram >= 0) {
                             mStatusEl.innerText = currentLang === 'ko' ? '양수 구간' : 'POSITIVE';
-                            mStatusEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-blue-600 text-white";
+                            mStatusEl.className = "text-xl font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-blue-600 text-white";
                         } else {
                             mStatusEl.innerText = currentLang === 'ko' ? '음수 구간' : 'NEGATIVE';
-                            mStatusEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-black text-white";
+                            mStatusEl.className = "text-xl font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-black text-white";
                         }
                     }
                 }
@@ -754,10 +754,10 @@
                     if (vStatusEl) {
                         if (v.is_surging === true) {
                             vStatusEl.innerText = currentLang === 'ko' ? '급증 ↑' : 'SURGING ↑';
-                            vStatusEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-yellow-400 text-black";
+                            vStatusEl.className = "text-xl font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-yellow-400 text-black";
                         } else {
                             vStatusEl.innerText = currentLang === 'ko' ? '평이' : 'NORMAL';
-                            vStatusEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-black text-white";
+                            vStatusEl.className = "text-xl font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-black text-white";
                         }
                     }
                 }
@@ -776,13 +776,13 @@
                     if (sEl) {
                         if (b.is_below === true) {
                             sEl.innerText = currentLang === 'ko' ? '하단 이탈 ↓' : 'BELOW BAND ↓';
-                            sEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-white mb-2 bg-yellow-400 text-black";
+                            sEl.className = "text-xl font-black inline-block px-2 py-1 border-2 border-white mb-2 bg-yellow-400 text-black";
                         } else if (b.is_below === false) {
                             sEl.innerText = currentLang === 'ko' ? '밴드 내부' : 'IN BAND';
-                            sEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-white mb-2 bg-white text-black";
+                            sEl.className = "text-xl font-black inline-block px-2 py-1 border-2 border-white mb-2 bg-white text-black";
                         } else {
                             sEl.innerText = '--';
-                            sEl.className = "text-sm font-black text-white inline-block px-2 py-1 border-2 border-white mb-2";
+                            sEl.className = "text-xl font-black text-white inline-block px-2 py-1 border-2 border-white mb-2";
                         }
                     }
                 }
@@ -825,7 +825,7 @@
                         return `<tr class="border-b-2 border-black/10 hover:bg-zinc-50 transition-colors">
                             <td class="py-3 px-2 font-mono text-xs text-zinc-700 font-bold">${h.timestamp}</td>
                             <td class="py-3 px-2">
-                                <span style="background:${isBuy ? '#FACC15' : '#E63946'};color:${isBuy ? '#000' : '#fff'}" class="text-sm font-black px-2 py-1 border-2 border-black inline-block">${isBuy ? i18n[currentLang].side_buy : i18n[currentLang].side_sell}</span>
+                                <span style="background:${isBuy ? '#FACC15' : '#E63946'};color:${isBuy ? '#000' : '#fff'}" class="text-xl font-black px-2 py-1 border-2 border-black inline-block">${isBuy ? i18n[currentLang].side_buy : i18n[currentLang].side_sell}</span>
                             </td>
                             <td class="py-3 px-2 text-right font-bold">${h.price.toLocaleString()} ₩</td>
                             <td class="py-3 px-2 text-right font-bold">${parseFloat(h.volume).toFixed(6)}</td>
