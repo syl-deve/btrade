@@ -132,6 +132,20 @@ class ScalperStrategy:
         except Exception:
             return False
 
+    def get_volume_ratio(self, exchange="UPBIT", interval="minute15", period=20):
+        """현재봉 거래량 / 20봉 평균 비율 반환. Returns (current_volume, avg_volume, ratio) or (None, None, None)."""
+        try:
+            df = self.get_ohlcv(exchange, interval, period + 5)
+            if df is None or df.empty or 'volume' not in df.columns:
+                return None, None, None
+            avg_volume = df['volume'].iloc[:-1].rolling(window=period).mean().iloc[-1]
+            current_volume = df['volume'].iloc[-1]
+            if avg_volume is None or avg_volume == 0:
+                return None, None, None
+            return float(current_volume), float(avg_volume), float(current_volume / avg_volume)
+        except Exception:
+            return None, None, None
+
     def get_atr(self, exchange="UPBIT", interval="minute15", period=14, count=120):
         """ATR(Average True Range) 계산. Returns ATR값 or None."""
         try:

@@ -475,6 +475,17 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         boll_upper, boll_middle, boll_lower = strategy.get_bollinger(target_exchange)
         boll_ok = bool(strategy.is_below_bollinger_lower(target_exchange)) if boll_lower is not None else None
 
+        # MACD values
+        macd_val, macd_signal, macd_hist = strategy.get_macd(target_exchange)
+        macd_reversing = bool(strategy.is_macd_reversing(target_exchange)) if macd_hist else None
+
+        # Volume ratio
+        vol_current, vol_avg, vol_ratio = strategy.get_volume_ratio(target_exchange)
+        vol_surging = bool(strategy.is_volume_surging(
+            target_exchange,
+            multiplier=bot_settings.volume_multiplier if bot_settings else 1.5
+        )) if vol_ratio is not None else None
+
         # Full trade history (all records, newest first)
         history = db.query(TradeHistory).order_by(TradeHistory.timestamp.desc()).all()
 
@@ -492,6 +503,17 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                 "middle": int(boll_middle) if boll_middle else None,
                 "lower": int(boll_lower) if boll_lower else None,
                 "is_below": boll_ok,
+            },
+            "macd": {
+                "histogram": round(macd_hist[-1], 2) if macd_hist else None,
+                "histogram_prev": round(macd_hist[-2], 2) if macd_hist and len(macd_hist) >= 2 else None,
+                "is_reversing": macd_reversing,
+            },
+            "volume": {
+                "current": round(vol_current, 4) if vol_current else None,
+                "avg": round(vol_avg, 4) if vol_avg else None,
+                "ratio": round(vol_ratio, 2) if vol_ratio else None,
+                "is_surging": vol_surging,
             },
             "avg_buy_price": int(bot_settings.avg_buy_price) if bot_settings else 0,
             "profit_rate": profit_rate,

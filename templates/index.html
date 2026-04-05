@@ -146,6 +146,32 @@
                 <p data-i18n="label_last_trade_sub" class="text-[10px] font-bold mt-2 text-zinc-700 uppercase">마지막 거래 경과</p>
             </div>
 
+            <!-- MACD 상태 -->
+            <div class="bau-tile tile-stats-bau tile-red-accent flex flex-col justify-between">
+                <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_macd">MACD_SIGNAL</span></div>
+                <div>
+                    <div id="macd-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-black text-white">--</div>
+                    <div class="flex flex-col gap-0.5 text-xs font-bold text-zinc-600">
+                        <span data-i18n="label_macd_hist">히스토그램</span>
+                        <span class="font-black text-base" id="macd-hist">—</span>
+                        <span class="text-zinc-400" id="macd-hist-prev">이전: —</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 거래량 상태 -->
+            <div class="bau-tile tile-stats-bau flex flex-col justify-between">
+                <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_volume_filter">VOLUME_SURGE</span></div>
+                <div>
+                    <div id="vol-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-black text-white">--</div>
+                    <div class="flex flex-col gap-0.5 text-xs font-bold text-zinc-600">
+                        <span data-i18n="label_vol_ratio">평균 대비 비율</span>
+                        <span class="font-black text-base" id="vol-ratio">—</span>
+                        <span class="text-zinc-400" id="vol-threshold">기준: —</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 볼린저밴드 상태 -->
             <div class="bau-tile tile-stats-bau tile-blue-dot flex flex-col justify-between">
                 <div class="label-bau text-white/80"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER_BAND</span></div>
@@ -367,6 +393,10 @@
                 label_last_trade: 'LAST_TRADE',
                 label_last_trade_sub: 'Time Since Last Trade',
                 label_bollinger: 'BOLLINGER_BAND',
+                label_macd: 'MACD_SIGNAL',
+                label_macd_hist: 'Histogram',
+                label_volume_filter: 'VOLUME_SURGE',
+                label_vol_ratio: 'Ratio vs Avg',
                 side_buy: 'BUY', side_sell: 'SELL',
                 btn_sell_now: 'INSTANT_SELL',
             },
@@ -421,6 +451,10 @@
                 label_last_trade: '마지막 거래',
                 label_last_trade_sub: '마지막 거래 경과',
                 label_bollinger: '볼린저밴드',
+                label_macd: 'MACD 신호',
+                label_macd_hist: '히스토그램',
+                label_volume_filter: '거래량 급증',
+                label_vol_ratio: '평균 대비 비율',
                 side_buy: '매수', side_sell: '매도',
                 btn_sell_now: '즉시 매도',
             }
@@ -682,6 +716,48 @@
                         rsiThresh.innerText = currentLang === 'ko'
                             ? `1차 ≤${data.config.rsi_threshold} / 2차 ≤${data.config.rsi_threshold_2}`
                             : `1ST ≤${data.config.rsi_threshold} / 2ND ≤${data.config.rsi_threshold_2}`;
+                    }
+                }
+
+                // MACD
+                if (data.macd) {
+                    const m = data.macd;
+                    const histEl = document.getElementById('macd-hist');
+                    const histPrevEl = document.getElementById('macd-hist-prev');
+                    const mStatusEl = document.getElementById('macd-status');
+                    if (histEl) histEl.innerText = m.histogram !== null ? m.histogram.toFixed(2) : '—';
+                    if (histPrevEl) histPrevEl.innerText = (currentLang === 'ko' ? '이전: ' : 'Prev: ') + (m.histogram_prev !== null ? m.histogram_prev.toFixed(2) : '—');
+                    if (mStatusEl) {
+                        if (m.is_reversing === true) {
+                            mStatusEl.innerText = currentLang === 'ko' ? '반전 신호 ↑' : 'REVERSING ↑';
+                            mStatusEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-red-600 text-white";
+                        } else if (m.histogram !== null && m.histogram >= 0) {
+                            mStatusEl.innerText = currentLang === 'ko' ? '양수 구간' : 'POSITIVE';
+                            mStatusEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-blue-600 text-white";
+                        } else {
+                            mStatusEl.innerText = currentLang === 'ko' ? '음수 구간' : 'NEGATIVE';
+                            mStatusEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-black text-white";
+                        }
+                    }
+                }
+
+                // Volume
+                if (data.volume) {
+                    const v = data.volume;
+                    const volRatioEl = document.getElementById('vol-ratio');
+                    const volThreshEl = document.getElementById('vol-threshold');
+                    const vStatusEl = document.getElementById('vol-status');
+                    const mult = data.config ? data.config.volume_multiplier : 1.5;
+                    if (volRatioEl) volRatioEl.innerText = v.ratio !== null ? v.ratio.toFixed(2) + 'x' : '—';
+                    if (volThreshEl) volThreshEl.innerText = (currentLang === 'ko' ? '기준: ' : 'Min: ') + mult + 'x';
+                    if (vStatusEl) {
+                        if (v.is_surging === true) {
+                            vStatusEl.innerText = currentLang === 'ko' ? '급증 ↑' : 'SURGING ↑';
+                            vStatusEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-yellow-400 text-black";
+                        } else {
+                            vStatusEl.innerText = currentLang === 'ko' ? '평이' : 'NORMAL';
+                            vStatusEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-black text-white";
+                        }
                     }
                 }
 
