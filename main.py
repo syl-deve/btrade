@@ -473,7 +473,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
 
         # Bollinger Band values
         boll_upper, boll_middle, boll_lower = strategy.get_bollinger(target_exchange)
-        boll_ok = strategy.is_below_bollinger_lower(target_exchange) if boll_lower is not None else None
+        boll_ok = bool(strategy.is_below_bollinger_lower(target_exchange)) if boll_lower is not None else None
 
         # Full trade history (all records, newest first)
         history = db.query(TradeHistory).order_by(TradeHistory.timestamp.desc()).all()
