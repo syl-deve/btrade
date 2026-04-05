@@ -155,6 +155,9 @@ h1, .archivo-bold {
 
 .label-bau {
     font-size: 0.95rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .bau-input, .bau-select {
