@@ -91,7 +91,7 @@
                     <!-- Significant Profit Rate Display -->
                     <div id="current-profit-rate" class="text-6xl md:text-8xl font-black archivo-bold leading-tight mt-4 text-white tracking-tighter">0.00<span class="text-3xl md:text-4xl">%</span></div>
                     <div id="holding-profit-krw" class="text-2xl md:text-3xl font-black text-white mt-1 tracking-tighter opacity-90">0 ₩</div>
-                    <div id="buy-count-badge" class="mt-2 text-[11px] font-black tracking-widest text-white opacity-60 uppercase" style="display:none;"></div>
+                    <div id="buy-count-badge" class="mt-2 inline-block font-black tracking-widest uppercase px-3 py-1 border-2 border-white text-black text-base" style="display:none; background:#FACC15;"></div>
                 </div>
                 
                 <div id="current-crypto" class="border-4 border-black bg-white p-6 text-black shadow-[4px_4px_0px_#000]">
@@ -637,7 +637,7 @@
                         if (buyCountBadge) {
                             const cnt = data.buy_count || 0;
                             buyCountBadge.style.display = '';
-                            buyCountBadge.innerText = currentLang === 'ko' ? `${cnt}차 매수 포지션` : `POSITION: BUY ${cnt}`;
+                            buyCountBadge.innerText = currentLang === 'ko' ? (cnt >= 2 ? '분할매수 2회차' : '매수 진입') : (cnt >= 2 ? 'SPLIT BUY x2' : 'ENTRY x1');
                         }
                     } else {
                         holdingProfitKrwEl.innerText = '0 ₩';
