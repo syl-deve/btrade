@@ -471,9 +471,13 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                     "y": current_sum
                 })
 
+        # Bollinger Band values
+        boll_upper, boll_middle, boll_lower = strategy.get_bollinger(target_exchange)
+        boll_ok = strategy.is_below_bollinger_lower(target_exchange) if boll_lower is not None else None
+
         # Full trade history (all records, newest first)
         history = db.query(TradeHistory).order_by(TradeHistory.timestamp.desc()).all()
-        
+
         return {
             "exchange": target_exchange,
             "authorized": authorized,
@@ -483,6 +487,12 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             "coin_balance": coin_balance,
             "current_price": int(current_price),
             "current_rsi": current_rsi,
+            "bollinger": {
+                "upper": int(boll_upper) if boll_upper else None,
+                "middle": int(boll_middle) if boll_middle else None,
+                "lower": int(boll_lower) if boll_lower else None,
+                "is_below": boll_ok,
+            },
             "avg_buy_price": int(bot_settings.avg_buy_price) if bot_settings else 0,
             "profit_rate": profit_rate,
             "total_net_profit": int(total_net_profit),

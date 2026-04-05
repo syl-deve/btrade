@@ -146,6 +146,19 @@
                 <p data-i18n="label_last_trade_sub" class="text-[10px] font-bold mt-2 text-zinc-700 uppercase">마지막 거래 경과</p>
             </div>
 
+            <!-- 볼린저밴드 상태 -->
+            <div class="bau-tile tile-stats-bau tile-blue-dot flex flex-col justify-between">
+                <div class="label-bau text-white/80"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER_BAND</span></div>
+                <div>
+                    <div id="boll-status" class="text-sm font-black text-white inline-block px-2 py-1 border-2 border-white mb-2">--</div>
+                    <div class="flex flex-col gap-0.5 text-xs font-bold text-white/90">
+                        <span>↑ <span id="boll-upper">—</span></span>
+                        <span>— <span id="boll-middle">—</span></span>
+                        <span>↓ <span id="boll-lower" class="text-yellow-300 font-black">—</span></span>
+                    </div>
+                </div>
+            </div>
+
             <!-- 거래내역 전체폭 섹션 -->
             <section class="bau-tile tile-full flex flex-col gap-4">
                 <div class="flex items-center justify-between">
@@ -353,6 +366,7 @@
                 label_today_profit_sub: "Today's Realized P&L",
                 label_last_trade: 'LAST_TRADE',
                 label_last_trade_sub: 'Time Since Last Trade',
+                label_bollinger: 'BOLLINGER_BAND',
                 side_buy: 'BUY', side_sell: 'SELL',
                 btn_sell_now: 'INSTANT_SELL',
             },
@@ -406,6 +420,7 @@
                 label_today_profit_sub: '오늘 실현 손익',
                 label_last_trade: '마지막 거래',
                 label_last_trade_sub: '마지막 거래 경과',
+                label_bollinger: '볼린저밴드',
                 side_buy: '매수', side_sell: '매도',
                 btn_sell_now: '즉시 매도',
             }
@@ -667,6 +682,31 @@
                         rsiThresh.innerText = currentLang === 'ko'
                             ? `1차 ≤${data.config.rsi_threshold} / 2차 ≤${data.config.rsi_threshold_2}`
                             : `1ST ≤${data.config.rsi_threshold} / 2ND ≤${data.config.rsi_threshold_2}`;
+                    }
+                }
+
+                // Bollinger Band
+                if (data.bollinger) {
+                    const b = data.bollinger;
+                    const fmt = v => v ? v.toLocaleString() : '—';
+                    const uEl = document.getElementById('boll-upper');
+                    const mEl = document.getElementById('boll-middle');
+                    const lEl = document.getElementById('boll-lower');
+                    const sEl = document.getElementById('boll-status');
+                    if (uEl) uEl.innerText = fmt(b.upper);
+                    if (mEl) mEl.innerText = fmt(b.middle);
+                    if (lEl) lEl.innerText = fmt(b.lower);
+                    if (sEl) {
+                        if (b.is_below === true) {
+                            sEl.innerText = currentLang === 'ko' ? '하단 이탈 ↓' : 'BELOW BAND ↓';
+                            sEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-white mb-2 bg-yellow-400 text-black";
+                        } else if (b.is_below === false) {
+                            sEl.innerText = currentLang === 'ko' ? '밴드 내부' : 'IN BAND';
+                            sEl.className = "text-sm font-black inline-block px-2 py-1 border-2 border-white mb-2 bg-white text-black";
+                        } else {
+                            sEl.innerText = '--';
+                            sEl.className = "text-sm font-black text-white inline-block px-2 py-1 border-2 border-white mb-2";
+                        }
                     }
                 }
 
