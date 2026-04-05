@@ -117,72 +117,73 @@
                 </div>
             </section>
 
-            <!-- RSI Stat -->
-            <div class="bau-tile tile-stats-bau tile-yellow-accent">
-                <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_rsi">RSI_STRENGTH</span></div>
-                <div id="rsi-value" class="text-5xl font-black">0.00</div>
-                <div id="rsi-status" class="mt-3 text-[10px] font-black p-2 bg-black text-white inline-block">NEUTRAL</div>
-                <div id="rsi-thresholds" class="mt-2 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">1차 — / 2차 —</div>
-            </div>
+            <!-- 스탯 카드 7개 (한 줄 flex) -->
+            <div class="tile-full flex flex-wrap gap-0" style="grid-column: span 12;">
 
-            <!-- 평균 매매 단가 -->
-            <div class="bau-tile tile-stats-bau tile-red-accent">
-                <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_avg_profit">AVG_PROFIT/TRADE</span></div>
-                <div id="avg-profit-per-trade" class="text-4xl font-black">0 ₩</div>
-                <p data-i18n="label_avg_profit_sub" class="text-[10px] font-bold mt-2 text-zinc-700 uppercase">매도당 평균 순익</p>
-            </div>
-
-            <!-- 오늘 손익 -->
-            <div class="bau-tile tile-stats-bau flex flex-col gap-2">
-                <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_today_profit">TODAY_P&L</span></div>
-                <div id="today-net-profit" class="text-4xl font-black">0 ₩</div>
-                <p data-i18n="label_today_profit_sub" class="text-[10px] font-bold mt-2 text-zinc-700 uppercase">오늘 실현 손익</p>
-            </div>
-
-            <!-- 마지막 매매 경과시간 -->
-            <div class="bau-tile tile-stats-bau border-black flex flex-col justify-between">
-                <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_last_trade">LAST_TRADE</span></div>
-                <div id="last-trade-elapsed" class="text-4xl font-black">-</div>
-                <p data-i18n="label_last_trade_sub" class="text-[10px] font-bold mt-2 text-zinc-700 uppercase">마지막 거래 경과</p>
-            </div>
-
-            <!-- MACD 상태 -->
-            <div class="bau-tile tile-stats-bau tile-red-accent flex flex-col justify-between">
-                <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_macd">MACD_SIGNAL</span></div>
-                <div>
-                    <div id="macd-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-black text-white">--</div>
-                    <div class="flex flex-col gap-0.5 text-xs font-bold text-zinc-600">
-                        <span data-i18n="label_macd_hist">히스토그램</span>
-                        <span class="font-black text-base" id="macd-hist">—</span>
-                        <span class="text-zinc-400" id="macd-hist-prev">이전: —</span>
+                <!-- RSI -->
+                <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:140px;">
+                    <div class="label-bau text-xs"><div class="bau-shape bau-triangle"></div><span data-i18n="label_rsi">RSI_STRENGTH</span></div>
+                    <div id="rsi-value" class="text-4xl font-black leading-none">0.00</div>
+                    <div>
+                        <div id="rsi-status" class="mt-2 text-xs font-black px-2 py-1 bg-black text-white inline-block border-2 border-black">NEUTRAL</div>
+                        <div id="rsi-thresholds" class="mt-1 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">1차 — / 2차 —</div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 거래량 상태 -->
-            <div class="bau-tile tile-stats-bau flex flex-col justify-between">
-                <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_volume_filter">VOLUME_SURGE</span></div>
-                <div>
-                    <div id="vol-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black mb-2 bg-black text-white">--</div>
-                    <div class="flex flex-col gap-0.5 text-xs font-bold text-zinc-600">
-                        <span data-i18n="label_vol_ratio">평균 대비 비율</span>
-                        <span class="font-black text-base" id="vol-ratio">—</span>
-                        <span class="text-zinc-400" id="vol-threshold">기준: —</span>
+                <!-- 매매당 평균 손익 -->
+                <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:140px;">
+                    <div class="label-bau text-xs"><div class="bau-shape bau-circle"></div><span data-i18n="label_avg_profit">AVG_PROFIT/TRADE</span></div>
+                    <div id="avg-profit-per-trade" class="text-3xl font-black leading-none">0 ₩</div>
+                    <p data-i18n="label_avg_profit_sub" class="text-[10px] font-bold mt-1 text-zinc-700 uppercase">매도당 평균 순익</p>
+                </div>
+
+                <!-- 오늘 손익 -->
+                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:140px;">
+                    <div class="label-bau text-xs"><div class="bau-shape bau-square"></div><span data-i18n="label_today_profit">TODAY_P&L</span></div>
+                    <div id="today-net-profit" class="text-3xl font-black leading-none">0 ₩</div>
+                    <p data-i18n="label_today_profit_sub" class="text-[10px] font-bold mt-1 text-zinc-700 uppercase">오늘 실현 손익</p>
+                </div>
+
+                <!-- 마지막 거래 -->
+                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:140px;">
+                    <div class="label-bau text-xs"><div class="bau-shape bau-triangle"></div><span data-i18n="label_last_trade">LAST_TRADE</span></div>
+                    <div id="last-trade-elapsed" class="text-3xl font-black leading-none">-</div>
+                    <p data-i18n="label_last_trade_sub" class="text-[10px] font-bold mt-1 text-zinc-700 uppercase">마지막 거래 경과</p>
+                </div>
+
+                <!-- MACD -->
+                <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:140px;">
+                    <div class="label-bau text-xs"><div class="bau-shape bau-square"></div><span data-i18n="label_macd">MACD</span></div>
+                    <div id="macd-status" class="text-xs font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
+                    <div class="flex flex-col gap-0 text-xs font-bold text-zinc-600">
+                        <span data-i18n="label_macd_hist" class="text-[10px] uppercase text-zinc-400">히스토그램</span>
+                        <span class="font-black text-lg leading-tight" id="macd-hist">—</span>
+                        <span class="text-[10px] text-zinc-400" id="macd-hist-prev">이전: —</span>
                     </div>
                 </div>
-            </div>
 
-            <!-- 볼린저밴드 상태 -->
-            <div class="bau-tile tile-stats-bau tile-blue-dot flex flex-col justify-between">
-                <div class="label-bau text-white/80"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER_BAND</span></div>
-                <div>
-                    <div id="boll-status" class="text-sm font-black text-white inline-block px-2 py-1 border-2 border-white mb-2">--</div>
-                    <div class="flex flex-col gap-0.5 text-xs font-bold text-white/90">
-                        <span>↑ <span id="boll-upper">—</span></span>
-                        <span>— <span id="boll-middle">—</span></span>
-                        <span>↓ <span id="boll-lower" class="text-yellow-300 font-black">—</span></span>
+                <!-- 거래량 -->
+                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:140px;">
+                    <div class="label-bau text-xs"><div class="bau-shape bau-circle"></div><span data-i18n="label_volume_filter">VOLUME</span></div>
+                    <div id="vol-status" class="text-xs font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
+                    <div class="flex flex-col gap-0 text-xs font-bold text-zinc-600">
+                        <span data-i18n="label_vol_ratio" class="text-[10px] uppercase text-zinc-400">평균 대비</span>
+                        <span class="font-black text-lg leading-tight" id="vol-ratio">—</span>
+                        <span class="text-[10px] text-zinc-400" id="vol-threshold">기준: —</span>
                     </div>
                 </div>
+
+                <!-- 볼린저밴드 -->
+                <div class="bau-tile tile-blue-dot flex flex-col justify-between" style="flex:1; min-width:140px;">
+                    <div class="label-bau text-xs text-white/80"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER</span></div>
+                    <div id="boll-status" class="text-xs font-black text-white inline-block px-2 py-1 border-2 border-white">--</div>
+                    <div class="flex flex-col gap-0 text-xs font-bold text-white/90">
+                        <span class="text-[10px]">↑ <span id="boll-upper">—</span></span>
+                        <span class="text-[10px]">— <span id="boll-middle">—</span></span>
+                        <span class="text-[10px] text-yellow-300 font-black">↓ <span id="boll-lower">—</span></span>
+                    </div>
+                </div>
+
             </div>
 
             <!-- 거래내역 전체폭 섹션 -->
