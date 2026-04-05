@@ -145,12 +145,16 @@ h1, .archivo-bold {
 /* 가독성 개선: 소형 라벨 전역 기준 
    HTML의 text-[10px] text-zinc-400 패턴을 교체합니다 */
 .meta-label {
-    font-size: 0.75rem;      /* 12px - 최소 시인성 */
+    font-size: 0.875rem;     /* 14px */
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #3f3f46;          /* zinc-700 수준 */
+    color: #3f3f46;
     line-height: 1.4;
+}
+
+.label-bau {
+    font-size: 0.875rem !important;  /* 14px — 카드 헤더 라벨 */
 }
 
 .bau-input, .bau-select {
