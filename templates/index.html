@@ -823,7 +823,7 @@
                         const profitColor = h.net_profit > 0 ? 'color:#2563EB' : (h.net_profit < 0 ? 'color:#E63946' : 'color:#000');
                         const profitSign  = h.net_profit > 0 ? '+' : '';
                         return `<tr class="border-b-2 border-black/10 hover:bg-zinc-50 transition-colors">
-                            <td class="py-3 px-2 font-mono text-xs text-zinc-700 font-bold">${h.timestamp}</td>
+                            <td class="py-3 px-2 font-mono text-base text-zinc-700 font-bold">${h.timestamp}</td>
                             <td class="py-3 px-2">
                                 <span style="background:${isBuy ? '#FACC15' : '#E63946'};color:${isBuy ? '#000' : '#fff'}" class="text-sm font-black px-2 py-1 border-2 border-black inline-block">${isBuy ? i18n[currentLang].side_buy : i18n[currentLang].side_sell}</span>
                             </td>
