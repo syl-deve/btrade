@@ -213,6 +213,7 @@
                                 <th class="text-right py-3 px-3 meta-label" data-i18n="th_price">Price</th>
                                 <th class="text-right py-3 px-3 meta-label" data-i18n="th_volume">Volume</th>
                                 <th class="text-right py-3 px-3 meta-label" data-i18n="th_amount">Amount</th>
+                                <th class="text-right py-3 px-3 meta-label" data-i18n="th_fee">Fee</th>
                                 <th class="text-right py-3 px-3 meta-label" data-i18n="th_profit">Net P&L</th>
                             </tr>
                         </thead>
@@ -380,7 +381,7 @@
                 btn_apply:    'APPLY_CHANGES',
                 label_history:'TRADE_HISTORY (ALL)',
                 th_time: 'Time', th_side: 'Side', th_price: 'Price',
-                th_volume: 'Volume', th_amount: 'Amount', th_profit: 'Net P&L',
+                th_volume: 'Volume', th_amount: 'Amount', th_fee: 'Fee', th_profit: 'Net P&L',
                 // 동적 JS 문자열
                 status_active: 'ACTIVE', status_offline: 'OFFLINE',
                 auth_ok: 'AUTHORIZED', auth_err: 'UNAUTHORIZED',
@@ -437,7 +438,7 @@
                 btn_apply:    '변경사항 적용',
                 label_history:'거래 내역 (전체)',
                 th_time: '시간', th_side: '구분', th_price: '체결가',
-                th_volume: '수량', th_amount: '거래금액', th_profit: '손익',
+                th_volume: '수량', th_amount: '거래금액', th_fee: '수수료', th_profit: '손익',
                 // 동적 JS 문자열
                 status_active: '가동중', status_offline: '정지',
                 auth_ok: '인증완료', auth_err: '인증실패',
@@ -870,6 +871,7 @@
                             <td class="py-3 px-2 text-right font-bold">${h.price.toLocaleString()} ₩</td>
                             <td class="py-3 px-2 text-right font-bold">${parseFloat(h.volume).toFixed(6)}</td>
                             <td class="py-3 px-2 text-right font-bold">${h.total_amount.toLocaleString()} ₩</td>
+                            <td class="py-3 px-2 text-right font-bold text-zinc-400">${h.fee ? '-' + h.fee.toLocaleString() + ' ₩' : '-'}</td>
                             <td class="py-3 px-2 text-right font-black" style="${profitColor}">${h.side === 'SELL' ? profitSign + h.net_profit.toLocaleString() + ' ₩' : '-'}</td>
                         </tr>`;
                     }).join('');

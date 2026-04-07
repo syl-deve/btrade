@@ -16,6 +16,7 @@ class TradeHistory(Base):
     volume = Column(Float)
     total_amount = Column(Float)
     net_profit = Column(Float, default=0.0) # 매도 시 확정된 수익금 (매도금 - 매수원금)
+    fee = Column(Float, nullable=True)       # 거래 수수료 (원화)
     timestamp = Column(DateTime, default=datetime.datetime.now)
 
 class BotSettings(Base):

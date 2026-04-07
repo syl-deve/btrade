@@ -21,6 +21,13 @@ import sys
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
+UPBIT_FEE_RATE = 0.0005   # 업비트 0.05%
+BITHUMB_FEE_RATE = 0.0004 # 빗썸 0.04%
+
+def get_fee_rate():
+    from config import EXCHANGE
+    return BITHUMB_FEE_RATE if EXCHANGE == "BITHUMB" else UPBIT_FEE_RATE
+
 # --- Lifespan Event Handler ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -49,6 +56,16 @@ async def lifespan(app: FastAPI):
         ("cooldown_minutes",       "ALTER TABLE bot_settings ADD COLUMN cooldown_minutes INTEGER DEFAULT 60"),
         ("cooldown_until",         "ALTER TABLE bot_settings ADD COLUMN cooldown_until DATETIME"),
     ]
+    # trade_history 마이그레이션
+    trade_migrations = [
+        ("fee", "ALTER TABLE trade_history ADD COLUMN fee FLOAT"),
+    ]
+    for col, sql in trade_migrations:
+        try:
+            db.execute(text(f"SELECT {col} FROM trade_history LIMIT 1"))
+        except Exception:
+            db.execute(text(sql))
+            db.commit()
     for col, sql in migrations:
         try:
             db.execute(text(f"SELECT {col} FROM bot_settings LIMIT 1"))
@@ -156,21 +173,28 @@ def _reset_position(bot_settings):
     bot_settings.position_opened_at = None
 
 def _record_sell(db, current_price, coin_balance, bot_settings):
+    fee_rate = get_fee_rate()
     buy_principle = bot_settings.avg_buy_price * coin_balance
     sell_total = current_price * coin_balance
-    net_profit = sell_total - buy_principle
+    buy_fee = buy_principle * fee_rate
+    sell_fee = sell_total * fee_rate
+    total_fee = buy_fee + sell_fee
+    net_profit = sell_total - buy_principle - total_fee
     db.add(TradeHistory(
         symbol=SYMBOL, side="SELL", price=current_price,
-        volume=coin_balance, total_amount=sell_total, net_profit=net_profit
+        volume=coin_balance, total_amount=sell_total,
+        net_profit=net_profit, fee=total_fee
     ))
     _reset_position(bot_settings)
     db.commit()
     return net_profit
 
 def _record_buy(db, current_price, buy_amount):
+    fee_rate = get_fee_rate()
+    fee = buy_amount * fee_rate
     db.add(TradeHistory(
         symbol=SYMBOL, side="BUY", price=current_price,
-        volume=buy_amount / current_price, total_amount=buy_amount
+        volume=buy_amount / current_price, total_amount=buy_amount, fee=fee
     ))
     db.commit()
 
@@ -543,6 +567,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             "history": [{
                 "id": h.id, "side": h.side, "price": int(h.price), "volume": h.volume,
                 "total_amount": int(h.total_amount), "net_profit": int(h.net_profit) if h.net_profit else 0,
+                "fee": int(h.fee) if h.fee else 0,
                 "timestamp": h.timestamp.strftime("%Y-%m-%d %H:%M:%S")
             } for h in history]
         }
