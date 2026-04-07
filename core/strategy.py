@@ -46,9 +46,12 @@ class ScalperStrategy:
             period = 14
             au = ups.rolling(window=period).mean()
             ad = downs.rolling(window=period).mean()
-            rs = au / ad
+            rs = au / ad.replace(0, 1e-10)  # div-by-zero 방지
             rsi = 100 - (100 / (1 + rs))
-            return rsi.iloc[-1]
+            val = rsi.iloc[-1]
+            if val != val:  # nan 체크
+                return None
+            return val
         except Exception:
             return None
 

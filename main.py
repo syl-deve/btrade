@@ -183,7 +183,7 @@ def _check_daily_loss(db, bot_settings):
         TradeHistory.timestamp >= today_start,
         TradeHistory.net_profit < 0
     ).all()
-    today_loss = sum(t.net_profit for t in today_sells if t.net_profit)
+    today_loss = sum(t.net_profit for t in today_sells if t.net_profit is not None)
     limit = bot_settings.daily_loss_limit or -50000.0
     if today_loss <= limit:
         bot_settings.is_running = False
@@ -196,7 +196,7 @@ def _check_daily_loss(db, bot_settings):
 def _check_consecutive_loss(db, bot_settings):
     """연속 손절 횟수 초과 시 쿨다운 설정. True 반환 시 쿨다운 중."""
     import datetime as dt
-    now = dt.datetime.utcnow()
+    now = dt.datetime.now()
     # 이미 쿨다운 중
     if bot_settings.cooldown_until and now < bot_settings.cooldown_until:
         remaining = int((bot_settings.cooldown_until - now).total_seconds() / 60)
@@ -272,6 +272,7 @@ async def trading_loop():
                             logger.warning(f"🚨 ATR 손절: SOLD @ {current_price:,.0f} ({profit_rate:.2f}%, SL: {effective_sl:.2f}%) | P&L: {net_profit:,.0f} KRW")
                             send_discord_message("🚨 ATR 손절", f"손절율: {effective_sl:.2f}% (ATR 동적)\n체결가: {current_price:,.0f}\n손실: {net_profit:,.0f} KRW", color=0x0000ff)
                             _check_daily_loss(db, bot_settings)
+                            _check_consecutive_loss(db, bot_settings)
 
                     else:
                         # 2. 2차 추가매수
@@ -281,13 +282,19 @@ async def trading_loop():
                                 buy_amount = krw_balance * 0.995
                                 res = current_client.buy_market_order(buy_amount)
                                 if res:
-                                    total_coin = coin_balance + buy_amount / current_price
-                                    total_cost = bot_settings.avg_buy_price * coin_balance + buy_amount
+                                    new_coin = buy_amount / current_price
+                                    total_coin = coin_balance + new_coin
+                                    # 1차 실제 투자금을 DB에서 조회해 정확한 평단 계산
+                                    first_buy = db.query(TradeHistory).filter(
+                                        TradeHistory.side == "BUY"
+                                    ).order_by(TradeHistory.timestamp.desc()).first()
+                                    first_cost = first_buy.total_amount if first_buy else bot_settings.avg_buy_price * coin_balance
+                                    total_cost = first_cost + buy_amount
                                     bot_settings.avg_buy_price = total_cost / total_coin
                                     bot_settings.buy_count = 2
                                     bot_settings.highest_profit_rate = 0.0
-                                    db.commit()
                                     _record_buy(db, current_price, buy_amount)
+                                    db.commit()
                                     logger.info(f"💎 2차 매수: {current_price:,.0f} | RSI: {current_rsi:.2f} | 새 평단: {bot_settings.avg_buy_price:,.0f}")
                                     send_discord_message("💎 2차 추가매수", f"RSI {current_rsi:.2f} → 추가매수\n체결가: {current_price:,.0f}\n새 평단: {bot_settings.avg_buy_price:,.0f}", color=0x8b5cf6)
 
@@ -302,7 +309,7 @@ async def trading_loop():
                                 if res:
                                     net_profit = _record_sell(db, current_price, coin_balance, bot_settings)
                                     logger.info(f"🎣 트레일링 익절: SOLD @ {current_price:,.0f} (고점: {bot_settings.highest_profit_rate:.2f}% → {profit_rate:.2f}%) | P&L: +{net_profit:,.0f} KRW")
-                                    send_discord_message("🎣 트레일링 익절", f"고점 {bot_settings.highest_profit_rate:.2f}% → {profit_rate:.2f}%\n체결가: {current_price:,.0f}\n수익: +{net_profit:,.0f} KRW", color=0xff0000)
+                                    send_discord_message("🎣 트레일링 익절", f"고점 {bot_settings.highest_profit_rate:.2f}% → {profit_rate:.2f}%\n체결가: {current_price:,.0f}\n수익: +{net_profit:,.0f} KRW", color=0x00ff00)
                                     _check_daily_loss(db, bot_settings)
                         else:
                             logger.info(f"[홀딩] 수익률: {profit_rate:.2f}% | 고점: {bot_settings.highest_profit_rate:.2f}% | SL: {effective_sl:.2f}%")
@@ -341,8 +348,8 @@ async def trading_loop():
                                     bot_settings.highest_profit_rate = 0.0
                                     bot_settings.buy_count = 1
                                     bot_settings.position_opened_at = dt.datetime.utcnow()
-                                    db.commit()
                                     _record_buy(db, current_price, buy_amount)
+                                    db.commit()
                                     logger.info(f"🛒 1차 매수: {current_price:,.0f} | RSI: {current_rsi:.2f} | 금액: {buy_amount:,.0f} KRW")
                                     filter_str = f"RSI {current_rsi:.2f}"
                                     if bot_settings.use_bollinger: filter_str += " | 볼린저✓"
@@ -420,14 +427,11 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         current_price = current_client.get_current_price(SYMBOL)
         if current_price is None:
             logger.error(f"❌ Failed to fetch current price for {SYMBOL} on {target_exchange}")
-            current_price = 0.0
         current_rsi = strategy.get_rsi(target_exchange) or 0.0
-        
+
         profit_rate = 0.0
         if bot_settings and bot_settings.avg_buy_price > 0 and current_price:
             profit_rate = ((current_price / bot_settings.avg_buy_price) - 1) * 100
-        elif current_price is None:
-            current_price = 0.0 # Safety default
         
         # Calculate Detailed Statistics
         all_trades = db.query(TradeHistory).filter(TradeHistory.side == "SELL").order_by(TradeHistory.timestamp.asc()).all()
@@ -490,7 +494,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             "target_coin": SYMBOL,
             "krw_balance": int(krw_balance),
             "coin_balance": coin_balance,
-            "current_price": int(current_price),
+            "current_price": int(current_price) if current_price else 0,
             "current_rsi": current_rsi,
             "bollinger": {
                 "upper": int(boll_upper) if boll_upper else None,
