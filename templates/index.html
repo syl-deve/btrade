@@ -49,6 +49,13 @@
                 <div id="coin-balance" class="text-2xl font-black archivo-bold">0.0000 <span id="coin-unit" class="text-sm opacity-60">WAIT</span></div>
                 <div id="coin-value-krw" class="text-base font-bold text-zinc-500 mt-0.5" style="display:none;"></div>
             </div>
+            <!-- 거래 단계 상태 -->
+            <div class="flex flex-col justify-center px-4 md:px-8 border-l-2 border-black/10">
+                <div id="trade-phase-label" class="meta-label text-zinc-400">PHASE</div>
+                <div id="trade-phase-text" class="text-base font-black uppercase tracking-wide text-zinc-800">—</div>
+                <div id="trade-phase-sub" class="text-sm font-bold text-zinc-400 mt-0.5">—</div>
+            </div>
+
             <div class="ml-auto flex items-center gap-4">
                 <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau py-3 px-6 bg-zinc-900 text-white border-4 border-black font-black tracking-widest text-sm"><span data-i18n="btn_config">GENERAL_CONFIG</span></button>
             </div>
@@ -590,6 +597,37 @@
                         coinKrwEl.style.display = '';
                     } else {
                         coinKrwEl.style.display = 'none';
+                    }
+                }
+
+                // 거래 단계 상태 표시
+                const phaseLabel = document.getElementById('trade-phase-label');
+                const phaseText = document.getElementById('trade-phase-text');
+                const phaseSub = document.getElementById('trade-phase-sub');
+                if (phaseText && phaseSub) {
+                    const ko = currentLang === 'ko';
+                    const holding = coinVal > 0.0001 && data.avg_buy_price > 0;
+                    const cnt = data.buy_count || 0;
+                    if (!data.is_running) {
+                        phaseLabel.innerText = ko ? '봇 상태' : 'STATUS';
+                        phaseText.innerText = ko ? '봇 정지됨' : 'BOT OFFLINE';
+                        phaseText.style.color = '#E63946';
+                        phaseSub.innerText = ko ? '시작 버튼을 눌러 봇을 활성화하세요' : 'Press START to activate the bot';
+                    } else if (!holding) {
+                        phaseLabel.innerText = ko ? '현재 단계' : 'PHASE';
+                        phaseText.innerText = ko ? '매수 신호 탐색 중' : 'SCANNING FOR ENTRY';
+                        phaseText.style.color = '#3B82F6';
+                        phaseSub.innerText = ko ? 'RSI + 볼린저 조건 충족 시 1차 매수 진입' : 'Waiting for RSI + Bollinger condition';
+                    } else if (cnt === 1) {
+                        phaseLabel.innerText = ko ? '현재 단계' : 'PHASE';
+                        phaseText.innerText = ko ? '1차 매수 보유 중' : 'HOLDING — ENTRY x1';
+                        phaseText.style.color = '#F59E0B';
+                        phaseSub.innerText = ko ? '익절 목표 도달 시 트레일링 / RSI 급락 시 2차 추가매수' : 'Trailing profit target / RSI drop → 2nd buy';
+                    } else if (cnt >= 2) {
+                        phaseLabel.innerText = ko ? '현재 단계' : 'PHASE';
+                        phaseText.innerText = ko ? '분할매수 완료 — 익절 대기' : 'SPLIT BUY DONE — AWAITING EXIT';
+                        phaseText.style.color = '#8B5CF6';
+                        phaseSub.innerText = ko ? '트레일링 익절 또는 ATR 손절 대기 중' : 'Waiting for trailing profit or ATR stop-loss';
                     }
                 }
 
