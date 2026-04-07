@@ -26,7 +26,7 @@ BITHUMB_FEE_RATE = 0.0004 # 빗썸 0.04%
 
 def get_fee_rate():
     from config import EXCHANGE
-    return BITHUMB_FEE_RATE if EXCHANGE == "BITHUMB" else UPBIT_FEE_RATE
+    return UPBIT_FEE_RATE if EXCHANGE == "UPBIT" else BITHUMB_FEE_RATE
 
 # --- Lifespan Event Handler ---
 @asynccontextmanager
@@ -66,6 +66,8 @@ async def lifespan(app: FastAPI):
         except Exception:
             db.execute(text(sql))
             db.commit()
+    # 기존 거래 fee 소급 적용 (fee가 NULL인 행만)
+    db.execute(text("UPDATE trade_history SET fee = total_amount * 0.0004 WHERE fee IS NULL"))
     for col, sql in migrations:
         try:
             db.execute(text(f"SELECT {col} FROM bot_settings LIMIT 1"))
