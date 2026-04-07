@@ -28,6 +28,26 @@ def get_fee_rate():
     from config import EXCHANGE
     return UPBIT_FEE_RATE if EXCHANGE == "UPBIT" else BITHUMB_FEE_RATE
 
+# --- DB 즉시 마이그레이션 (모듈 로드 시 실행) ---
+def _run_db_migrations():
+    import sqlite3 as _sq
+    from config import DATABASE_URL as _url
+    path = _url.replace("sqlite:///", "")
+    conn = _sq.connect(path)
+    # trade_history.fee 컬럼
+    try:
+        conn.execute("ALTER TABLE trade_history ADD COLUMN fee FLOAT")
+    except Exception:
+        pass
+    # fee NULL 소급 적용
+    updated = conn.execute("UPDATE trade_history SET fee = total_amount * 0.0025 WHERE fee IS NULL").rowcount
+    conn.commit()
+    conn.close()
+    if updated:
+        logging.getLogger(__name__).info(f"[Migration] fee 소급 적용 {updated}건 완료")
+
+_run_db_migrations()
+
 # --- Lifespan Event Handler ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -56,20 +76,6 @@ async def lifespan(app: FastAPI):
         ("cooldown_minutes",       "ALTER TABLE bot_settings ADD COLUMN cooldown_minutes INTEGER DEFAULT 60"),
         ("cooldown_until",         "ALTER TABLE bot_settings ADD COLUMN cooldown_until DATETIME"),
     ]
-    # trade_history 마이그레이션 (raw sqlite3로 확실하게 처리)
-    import sqlite3 as _sqlite3
-    from config import DATABASE_URL as _DB_URL
-    _db_path = _DB_URL.replace("sqlite:///", "")
-    _conn = _sqlite3.connect(_db_path)
-    try:
-        _conn.execute("ALTER TABLE trade_history ADD COLUMN fee FLOAT")
-        logger.info("[Migration] trade_history.fee 컬럼 추가")
-    except Exception:
-        pass  # 이미 존재
-    _conn.execute("UPDATE trade_history SET fee = total_amount * 0.0025 WHERE fee IS NULL")
-    _conn.commit()
-    _conn.close()
-    logger.info("[Migration] trade_history.fee 소급 적용 완료")
     for col, sql in migrations:
         try:
             db.execute(text(f"SELECT {col} FROM bot_settings LIMIT 1"))
