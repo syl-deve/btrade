@@ -41,8 +41,8 @@ def _run_db_migrations():
         conn.execute("ALTER TABLE trade_history ADD COLUMN fee FLOAT")
     except Exception:
         pass
-    # fee NULL 소급 적용
-    updated = conn.execute("UPDATE trade_history SET fee = total_amount * 0.0025 WHERE fee IS NULL").rowcount
+    # fee 전체 재계산 (요율 변경 시 반영)
+    updated = conn.execute("UPDATE trade_history SET fee = total_amount * 0.0025").rowcount
     conn.commit()
     conn.close()
     if updated:
