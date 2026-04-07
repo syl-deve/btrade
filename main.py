@@ -344,7 +344,11 @@ async def trading_loop():
                                     db.commit()
                                     _record_buy(db, current_price, buy_amount)
                                     logger.info(f"🛒 1차 매수: {current_price:,.0f} | RSI: {current_rsi:.2f} | 금액: {buy_amount:,.0f} KRW")
-                                    send_discord_message("🛒 1차 매수", f"RSI {current_rsi:.2f} | 볼린저✓ MACD✓ 거래량✓\n체결가: {current_price:,.0f}\n매수금액: {buy_amount:,.0f} KRW", color=0x00ff00)
+                                    filter_str = f"RSI {current_rsi:.2f}"
+                                    if bot_settings.use_bollinger: filter_str += " | 볼린저✓"
+                                    if bot_settings.use_macd: filter_str += " | MACD✓"
+                                    if bot_settings.use_volume_filter: filter_str += " | 거래량✓"
+                                    send_discord_message("🛒 1차 매수", f"{filter_str}\n체결가: {current_price:,.0f}\n매수금액: {buy_amount:,.0f} KRW", color=0x00ff00)
                                 else:
                                     logger.error("❌ 1차 매수 실패")
 
