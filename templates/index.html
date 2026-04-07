@@ -296,12 +296,6 @@
                             <input type="number" id="set-vol-mult" step="0.1" min="1.0" class="bau-input" placeholder="1.5">
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mt-4">
-                        <div>
-                            <label data-i18n="cfg_hold_hours" class="bau-label">최대 보유 시간 (h)</label>
-                            <input type="number" id="set-hold-hours" step="0.5" min="0.5" class="bau-input" placeholder="4.0">
-                        </div>
-                    </div>
                 </div>
 
                 <!-- 리스크 관리 -->
@@ -371,7 +365,6 @@
                 cfg_volume:   'Volume Surge Filter',
                 cfg_atr:      'ATR Stop Multiplier',
                 cfg_vol_mult: 'Volume Multiplier',
-                cfg_hold_hours:'Max Hold Hours',
                 cfg_daily_loss:'Daily Loss Limit (₩)',
                 cfg_cons_loss: 'Max Consecutive Losses',
                 cfg_cooldown:  'Cooldown Duration (min)',
@@ -429,7 +422,6 @@
                 cfg_volume:   '거래량 급증 필터',
                 cfg_atr:      'ATR 손절 배수',
                 cfg_vol_mult: '거래량 기준 배수',
-                cfg_hold_hours:'최대 보유 시간 (h)',
                 cfg_daily_loss:'일일 손실 한도 (₩)',
                 cfg_cons_loss: '연속 손절 허용 횟수',
                 cfg_cooldown:  '쿨다운 시간 (분)',
@@ -801,7 +793,6 @@
                     document.getElementById('set-volume').checked = data.config.use_volume_filter;
                     document.getElementById('set-atr').value = data.config.atr_multiplier;
                     document.getElementById('set-vol-mult').value = data.config.volume_multiplier;
-                    document.getElementById('set-hold-hours').value = data.config.max_hold_hours;
                     document.getElementById('set-daily-loss').value = data.config.daily_loss_limit;
                     document.getElementById('set-cons-loss').value = data.config.max_consecutive_loss;
                     document.getElementById('set-cooldown').value = data.config.cooldown_minutes;
@@ -862,7 +853,6 @@
                 use_volume_filter: document.getElementById('set-volume').checked,
                 atr_multiplier: parseFloat(document.getElementById('set-atr').value),
                 volume_multiplier: parseFloat(document.getElementById('set-vol-mult').value),
-                max_hold_hours: parseFloat(document.getElementById('set-hold-hours').value),
                 daily_loss_limit: parseFloat(document.getElementById('set-daily-loss').value),
                 max_consecutive_loss: parseInt(document.getElementById('set-cons-loss').value),
                 cooldown_minutes: parseInt(document.getElementById('set-cooldown').value),

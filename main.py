@@ -264,23 +264,13 @@ async def trading_loop():
                     )
                     effective_sl = dynamic_sl if dynamic_sl is not None else bot_settings.stop_loss_rate
 
-                    # B. 보유 시간 초과 강제 청산
-                    max_hours = bot_settings.max_hold_hours or 4.0
-                    hold_expired = False
-                    if bot_settings.position_opened_at:
-                        hold_hours = (dt.datetime.utcnow() - bot_settings.position_opened_at).total_seconds() / 3600
-                        if hold_hours >= max_hours and profit_rate < 0:
-                            hold_expired = True
-                            logger.warning(f"⏰ 보유시간 초과 ({hold_hours:.1f}h ≥ {max_hours}h) + 수익률 {profit_rate:.2f}% → 강제 청산")
-
-                    # 1. 긴급 손절 (ATR 동적 손절 적용) or 보유시간 초과
-                    if profit_rate <= effective_sl or hold_expired:
+                    # 1. 긴급 손절 (ATR 동적 손절 적용)
+                    if profit_rate <= effective_sl:
                         res = current_client.sell_market_order(coin_balance)
                         if res:
                             net_profit = _record_sell(db, current_price, coin_balance, bot_settings)
-                            reason = "⏰ 보유시간 초과" if hold_expired else "🚨 ATR 손절"
-                            logger.warning(f"{reason}: SOLD @ {current_price:,.0f} ({profit_rate:.2f}%, SL: {effective_sl:.2f}%) | P&L: {net_profit:,.0f} KRW")
-                            send_discord_message(reason, f"손절율: {effective_sl:.2f}% (ATR 동적)\n체결가: {current_price:,.0f}\n손실: {net_profit:,.0f} KRW", color=0x0000ff)
+                            logger.warning(f"🚨 ATR 손절: SOLD @ {current_price:,.0f} ({profit_rate:.2f}%, SL: {effective_sl:.2f}%) | P&L: {net_profit:,.0f} KRW")
+                            send_discord_message("🚨 ATR 손절", f"손절율: {effective_sl:.2f}% (ATR 동적)\n체결가: {current_price:,.0f}\n손실: {net_profit:,.0f} KRW", color=0x0000ff)
                             _check_daily_loss(db, bot_settings)
 
                     else:
@@ -538,7 +528,6 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                 "use_volume_filter": bot_settings.use_volume_filter if bot_settings else True,
                 "volume_multiplier": bot_settings.volume_multiplier if bot_settings else 1.5,
                 "atr_multiplier": bot_settings.atr_multiplier if bot_settings else 1.5,
-                "max_hold_hours": bot_settings.max_hold_hours if bot_settings else 4.0,
                 "daily_loss_limit": bot_settings.daily_loss_limit if bot_settings else -50000.0,
                 "max_consecutive_loss": bot_settings.max_consecutive_loss if bot_settings else 3,
                 "cooldown_minutes": bot_settings.cooldown_minutes if bot_settings else 60,
@@ -572,7 +561,6 @@ async def update_settings(data: dict, db: Session = Depends(get_db), user=Depend
         bot_settings.use_volume_filter = data.get("use_volume_filter", True)
         bot_settings.volume_multiplier = data.get("volume_multiplier", 1.5)
         bot_settings.atr_multiplier = data.get("atr_multiplier", 1.5)
-        bot_settings.max_hold_hours = data.get("max_hold_hours", 4.0)
         bot_settings.daily_loss_limit = data.get("daily_loss_limit", -50000.0)
         bot_settings.max_consecutive_loss = data.get("max_consecutive_loss", 3)
         bot_settings.cooldown_minutes = data.get("cooldown_minutes", 60)
