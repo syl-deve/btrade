@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 UPBIT_FEE_RATE = 0.0005   # 업비트 0.05%
-BITHUMB_FEE_RATE = 0.0004 # 빗썸 0.04%
+BITHUMB_FEE_RATE = 0.0025 # 빗썸 0.25%
 
 def get_fee_rate():
     from config import EXCHANGE
@@ -66,8 +66,9 @@ async def lifespan(app: FastAPI):
         except Exception:
             db.execute(text(sql))
             db.commit()
-    # 기존 거래 fee 소급 적용 (fee가 NULL인 행만)
-    db.execute(text("UPDATE trade_history SET fee = total_amount * 0.0004 WHERE fee IS NULL"))
+    # 기존 거래 fee 소급 적용 (fee가 NULL인 행만, 빗썸 0.25%)
+    db.execute(text("UPDATE trade_history SET fee = total_amount * 0.0025 WHERE fee IS NULL"))
+    db.commit()
     for col, sql in migrations:
         try:
             db.execute(text(f"SELECT {col} FROM bot_settings LIMIT 1"))
