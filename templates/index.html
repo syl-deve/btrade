@@ -47,6 +47,7 @@
             <div class="flex flex-col">
                 <p data-i18n="label_coin" class="meta-label">Currently Held (Unit)</p>
                 <div id="coin-balance" class="text-2xl font-black archivo-bold">0.0000 <span id="coin-unit" class="text-sm opacity-60">WAIT</span></div>
+                <div id="coin-value-krw" class="text-base font-bold text-zinc-500 mt-0.5" style="display:none;"></div>
             </div>
             <div class="ml-auto flex items-center gap-4">
                 <button onclick="document.getElementById('config-modal').showModal()" class="btn-bau py-3 px-6 bg-zinc-900 text-white border-4 border-black font-black tracking-widest text-sm"><span data-i18n="btn_config">GENERAL_CONFIG</span></button>
@@ -581,6 +582,16 @@
                 
                 safeUpdate('krw-balance', new Intl.NumberFormat().format(krwVal) + ' ₩');
                 safeUpdate('coin-balance', `${parseFloat(coinVal).toFixed(6)} <span id="coin-unit" class="text-sm opacity-60">${coinUnit}</span>`);
+                const coinKrwEl = document.getElementById('coin-value-krw');
+                if (coinKrwEl) {
+                    if (coinVal > 0.0001 && data.current_price) {
+                        const coinKrw = Math.floor(coinVal * data.current_price);
+                        coinKrwEl.innerText = '≈ ' + new Intl.NumberFormat().format(coinKrw) + ' ₩';
+                        coinKrwEl.style.display = '';
+                    } else {
+                        coinKrwEl.style.display = 'none';
+                    }
+                }
 
                 // Bot Status & Button Swap
                 const botBadge = document.getElementById('bot-status-badge');
