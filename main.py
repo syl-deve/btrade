@@ -56,19 +56,20 @@ async def lifespan(app: FastAPI):
         ("cooldown_minutes",       "ALTER TABLE bot_settings ADD COLUMN cooldown_minutes INTEGER DEFAULT 60"),
         ("cooldown_until",         "ALTER TABLE bot_settings ADD COLUMN cooldown_until DATETIME"),
     ]
-    # trade_history 마이그레이션
-    trade_migrations = [
-        ("fee", "ALTER TABLE trade_history ADD COLUMN fee FLOAT"),
-    ]
-    for col, sql in trade_migrations:
-        try:
-            db.execute(text(f"SELECT {col} FROM trade_history LIMIT 1"))
-        except Exception:
-            db.execute(text(sql))
-            db.commit()
-    # 기존 거래 fee 소급 적용 (fee가 NULL인 행만, 빗썸 0.25%)
-    db.execute(text("UPDATE trade_history SET fee = total_amount * 0.0025 WHERE fee IS NULL"))
-    db.commit()
+    # trade_history 마이그레이션 (raw sqlite3로 확실하게 처리)
+    import sqlite3 as _sqlite3
+    from config import DATABASE_URL as _DB_URL
+    _db_path = _DB_URL.replace("sqlite:///", "")
+    _conn = _sqlite3.connect(_db_path)
+    try:
+        _conn.execute("ALTER TABLE trade_history ADD COLUMN fee FLOAT")
+        logger.info("[Migration] trade_history.fee 컬럼 추가")
+    except Exception:
+        pass  # 이미 존재
+    _conn.execute("UPDATE trade_history SET fee = total_amount * 0.0025 WHERE fee IS NULL")
+    _conn.commit()
+    _conn.close()
+    logger.info("[Migration] trade_history.fee 소급 적용 완료")
     for col, sql in migrations:
         try:
             db.execute(text(f"SELECT {col} FROM bot_settings LIMIT 1"))
