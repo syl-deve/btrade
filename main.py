@@ -30,9 +30,11 @@ def get_fee_rate():
 
 # --- DB 즉시 마이그레이션 (모듈 로드 시 실행) ---
 def _run_db_migrations():
-    import sqlite3 as _sq
+    import sqlite3 as _sq, os as _os
     from config import DATABASE_URL as _url
     path = _url.replace("sqlite:///", "")
+    if path.startswith("./"):
+        path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), path[2:])
     conn = _sq.connect(path)
     # trade_history.fee 컬럼
     try:
