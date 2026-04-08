@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 UPBIT_FEE_RATE = 0.0005   # 업비트 0.05%
-BITHUMB_FEE_RATE = 0.0025 # 빗썸 0.25%
+BITHUMB_FEE_RATE = 0.0004 # 빗썸 0.04% (수수료 쿠폰 적용)
 
 def get_fee_rate():
     from config import EXCHANGE
@@ -41,8 +41,8 @@ def _run_db_migrations():
         conn.execute("ALTER TABLE trade_history ADD COLUMN fee FLOAT")
     except Exception:
         pass
-    # fee 전체 재계산 (요율 변경 시 반영)
-    updated = conn.execute("UPDATE trade_history SET fee = total_amount * 0.0025").rowcount
+    # fee 전체 재계산 (요율 변경 시 반영, 빗썸 0.04% 쿠폰 적용)
+    updated = conn.execute("UPDATE trade_history SET fee = total_amount * 0.0004").rowcount
     conn.commit()
     conn.close()
     if updated:
