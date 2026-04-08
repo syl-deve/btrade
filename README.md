@@ -1,17 +1,17 @@
 # BITRADE CORE
 
-업비트/빗썸 API를 활용한 비트코인 자동 매매 웹 대시보드입니다. RSI + 볼린저밴드 + MACD + 거래량 4중 필터 기반 분할매수 전략과 ATR 동적 손절, 리스크 관리 시스템을 탑재합니다.
+빗썸 API를 활용한 비트코인 자동 매매 웹 대시보드입니다. RSI + 볼린저밴드 필터 기반 분할매수 전략과 ATR 동적 손절, 트레일링 익절, 리스크 관리 시스템을 탑재합니다.
 
 ## 주요 기능
 
-- **4중 필터 매수**: RSI + 볼린저밴드 하단 + MACD 반전 + 거래량 급증 동시 충족 시 진입
+- **매수 필터**: RSI + 볼린저밴드 하단 기본, MACD 반전 / 거래량 급증 필터 토글 가능
 - **분할매수**: 1차 진입(잔고 60%) 후 추가 하락 시 2차 추가매수로 평단 낮추기
 - **ATR 동적 손절**: 시장 변동성에 따라 손절폭 자동 조정 (-0.5 ~ -3.0%)
+- **트레일링 익절**: 목표 수익률 도달 후 고점 대비 일정 폭 하락 시 자동 매도
 - **리스크 관리**: 일일 손실 한도 자동 정지 + 연속 손절 쿨다운
-- **보유시간 강제청산**: 설정 시간 초과 + 손실 중이면 자동 매도
 - **즉시매도 버튼**: 대시보드에서 수동 전량 매도
-- **실시간 대시보드**: Bauhaus 디자인 UI, 누적수익 차트, 분할매수 포지션 현황
-- **멀티 거래소**: 업비트 / 빗썸 전환 지원
+- **실시간 대시보드**: Bauhaus 디자인 UI, 누적수익 차트, 볼린저/MACD/거래량 실시간 카드
+- **수수료 추적**: 거래별 수수료 기록 및 순익 반영 (빗썸 0.04% 쿠폰 기준)
 - **디스코드 알림**: 매수/매도/손실한도/쿨다운 이벤트 즉시 알림
 - **한/영 UI 토글**
 
@@ -21,10 +21,11 @@
 # 1. 가상환경 생성 및 패키지 설치
 python -m venv .venv
 .venv\Scripts\activate       # Windows
+# source .venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 
 # 2. 환경 변수 설정
-copy .env.template .env      # .env 파일을 열어 API 키 입력
+cp .env.template .env        # .env 파일을 열어 API 키 입력
 
 # 3. 서버 실행
 python main.py               # http://localhost:8000
@@ -32,22 +33,24 @@ python main.py               # http://localhost:8000
 
 ## 매매 전략
 
-### 매수 조건 (4중 필터, 모두 충족 시 진입)
+### 매수 조건
 
-| 필터 | 조건 | 비고 |
+| 필터 | 조건 | 토글 |
 |---|---|---|
-| RSI | ≤ 35 (1차) / ≤ 28 (2차) | 14기간, 15분봉 |
-| 볼린저밴드 | 현재가 ≤ 하단 밴드 | 20기간, 2σ |
-| MACD | 히스토그램 음수 구간 반전 | 12/26/9, 바닥 다지는 시점 |
-| 거래량 | 20봉 평균의 1.5배 이상 | 급등 초입 포착 |
+| RSI | ≤ 35 (1차) / ≤ 28 (2차) | 항상 적용 |
+| 볼린저밴드 | 현재가 ≤ 하단 밴드 (20기간, 2σ) | `use_bollinger` |
+| MACD | 히스토그램 음수 구간 반전 (12/26/9) | `use_macd` |
+| 거래량 | 20봉 평균의 N배 이상 | `use_volume_filter` |
+
+- 활성화된 필터 전부 통과 시 → 잔고 × `first_buy_ratio`(60%) 매수
+- **2차 추가매수**: RSI ≤ 28 AND 현재가 < 평단 → 잔여 잔고 전량 매수
 
 ### 매도 조건 (우선순위 순)
 
 | 순위 | 조건 | 행동 |
 |---|---|---|
-| 1 | ATR 동적 손절 도달 | 전량 시장가 매도 |
-| 2 | 보유시간 초과 + 손실 중 | 강제 청산 |
-| 3 | 트레일링 익절 (1.5% 도달 후 0.3% 하락) | 전량 시장가 매도 |
+| 1 | ATR 동적 손절 도달 (-0.5 ~ -3.0%) | 전량 시장가 매도 |
+| 2 | 트레일링 익절 (목표% 도달 후 offset% 하락) | 전량 시장가 매도 |
 | - | 즉시매도 버튼 | 수동 전량 매도 |
 
 ### 리스크 관리
@@ -68,8 +71,8 @@ models.py               SQLAlchemy ORM (TradeHistory, BotSettings)
 config.py               .env 로드
 core/
   strategy.py           RSI, 볼린저, MACD, 거래량, ATR 지표 계산
-  upbit_client.py       pyupbit 래퍼
   bithumb_client.py     빗썸 V1 JWT/SHA512 클라이언트
+  upbit_client.py       pyupbit 래퍼 (현재 비활성화)
   discord_notifier.py   웹훅 알림
 templates/index.html    Tailwind + Chart.js 대시보드
 static/css/bauhaus.css  Bauhaus 디자인 시스템
@@ -78,13 +81,11 @@ static/css/bauhaus.css  Bauhaus 디자인 시스템
 ## 환경 변수 (.env)
 
 ```
-UPBIT_ACCESS_KEY=
-UPBIT_SECRET_KEY=
 BITHUMB_ACCESS_KEY=
 BITHUMB_SECRET_KEY=
 DISCORD_WEBHOOK_URL=
 DASHBOARD_PASSWORD=
-EXCHANGE=UPBIT          # UPBIT 또는 BITHUMB
+EXCHANGE=BITHUMB
 SYMBOL=KRW-BTC
 ```
 
