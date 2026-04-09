@@ -251,18 +251,18 @@ h1, .archivo-bold {
     .value-bau { font-size: 2rem; }
 }
 
-/* Hint button (? icon on stat cards — absolute top-right corner) */
+/* Hint button (? icon — pinned to top-right corner of card) */
 .hint-btn {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    border: 2px solid #000;
-    background: #fff;
-    color: #000;
-    font-size: 0.65rem;
+    top: 0;
+    right: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 0 0 0 8px;
+    border: none;
+    background: #000;
+    color: #fff;
+    font-size: 0.75rem;
     font-weight: 900;
     line-height: 1;
     cursor: pointer;
@@ -274,15 +274,12 @@ h1, .archivo-bold {
     transition: background 0.15s, color 0.15s;
 }
 .hint-btn:hover {
-    background: #000;
-    color: #fff;
+    background: #333;
 }
 .hint-btn-light {
-    border-color: rgba(255,255,255,0.9);
-    background: transparent;
+    background: rgba(255,255,255,0.25);
     color: #fff;
 }
 .hint-btn-light:hover {
-    background: #fff;
-    color: #000;
+    background: rgba(255,255,255,0.5);
 }
