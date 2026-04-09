@@ -129,8 +129,9 @@
             <div class="tile-full flex flex-wrap gap-0" style="grid-column: span 12;">
 
                 <!-- RSI -->
-                <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-triangle"></div><span data-i18n="label_rsi">RSI_STRENGTH</span></div><button class="hint-btn" onclick="showHint('rsi')" title="설명">?</button></div>
+                <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                    <button class="hint-btn" onclick="showHint('rsi', this)" title="설명">?</button>
+                    <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_rsi">RSI_STRENGTH</span></div>
                     <div id="rsi-value" class="text-4xl font-black leading-none">0.00</div>
                     <div>
                         <div id="rsi-status" class="mt-2 text-sm font-black px-2 py-1 bg-black text-white inline-block border-2 border-black">NEUTRAL</div>
@@ -139,29 +140,33 @@
                 </div>
 
                 <!-- 매매당 평균 손익 -->
-                <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-circle"></div><span data-i18n="label_avg_profit">AVG_PROFIT/TRADE</span></div><button class="hint-btn" onclick="showHint('avg_profit')" title="설명">?</button></div>
+                <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                    <button class="hint-btn" onclick="showHint('avg_profit', this)" title="설명">?</button>
+                    <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_avg_profit">AVG_PROFIT/TRADE</span></div>
                     <div id="avg-profit-per-trade" class="text-3xl font-black leading-none">0 ₩</div>
                     <p data-i18n="label_avg_profit_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">매도당 평균 순익</p>
                 </div>
 
                 <!-- 오늘 손익 -->
-                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-square"></div><span data-i18n="label_today_profit">TODAY_P&L</span></div><button class="hint-btn" onclick="showHint('today_profit')" title="설명">?</button></div>
+                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                    <button class="hint-btn" onclick="showHint('today_profit', this)" title="설명">?</button>
+                    <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_today_profit">TODAY_P&L</span></div>
                     <div id="today-net-profit" class="text-3xl font-black leading-none">0 ₩</div>
                     <p data-i18n="label_today_profit_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">오늘 실현 손익</p>
                 </div>
 
                 <!-- 마지막 거래 -->
-                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-triangle"></div><span data-i18n="label_last_trade">LAST_TRADE</span></div><button class="hint-btn" onclick="showHint('last_trade')" title="설명">?</button></div>
+                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                    <button class="hint-btn" onclick="showHint('last_trade', this)" title="설명">?</button>
+                    <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_last_trade">LAST_TRADE</span></div>
                     <div id="last-trade-elapsed" class="text-3xl font-black leading-none">-</div>
                     <p data-i18n="label_last_trade_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">마지막 거래 경과</p>
                 </div>
 
                 <!-- MACD -->
-                <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-square"></div><span data-i18n="label_macd">MACD</span></div><button class="hint-btn" onclick="showHint('macd')" title="설명">?</button></div>
+                <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                    <button class="hint-btn" onclick="showHint('macd', this)" title="설명">?</button>
+                    <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_macd">MACD</span></div>
                     <div id="macd-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
                     <div class="flex flex-col gap-0">
                         <span data-i18n="label_macd_hist" class="text-sm font-bold uppercase text-zinc-400">히스토그램</span>
@@ -171,8 +176,9 @@
                 </div>
 
                 <!-- 거래량 -->
-                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-circle"></div><span data-i18n="label_volume_filter">VOLUME</span></div><button class="hint-btn" onclick="showHint('volume')" title="설명">?</button></div>
+                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                    <button class="hint-btn" onclick="showHint('volume', this)" title="설명">?</button>
+                    <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_volume_filter">VOLUME</span></div>
                     <div id="vol-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
                     <div class="flex flex-col gap-0">
                         <span data-i18n="label_vol_ratio" class="text-sm font-bold uppercase text-zinc-400">평균 대비</span>
@@ -182,8 +188,9 @@
                 </div>
 
                 <!-- 볼린저밴드 -->
-                <div class="bau-tile tile-blue-dot flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau text-white/80" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER</span></div><button class="hint-btn hint-btn-light" onclick="showHint('bollinger')" title="설명">?</button></div>
+                <div class="bau-tile tile-blue-dot flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                    <button class="hint-btn hint-btn-light" onclick="showHint('bollinger', this)" title="설명">?</button>
+                    <div class="label-bau text-white/80"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER</span></div>
                     <div id="boll-status" class="text-sm font-black text-white inline-block px-2 py-1 border-2 border-white">--</div>
                     <div class="flex flex-col gap-0.5 text-sm font-bold text-white/90">
                         <span>↑ <span id="boll-upper">—</span></span>
@@ -229,13 +236,12 @@
     </div>
 
     <!-- Hint Popup -->
-    <div id="hint-overlay" onclick="closeHint()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9998;"></div>
-    <div id="hint-popup" style="display:none;position:fixed;z-index:9999;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border:3px solid #000;max-width:340px;width:90%;padding:24px 24px 20px;box-shadow:6px 6px 0 #000;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-            <div id="hint-title" style="font-size:1.1rem;font-weight:900;letter-spacing:-0.02em;text-transform:uppercase;"></div>
-            <button onclick="closeHint()" style="font-weight:900;font-size:1.2rem;line-height:1;background:none;border:none;cursor:pointer;padding:0 0 0 12px;">✕</button>
+    <div id="hint-popup" style="display:none;position:fixed;z-index:9999;background:#fff;border:3px solid #000;max-width:300px;width:90%;padding:20px 20px 16px;box-shadow:5px 5px 0 #000;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+            <div id="hint-title" style="font-size:1rem;font-weight:900;letter-spacing:-0.02em;text-transform:uppercase;padding-right:8px;"></div>
+            <button onclick="closeHint()" style="flex-shrink:0;font-weight:900;font-size:1.1rem;line-height:1;background:none;border:none;cursor:pointer;padding:0;">✕</button>
         </div>
-        <div id="hint-body" style="font-size:0.88rem;font-weight:600;line-height:1.6;color:#333;white-space:pre-line;"></div>
+        <div id="hint-body" style="font-size:0.82rem;font-weight:600;line-height:1.6;color:#333;white-space:pre-line;"></div>
     </div>
 
     <!-- Modal (Bauhaus Style) -->
@@ -1006,21 +1012,48 @@
             }
         };
 
-        function showHint(key) {
+        function showHint(key, btn) {
             const lang = currentLang || 'ko';
             const data = hintData[key];
             if (!data) return;
             const d = data[lang] || data['ko'];
             document.getElementById('hint-title').textContent = d.title;
             document.getElementById('hint-body').textContent = d.body;
-            document.getElementById('hint-overlay').style.display = 'block';
-            document.getElementById('hint-popup').style.display = 'block';
+
+            const popup = document.getElementById('hint-popup');
+            popup.style.display = 'block';
+
+            // 버튼 위치 기준으로 팝업 위치 계산
+            const rect = btn.getBoundingClientRect();
+            const pw = popup.offsetWidth || 300;
+            const ph = popup.offsetHeight || 200;
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            // 기본: 버튼 아래-왼쪽 정렬
+            let top = rect.bottom + 8;
+            let left = rect.right - pw;
+
+            // 화면 아래로 넘치면 버튼 위에 표시
+            if (top + ph > vh - 8) top = rect.top - ph - 8;
+            // 화면 왼쪽으로 넘치면 보정
+            if (left < 8) left = 8;
+            // 화면 오른쪽으로 넘치면 보정
+            if (left + pw > vw - 8) left = vw - pw - 8;
+
+            popup.style.top = top + 'px';
+            popup.style.left = left + 'px';
         }
 
         function closeHint() {
-            document.getElementById('hint-overlay').style.display = 'none';
             document.getElementById('hint-popup').style.display = 'none';
         }
+
+        document.addEventListener('click', function(e) {
+            const popup = document.getElementById('hint-popup');
+            if (popup.style.display === 'none') return;
+            if (!popup.contains(e.target) && !e.target.classList.contains('hint-btn')) closeHint();
+        });
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeHint();
