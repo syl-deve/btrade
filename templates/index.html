@@ -130,7 +130,7 @@
 
                 <!-- RSI -->
                 <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_rsi">RSI_STRENGTH</span></div>
+                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-triangle"></div><span data-i18n="label_rsi">RSI_STRENGTH</span></div><button class="hint-btn" onclick="showHint('rsi')" title="설명">?</button></div>
                     <div id="rsi-value" class="text-4xl font-black leading-none">0.00</div>
                     <div>
                         <div id="rsi-status" class="mt-2 text-sm font-black px-2 py-1 bg-black text-white inline-block border-2 border-black">NEUTRAL</div>
@@ -140,28 +140,28 @@
 
                 <!-- 매매당 평균 손익 -->
                 <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_avg_profit">AVG_PROFIT/TRADE</span></div>
+                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-circle"></div><span data-i18n="label_avg_profit">AVG_PROFIT/TRADE</span></div><button class="hint-btn" onclick="showHint('avg_profit')" title="설명">?</button></div>
                     <div id="avg-profit-per-trade" class="text-3xl font-black leading-none">0 ₩</div>
                     <p data-i18n="label_avg_profit_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">매도당 평균 순익</p>
                 </div>
 
                 <!-- 오늘 손익 -->
                 <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_today_profit">TODAY_P&L</span></div>
+                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-square"></div><span data-i18n="label_today_profit">TODAY_P&L</span></div><button class="hint-btn" onclick="showHint('today_profit')" title="설명">?</button></div>
                     <div id="today-net-profit" class="text-3xl font-black leading-none">0 ₩</div>
                     <p data-i18n="label_today_profit_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">오늘 실현 손익</p>
                 </div>
 
                 <!-- 마지막 거래 -->
                 <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_last_trade">LAST_TRADE</span></div>
+                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-triangle"></div><span data-i18n="label_last_trade">LAST_TRADE</span></div><button class="hint-btn" onclick="showHint('last_trade')" title="설명">?</button></div>
                     <div id="last-trade-elapsed" class="text-3xl font-black leading-none">-</div>
                     <p data-i18n="label_last_trade_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">마지막 거래 경과</p>
                 </div>
 
                 <!-- MACD -->
                 <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_macd">MACD</span></div>
+                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-square"></div><span data-i18n="label_macd">MACD</span></div><button class="hint-btn" onclick="showHint('macd')" title="설명">?</button></div>
                     <div id="macd-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
                     <div class="flex flex-col gap-0">
                         <span data-i18n="label_macd_hist" class="text-sm font-bold uppercase text-zinc-400">히스토그램</span>
@@ -172,7 +172,7 @@
 
                 <!-- 거래량 -->
                 <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_volume_filter">VOLUME</span></div>
+                    <div class="label-bau" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-circle"></div><span data-i18n="label_volume_filter">VOLUME</span></div><button class="hint-btn" onclick="showHint('volume')" title="설명">?</button></div>
                     <div id="vol-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
                     <div class="flex flex-col gap-0">
                         <span data-i18n="label_vol_ratio" class="text-sm font-bold uppercase text-zinc-400">평균 대비</span>
@@ -183,7 +183,7 @@
 
                 <!-- 볼린저밴드 -->
                 <div class="bau-tile tile-blue-dot flex flex-col justify-between" style="flex:1; min-width:160px;">
-                    <div class="label-bau text-white/80"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER</span></div>
+                    <div class="label-bau text-white/80" style="justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER</span></div><button class="hint-btn hint-btn-light" onclick="showHint('bollinger')" title="설명">?</button></div>
                     <div id="boll-status" class="text-sm font-black text-white inline-block px-2 py-1 border-2 border-white">--</div>
                     <div class="flex flex-col gap-0.5 text-sm font-bold text-white/90">
                         <span>↑ <span id="boll-upper">—</span></span>
@@ -226,6 +226,16 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Hint Popup -->
+    <div id="hint-overlay" onclick="closeHint()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9998;"></div>
+    <div id="hint-popup" style="display:none;position:fixed;z-index:9999;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border:3px solid #000;max-width:340px;width:90%;padding:24px 24px 20px;box-shadow:6px 6px 0 #000;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+            <div id="hint-title" style="font-size:1.1rem;font-weight:900;letter-spacing:-0.02em;text-transform:uppercase;"></div>
+            <button onclick="closeHint()" style="font-weight:900;font-size:1.2rem;line-height:1;background:none;border:none;cursor:pointer;padding:0 0 0 12px;">✕</button>
+        </div>
+        <div id="hint-body" style="font-size:0.88rem;font-weight:600;line-height:1.6;color:#333;white-space:pre-line;"></div>
     </div>
 
     <!-- Modal (Bauhaus Style) -->
@@ -961,6 +971,60 @@
         applyLang(currentLang); // 저장된 언어 적용
         setInterval(updateStatus, 3000);
         updateStatus();
+    </script>
+
+    <script>
+        // ── 지표 설명 팝업 ────────────────────────────────────────────────
+        const hintData = {
+            rsi: {
+                en: { title: 'RSI (Relative Strength Index)', body: 'Measures momentum on a 0–100 scale.\n\n• RSI ≤ threshold → BUY signal (oversold)\n• RSI > threshold → NEUTRAL (wait)\n\nSettings:\n1st entry ≤ rsi_threshold\n2nd entry ≤ rsi_threshold_2\n\nPeriod: 14 candles' },
+                ko: { title: 'RSI (상대강도지수)', body: '0~100 사이의 모멘텀 지표입니다.\n\n• RSI ≤ 기준값 → 매수 신호 (과매도)\n• RSI > 기준값 → 관망\n\n설정:\n1차 매수 ≤ rsi_threshold\n2차 매수 ≤ rsi_threshold_2\n\n기간: 14봉' }
+            },
+            avg_profit: {
+                en: { title: 'Avg Profit per Trade', body: 'Average net profit per completed SELL.\n\nFormula:\nTotal Net Profit ÷ Number of SELLs\n\nIncludes all fees (buy + sell side).\nPositive = strategy is profitable overall.' },
+                ko: { title: '매매당 평균 손익', body: '매도 1회당 평균 순수익입니다.\n\n계산식:\n총 순익 ÷ 매도 횟수\n\n매수·매도 양쪽 수수료를 모두 차감한 값.\n양수면 전략이 수익 중 상태입니다.' }
+            },
+            today_profit: {
+                en: { title: 'Today\'s Net P&L', body: 'Realized profit/loss for today (KST).\n\nOnly counts completed SELLs.\nFees are already deducted.\n\nIf bot stops due to daily loss limit, this value triggered the cutoff.' },
+                ko: { title: '오늘 손익', body: '오늘(KST 기준) 실현된 순손익입니다.\n\n완료된 매도 거래만 집계합니다.\n수수료가 이미 차감된 값입니다.\n\n일일 손실 한도 초과 시 봇이 자동 정지되며,\n이 값이 한도를 넘겼을 때 작동합니다.' }
+            },
+            last_trade: {
+                en: { title: 'Last Trade Elapsed', body: 'Time elapsed since the last executed trade (buy or sell).\n\nUseful for checking if the bot is actively trading or stuck.\n\nIf this grows very large, check bot status and market conditions.' },
+                ko: { title: '마지막 거래 경과', body: '마지막 체결(매수 또는 매도) 이후 경과 시간입니다.\n\n봇이 정상 작동 중인지 확인하는 지표입니다.\n\n값이 너무 크면 봇 상태 및 시장 조건을 확인하세요.' }
+            },
+            macd: {
+                en: { title: 'MACD Signal', body: 'Moving Average Convergence Divergence.\n\nSettings: 12 / 26 EMA, Signal 9\n\nEntry condition (when enabled):\nHistogram < 0 AND histogram rising\n→ "반전 신호" = reversal forming\n\nShows last 3 candles\' histogram values.' },
+                ko: { title: 'MACD 신호', body: '이동평균 수렴·발산 지표입니다.\n\n설정: 12 / 26 EMA, 시그널 9\n\n매수 조건 (활성화 시):\n히스토그램 < 0 이면서 상승 중\n→ "반전 신호" = 하락 모멘텀 약화\n\n최근 3봉의 히스토그램 값을 표시합니다.' }
+            },
+            volume: {
+                en: { title: 'Volume Surge', body: 'Compares current candle volume to the 20-candle average.\n\nEntry condition (when enabled):\nCurrent volume ≥ Avg × volume_multiplier\n\nDefault multiplier: 1.5×\n\nHigh ratio = strong market interest → more reliable signal.' },
+                ko: { title: '거래량 급증', body: '현재 봉의 거래량과 20봉 평균을 비교합니다.\n\n매수 조건 (활성화 시):\n현재 거래량 ≥ 평균 × 거래량 배수\n\n기본 배수: 1.5×\n\n비율이 높을수록 시장 관심도가 높아\n더 신뢰할 수 있는 신호입니다.' }
+            },
+            bollinger: {
+                en: { title: 'Bollinger Bands', body: 'Volatility bands around a 20-period SMA.\n\nBands: Upper / Middle (SMA) / Lower\nStd Dev: 2σ\n\nEntry condition (when enabled):\nCurrent price ≤ Lower band\n→ "하단 이탈" = oversold zone\n\n"밴드 내부" = price inside normal range.' },
+                ko: { title: '볼린저밴드', body: '20기간 단순이동평균 기반 변동성 밴드입니다.\n\n밴드: 상단 / 중간(SMA) / 하단\n표준편차: 2σ\n\n매수 조건 (활성화 시):\n현재가 ≤ 하단 밴드\n→ "하단 이탈" = 과매도 구간\n\n"밴드 내부" = 정상 범위 내 위치 중.' }
+            }
+        };
+
+        function showHint(key) {
+            const lang = currentLang || 'ko';
+            const data = hintData[key];
+            if (!data) return;
+            const d = data[lang] || data['ko'];
+            document.getElementById('hint-title').textContent = d.title;
+            document.getElementById('hint-body').textContent = d.body;
+            document.getElementById('hint-overlay').style.display = 'block';
+            document.getElementById('hint-popup').style.display = 'block';
+        }
+
+        function closeHint() {
+            document.getElementById('hint-overlay').style.display = 'none';
+            document.getElementById('hint-popup').style.display = 'none';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeHint();
+        });
     </script>
 </body>
 </html>
