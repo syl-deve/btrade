@@ -1067,28 +1067,30 @@
             const data = hintData[key];
             if (!data) return;
             const d = data[lang] || data['ko'];
+
+            const popup = document.getElementById('hint-popup');
             document.getElementById('hint-title').textContent = d.title;
             document.getElementById('hint-body').textContent = d.body;
 
-            const popup = document.getElementById('hint-popup');
+            // dialog top-layer 문제 우회: body로 이동시켜 항상 최상위에 렌더링
+            if (popup.parentElement !== document.body) {
+                document.body.appendChild(popup);
+            }
+
             popup.style.display = 'block';
 
             // 버튼 위치 기준으로 팝업 위치 계산
             const rect = btn.getBoundingClientRect();
-            const pw = popup.offsetWidth || 300;
-            const ph = popup.offsetHeight || 200;
+            const pw = 300;
+            const ph = popup.offsetHeight || 220;
             const vw = window.innerWidth;
             const vh = window.innerHeight;
 
-            // 기본: 버튼 아래-왼쪽 정렬
             let top = rect.bottom + 8;
             let left = rect.right - pw;
 
-            // 화면 아래로 넘치면 버튼 위에 표시
             if (top + ph > vh - 8) top = rect.top - ph - 8;
-            // 화면 왼쪽으로 넘치면 보정
             if (left < 8) left = 8;
-            // 화면 오른쪽으로 넘치면 보정
             if (left + pw > vw - 8) left = vw - pw - 8;
 
             popup.style.top = top + 'px';
