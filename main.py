@@ -42,11 +42,13 @@ def _run_db_migrations():
     except Exception:
         pass
     # fee 전체 재계산 (요율 변경 시 반영, 빗썸 0.04% 쿠폰 적용)
-    updated = conn.execute("UPDATE trade_history SET fee = total_amount * 0.0004").rowcount
+    # BUY: 매수금액 × 0.04% (단건 수수료)
+    # SELL: 매도금액 × 0.04% × 2 (매수+매도 양쪽 합산)
+    conn.execute("UPDATE trade_history SET fee = total_amount * 0.0004 WHERE side = 'BUY'")
+    conn.execute("UPDATE trade_history SET fee = total_amount * 0.0008 WHERE side = 'SELL'")
     conn.commit()
     conn.close()
-    if updated:
-        logging.getLogger(__name__).info(f"[Migration] fee 소급 적용 {updated}건 완료")
+    logging.getLogger(__name__).info("[Migration] fee 소급 적용 완료 (BUY×0.04%, SELL×0.08%)")
 
 _run_db_migrations()
 
