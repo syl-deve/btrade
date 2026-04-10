@@ -17,12 +17,33 @@ from contextlib import asynccontextmanager
 import logging
 import sys
 
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+import hashlib
+import secrets
+
 # --- Logging Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 logger = logging.getLogger(__name__)
 
+# --- Security Config ---
 UPBIT_FEE_RATE = 0.0005   # 업비트 0.05%
 BITHUMB_FEE_RATE = 0.0004 # 빗썸 0.04% (수수료 쿠폰 적용)
+
+# 세션 및 CSRF를 위한 보안 키 (실제 상용 시 .env로 관리 권장)
+SESSION_SECRET_KEY = hashlib.sha256(DASHBOARD_PASSWORD.encode()).hexdigest()
+CSRF_SECRET = secrets.token_hex(32)
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
 
 def get_fee_rate():
     from config import EXCHANGE
@@ -125,6 +146,7 @@ async def lifespan(app: FastAPI):
 
 # FastAPI Setup
 app = FastAPI(title="Upbit Auto-Trader Dashboard", lifespan=lifespan)
+app.add_middleware(SecurityHeadersMiddleware)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -409,13 +431,21 @@ async def trading_loop():
 # --- Auth Dependency ---
 def get_current_user(request: Request):
     """
-    Checks for a valid session cookie. 
-    Redirects to login if unauthorized.
+    Checks for a valid session token in cookie.
     """
     session = request.cookies.get("session_auth")
-    if session != DASHBOARD_PASSWORD:
+    if session != SESSION_SECRET_KEY:
         return None
     return True
+
+def verify_csrf(request: Request):
+    """
+    Verifies CSRF token for POST/PUT/DELETE requests.
+    """
+    if request.method in ["POST", "PUT", "DELETE"]:
+        csrf_token = request.headers.get("X-CSRF-Token")
+        if not csrf_token or csrf_token != CSRF_SECRET:
+            raise HTTPException(status_code=403, detail="CSRF Token Mismatch")
 
 # --- Web Dashboard Routes ---
 @app.get("/login", response_class=HTMLResponse)
@@ -428,7 +458,15 @@ async def login_page(request: Request, error: str = None):
 async def login(request: Request, response: Response, password: str = Form(...)):
     if password == DASHBOARD_PASSWORD:
         response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
-        response.set_cookie(key="session_auth", value=DASHBOARD_PASSWORD, httponly=True, max_age=86400) # Valid for 1 day
+        # Use hashed SESSION_SECRET_KEY instead of plain password
+        response.set_cookie(
+            key="session_auth", 
+            value=SESSION_SECRET_KEY, 
+            httponly=True, 
+            max_age=86400,
+            samesite="lax",
+            secure=False # Set to True if using HTTPS
+        )
         return response
     return templates.TemplateResponse(
         request=request, name="login.html", context={"error": "Invalid Passcode Access Denied."}
@@ -445,7 +483,7 @@ async def homepage(request: Request, user=Depends(get_current_user), db: Session
     if not user:
         return RedirectResponse(url="/login")
     return templates.TemplateResponse(
-        request=request, name="index.html", context={}
+        request=request, name="index.html", context={"csrf_token": CSRF_SECRET}
     )
 
 @app.get("/api/status")
@@ -590,7 +628,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         return {"status": "error", "message": "Check server terminal for traceback"}
 
 @app.post("/api/settings")
-async def update_settings(data: dict, db: Session = Depends(get_db), user=Depends(get_current_user)):
+async def update_settings(data: dict, db: Session = Depends(get_db), user=Depends(get_current_user), _=Depends(verify_csrf)):
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
     
@@ -616,7 +654,7 @@ async def update_settings(data: dict, db: Session = Depends(get_db), user=Depend
     return {"status": "error"}
 
 @app.post("/api/sell_now")
-async def sell_now(db: Session = Depends(get_db), user=Depends(get_current_user)):
+async def sell_now(db: Session = Depends(get_db), user=Depends(get_current_user), _=Depends(verify_csrf)):
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
@@ -655,7 +693,7 @@ async def sell_now(db: Session = Depends(get_db), user=Depends(get_current_user)
     return {"status": "error", "message": "Order failed"}
 
 @app.post("/api/toggle")
-async def toggle_bot(db: Session = Depends(get_db), user=Depends(get_current_user)):
+async def toggle_bot(db: Session = Depends(get_db), user=Depends(get_current_user), _=Depends(verify_csrf)):
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
     

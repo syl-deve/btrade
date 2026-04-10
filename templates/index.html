@@ -357,6 +357,7 @@
     </dialog>
 
     <script>
+        const CSRF_TOKEN = "{{ csrf_token }}";
         let profitChart;
         let isConfigPopulated = false;
 
@@ -572,7 +573,9 @@
 
         async function updateStatus() {
             try {
-                const response = await fetch('/api/status');
+                const response = await fetch('/api/status', {
+                    headers: { 'X-CSRF-Token': CSRF_TOKEN }
+                });
                 if (!response.ok) throw new Error('API_FETCH_ERR');
                 const data = await response.json();
                 
@@ -928,7 +931,10 @@
             try {
                 const res = await fetch('/api/settings', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': CSRF_TOKEN
+                    },
                     body: JSON.stringify(data)
                 });
                 if (res.ok) {
@@ -945,7 +951,10 @@
             btn.disabled = true;
             btn.innerText = currentLang === 'ko' ? '분석중...' : 'ANALYZING...';
             try {
-                const res = await fetch('/api/sell_now', { method: 'POST' });
+                const res = await fetch('/api/sell_now', { 
+                    method: 'POST',
+                    headers: { 'X-CSRF-Token': CSRF_TOKEN }
+                });
                 const data = await res.json();
                 if (data.status === 'success') {
                     await updateStatus();
@@ -966,7 +975,10 @@
             btn.disabled = true;
             btn.innerText = 'PROCESS...'; 
             try {
-                const res = await fetch('/api/toggle', { method: 'POST' });
+                const res = await fetch('/api/toggle', { 
+                    method: 'POST',
+                    headers: { 'X-CSRF-Token': CSRF_TOKEN }
+                });
                 if (res.ok) await updateStatus();
             } catch (err) { alert('Connection Error'); }
             finally { btn.disabled = false; }
