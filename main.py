@@ -22,6 +22,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 import hashlib
 import secrets
+import time
+from pydantic import BaseModel, Field
+from typing import Optional
 
 # --- Logging Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
@@ -34,6 +37,28 @@ BITHUMB_FEE_RATE = 0.0004 # 빗썸 0.04% (수수료 쿠폰 적용)
 # 세션 및 CSRF를 위한 보안 키 (실제 상용 시 .env로 관리 권장)
 SESSION_SECRET_KEY = hashlib.sha256(DASHBOARD_PASSWORD.encode()).hexdigest()
 CSRF_SECRET = secrets.token_hex(32)
+
+# --- Rate Limiting Config ---
+LOGIN_ATTEMPTS = {}  # {ip: {"count": n, "blocked_until": timestamp}}
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_DURATION = 600 # 10 minutes in seconds
+
+class SettingsUpdate(BaseModel):
+    rsi_threshold: float = Field(default=35.0, ge=10, le=90)
+    rsi_threshold_2: float = Field(default=28.0, ge=10, le=90)
+    target_profit_rate: float = Field(default=1.5, ge=0.1, le=100.0)
+    stop_loss_rate: float = Field(default=-1.0, ge=-50.0, le=-0.1)
+    trailing_offset: float = Field(default=0.3, ge=0.01, le=10.0)
+    exchange: str = Field(default="UPBIT")
+    use_bollinger: bool = True
+    first_buy_ratio: float = Field(default=0.6, ge=0.1, le=1.0)
+    use_macd: bool = True
+    use_volume_filter: bool = True
+    volume_multiplier: float = Field(default=1.5, ge=1.0, le=10.0)
+    atr_multiplier: float = Field(default=1.5, ge=0.5, le=5.0)
+    daily_loss_limit: float = Field(default=-50000.0, le=0.0)
+    max_consecutive_loss: int = Field(default=3, ge=1, le=10)
+    cooldown_minutes: int = Field(default=60, ge=1, le=1440)
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -457,9 +482,22 @@ async def login_page(request: Request, error: str = None):
 
 @app.post("/login")
 async def login(request: Request, response: Response, password: str = Form(...)):
+    client_ip = request.client.host
+    now = time.time()
+    
+    # Check if IP is blocked
+    attempt_info = LOGIN_ATTEMPTS.get(client_ip, {"count": 0, "blocked_until": 0})
+    if now < attempt_info["blocked_until"]:
+        wait_time = int(attempt_info["blocked_until"] - now)
+        return templates.TemplateResponse(
+            request=request, name="login.html", 
+            context={"error": f"Too many attempts. Blocked for {wait_time}s."}
+        )
+
     if password == DASHBOARD_PASSWORD:
+        # Reset counter on success
+        LOGIN_ATTEMPTS[client_ip] = {"count": 0, "blocked_until": 0}
         response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
-        # Use hashed SESSION_SECRET_KEY instead of plain password
         response.set_cookie(
             key="session_auth", 
             value=SESSION_SECRET_KEY, 
@@ -469,8 +507,20 @@ async def login(request: Request, response: Response, password: str = Form(...))
             secure=False # Set to True if using HTTPS
         )
         return response
+    
+    # Track failed attempts
+    new_count = attempt_info["count"] + 1
+    blocked_until = 0
+    if new_count >= MAX_LOGIN_ATTEMPTS:
+        blocked_until = now + LOCKOUT_DURATION
+        logger.warning(f"🔒 Brute-force detected: IP {client_ip} blocked until {blocked_until}")
+        error_msg = f"Access Denied. Too many failures. Blocked for {LOCKOUT_DURATION//60} mins."
+    else:
+        LOGIN_ATTEMPTS[client_ip] = {"count": new_count, "blocked_until": 0}
+        error_msg = f"Invalid Passcode ({new_count}/{MAX_LOGIN_ATTEMPTS})."
+
     return templates.TemplateResponse(
-        request=request, name="login.html", context={"error": "Invalid Passcode Access Denied."}
+        request=request, name="login.html", context={"error": error_msg}
     )
 
 @app.get("/logout")
@@ -630,34 +680,34 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         return {"status": "error", "message": "Check server terminal for traceback"}
 
 @app.post("/api/settings")
-async def update_settings(data: dict, db: Session = Depends(get_db), user=Depends(get_current_user), _=Depends(verify_csrf)):
+async def update_settings(data: SettingsUpdate, db: Session = Depends(get_db), user=Depends(get_current_user), _=Depends(verify_csrf)):
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     try:
         bot_settings = db.query(BotSettings).first()
         if bot_settings:
-            bot_settings.rsi_threshold = data.get("rsi_threshold", 35.0)
-            bot_settings.rsi_threshold_2 = data.get("rsi_threshold_2", 28.0)
-            bot_settings.target_profit_rate = data.get("target_profit_rate", 1.5)
-            bot_settings.stop_loss_rate = data.get("stop_loss_rate", -1.0)
-            bot_settings.trailing_stop_offset = data.get("trailing_offset", 0.3)
-            bot_settings.exchange = data.get("exchange", "UPBIT")
-            bot_settings.use_bollinger = data.get("use_bollinger", True)
-            bot_settings.first_buy_ratio = data.get("first_buy_ratio", 0.6)
-            bot_settings.use_macd = data.get("use_macd", True)
-            bot_settings.use_volume_filter = data.get("use_volume_filter", True)
-            bot_settings.volume_multiplier = data.get("volume_multiplier", 1.5)
-            bot_settings.atr_multiplier = data.get("atr_multiplier", 1.5)
-            bot_settings.daily_loss_limit = data.get("daily_loss_limit", -50000.0)
-            bot_settings.max_consecutive_loss = data.get("max_consecutive_loss", 3)
-            bot_settings.cooldown_minutes = data.get("cooldown_minutes", 60)
+            bot_settings.rsi_threshold = data.rsi_threshold
+            bot_settings.rsi_threshold_2 = data.rsi_threshold_2
+            bot_settings.target_profit_rate = data.target_profit_rate
+            bot_settings.stop_loss_rate = data.stop_loss_rate
+            bot_settings.trailing_stop_offset = data.trailing_offset
+            bot_settings.exchange = data.exchange
+            bot_settings.use_bollinger = data.use_bollinger
+            bot_settings.first_buy_ratio = data.first_buy_ratio
+            bot_settings.use_macd = data.use_macd
+            bot_settings.use_volume_filter = data.use_volume_filter
+            bot_settings.volume_multiplier = data.volume_multiplier
+            bot_settings.atr_multiplier = data.atr_multiplier
+            bot_settings.daily_loss_limit = data.daily_loss_limit
+            bot_settings.max_consecutive_loss = data.max_consecutive_loss
+            bot_settings.cooldown_minutes = data.cooldown_minutes
             db.commit()
             return {"status": "success"}
         return {"status": "error", "message": "Bot settings not found"}
     except Exception:
         traceback.print_exc()
-        return {"status": "error", "message": "Check server terminal for traceback"}
+        return {"status": "error", "message": "Internal server error. Check logs."}
 
 @app.post("/api/sell_now")
 async def sell_now(db: Session = Depends(get_db), user=Depends(get_current_user), _=Depends(verify_csrf)):
