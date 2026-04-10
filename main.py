@@ -16,6 +16,7 @@ from core.discord_notifier import send_discord_message
 from contextlib import asynccontextmanager
 import logging
 import sys
+import traceback
 
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -488,9 +489,10 @@ async def homepage(request: Request, user=Depends(get_current_user), db: Session
 
 @app.get("/api/status")
 async def get_status(db: Session = Depends(get_db), user=Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
     try:
-        if not user:
-            raise HTTPException(status_code=401, detail="Unauthorized")
         
         bot_settings = db.query(BotSettings).first()
         target_exchange = bot_settings.exchange or "UPBIT"
@@ -632,26 +634,30 @@ async def update_settings(data: dict, db: Session = Depends(get_db), user=Depend
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
     
-    bot_settings = db.query(BotSettings).first()
-    if bot_settings:
-        bot_settings.rsi_threshold = data.get("rsi_threshold", 35.0)
-        bot_settings.rsi_threshold_2 = data.get("rsi_threshold_2", 28.0)
-        bot_settings.target_profit_rate = data.get("target_profit_rate", 1.5)
-        bot_settings.stop_loss_rate = data.get("stop_loss_rate", -1.0)
-        bot_settings.trailing_stop_offset = data.get("trailing_offset", 0.3)
-        bot_settings.exchange = data.get("exchange", "UPBIT")
-        bot_settings.use_bollinger = data.get("use_bollinger", True)
-        bot_settings.first_buy_ratio = data.get("first_buy_ratio", 0.6)
-        bot_settings.use_macd = data.get("use_macd", True)
-        bot_settings.use_volume_filter = data.get("use_volume_filter", True)
-        bot_settings.volume_multiplier = data.get("volume_multiplier", 1.5)
-        bot_settings.atr_multiplier = data.get("atr_multiplier", 1.5)
-        bot_settings.daily_loss_limit = data.get("daily_loss_limit", -50000.0)
-        bot_settings.max_consecutive_loss = data.get("max_consecutive_loss", 3)
-        bot_settings.cooldown_minutes = data.get("cooldown_minutes", 60)
-        db.commit()
-        return {"status": "success"}
-    return {"status": "error"}
+    try:
+        bot_settings = db.query(BotSettings).first()
+        if bot_settings:
+            bot_settings.rsi_threshold = data.get("rsi_threshold", 35.0)
+            bot_settings.rsi_threshold_2 = data.get("rsi_threshold_2", 28.0)
+            bot_settings.target_profit_rate = data.get("target_profit_rate", 1.5)
+            bot_settings.stop_loss_rate = data.get("stop_loss_rate", -1.0)
+            bot_settings.trailing_stop_offset = data.get("trailing_offset", 0.3)
+            bot_settings.exchange = data.get("exchange", "UPBIT")
+            bot_settings.use_bollinger = data.get("use_bollinger", True)
+            bot_settings.first_buy_ratio = data.get("first_buy_ratio", 0.6)
+            bot_settings.use_macd = data.get("use_macd", True)
+            bot_settings.use_volume_filter = data.get("use_volume_filter", True)
+            bot_settings.volume_multiplier = data.get("volume_multiplier", 1.5)
+            bot_settings.atr_multiplier = data.get("atr_multiplier", 1.5)
+            bot_settings.daily_loss_limit = data.get("daily_loss_limit", -50000.0)
+            bot_settings.max_consecutive_loss = data.get("max_consecutive_loss", 3)
+            bot_settings.cooldown_minutes = data.get("cooldown_minutes", 60)
+            db.commit()
+            return {"status": "success"}
+        return {"status": "error", "message": "Bot settings not found"}
+    except Exception:
+        traceback.print_exc()
+        return {"status": "error", "message": "Check server terminal for traceback"}
 
 @app.post("/api/sell_now")
 async def sell_now(db: Session = Depends(get_db), user=Depends(get_current_user), _=Depends(verify_csrf)):
