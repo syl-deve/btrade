@@ -273,7 +273,6 @@
                 <div>
                     <label data-i18n="cfg_exchange" class="bau-label">Target Trading Engine</label>
                     <select id="set-exchange" class="bau-select">
-                        <option value="UPBIT" disabled>UPBIT_CORP_KOREA (준비중)</option>
                         <option value="BITHUMB">BITHUMB_API_V1</option>
                     </select>
                 </div>
@@ -711,12 +710,12 @@
                 if (exText && exShape) {
                     if (data.exchange === 'BITHUMB') {
                         exText.innerText = 'BITHUMB_V1';
-                        exText.style.color = '#F37321'; 
+                        exText.style.color = '#F37321';
                         exShape.style.backgroundColor = '#F37321';
                     } else {
-                        exText.innerText = 'UPBIT_NODE';
-                        exText.style.color = '#2563EB'; 
-                        exShape.style.backgroundColor = '#2563EB';
+                        exText.innerText = 'BITHUMB_V1';
+                        exText.style.color = '#F37321';
+                        exShape.style.backgroundColor = '#F37321';
                     }
                 }
 

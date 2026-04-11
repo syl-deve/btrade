@@ -9,7 +9,6 @@ import uvicorn
 
 from config import SYMBOL, DASHBOARD_PASSWORD, TRADING_INTERVAL_MINUTES, EXCHANGE
 from models import SessionLocal, init_db, BotSettings, TradeHistory
-from core.upbit_client import UpbitClient
 from core.bithumb_client import BithumbClient
 from core.strategy import ScalperStrategy
 from core.discord_notifier import send_discord_message
@@ -31,7 +30,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(me
 logger = logging.getLogger(__name__)
 
 # --- Security Config ---
-UPBIT_FEE_RATE = 0.0005   # 업비트 0.05%
 BITHUMB_FEE_RATE = 0.0004 # 빗썸 0.04% (수수료 쿠폰 적용)
 
 # 세션 및 CSRF를 위한 보안 키 (실제 상용 시 .env로 관리 권장)
@@ -49,7 +47,7 @@ class SettingsUpdate(BaseModel):
     target_profit_rate: float = Field(default=1.5, ge=0.1, le=100.0)
     stop_loss_rate: float = Field(default=-1.0, ge=-50.0, le=-0.1)
     trailing_offset: float = Field(default=0.3, ge=0.01, le=10.0)
-    exchange: str = Field(default="UPBIT")
+    exchange: str = Field(default="BITHUMB")
     use_bollinger: bool = True
     first_buy_ratio: float = Field(default=0.6, ge=0.1, le=1.0)
     use_macd: bool = True
@@ -72,8 +70,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 def get_fee_rate():
-    from config import EXCHANGE
-    return UPBIT_FEE_RATE if EXCHANGE == "UPBIT" else BITHUMB_FEE_RATE
+    return BITHUMB_FEE_RATE
 
 # --- DB 즉시 마이그레이션 (모듈 로드 시 실행) ---
 def _run_db_migrations():
@@ -111,7 +108,7 @@ async def lifespan(app: FastAPI):
 
     # --- Auto Migration ---
     migrations = [
-        ("exchange",               "ALTER TABLE bot_settings ADD COLUMN exchange VARCHAR DEFAULT 'UPBIT'"),
+        ("exchange",               "ALTER TABLE bot_settings ADD COLUMN exchange VARCHAR DEFAULT 'BITHUMB'"),
         ("rsi_threshold_2",        "ALTER TABLE bot_settings ADD COLUMN rsi_threshold_2 FLOAT DEFAULT 28.0"),
         ("buy_count",              "ALTER TABLE bot_settings ADD COLUMN buy_count INTEGER DEFAULT 0"),
         ("use_bollinger",          "ALTER TABLE bot_settings ADD COLUMN use_bollinger BOOLEAN DEFAULT 1"),
@@ -177,14 +174,12 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # Global Client and Strategy Instances
-upbit_client = None
 bithumb_client = None
 strategy = None
 
 def init_clients():
-    global upbit_client, bithumb_client, strategy
+    global bithumb_client, strategy
     try:
-        upbit_client = UpbitClient()
         bithumb_client = BithumbClient()
         strategy = ScalperStrategy()
     except Exception:
@@ -194,8 +189,8 @@ def init_clients():
 
 init_clients()
 
-def get_client(exchange="UPBIT"):
-    global upbit_client, bithumb_client
+def get_client(exchange="BITHUMB"):
+    global bithumb_client
     if exchange == "BITHUMB":
         # Always check if client needs re-initialization if not authorized
         if not bithumb_client or not getattr(bithumb_client, "_is_authenticated", False):
@@ -204,16 +199,9 @@ def get_client(exchange="UPBIT"):
             except Exception:
                 pass
         return bithumb_client
-    else:
-        # Default to Upbit
-        if not upbit_client or not getattr(upbit_client, "_is_authenticated", False):
-            try:
-                upbit_client = UpbitClient()
-            except Exception:
-                pass
-        return upbit_client
+    return bithumb_client
 
-def is_client_authorized(exchange="UPBIT"):
+def is_client_authorized(exchange="BITHUMB"):
     client = get_client(exchange)
     if not client: return False
     # Upbit & Bithumb clients both have _is_authenticated attribute
@@ -321,7 +309,7 @@ async def trading_loop():
                     await asyncio.sleep(5)
                     continue
 
-                target_exchange = bot_settings.exchange or "UPBIT"
+                target_exchange = bot_settings.exchange or "BITHUMB"
                 current_client = get_client(target_exchange)
 
                 if not is_client_authorized(target_exchange):
@@ -545,7 +533,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
     try:
         
         bot_settings = db.query(BotSettings).first()
-        target_exchange = bot_settings.exchange or "UPBIT"
+        target_exchange = bot_settings.exchange or "BITHUMB"
         current_client = get_client(target_exchange)
         authorized = is_client_authorized(target_exchange)
         
@@ -757,7 +745,7 @@ async def sell_now(db: Session = Depends(get_db), user=Depends(get_current_user)
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     bot_settings = db.query(BotSettings).first()
-    target_exchange = bot_settings.exchange or "UPBIT" if bot_settings else "UPBIT"
+    target_exchange = (bot_settings.exchange or "BITHUMB") if bot_settings else "BITHUMB"
     current_client = get_client(target_exchange)
 
     if not is_client_authorized(target_exchange):

@@ -34,7 +34,7 @@ class BotSettings(Base):
     stop_loss_rate = Column(Float, default=-1.0)     # 손절 기준 (%)
     highest_profit_rate = Column(Float, default=0.0)
     trailing_stop_offset = Column(Float, default=0.3) # 트레일링 오프셋 (%)
-    exchange = Column(String, default="UPBIT")
+    exchange = Column(String, default="BITHUMB")
     buy_count = Column(Integer, default=0)
     use_bollinger = Column(Boolean, default=True)
     first_buy_ratio = Column(Float, default=0.6)
