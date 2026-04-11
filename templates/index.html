@@ -23,27 +23,34 @@
                     </div>
                     <h1 class="text-lg md:text-4xl font-black archivo-bold tracking-tighter uppercase whitespace-nowrap">BITRADE.<span class="text-red-600">DASHBOARD</span></h1>
                 </div>
-                <!-- 모바일에서 상태 + 버튼들 -->
+                <!-- 버튼 영역 -->
                 <nav class="flex items-center gap-2 md:gap-6 font-bold uppercase text-sm tracking-widest flex-shrink-0">
                     <div id="exchange-badge" class="hidden md:flex items-center gap-2">
                         <div class="bau-shape bau-square w-3 h-3"></div>
                         <span id="exchange-text" class="text-xs md:text-sm">AUTO_CONNECT</span>
                     </div>
-                    <div id="bot-status-badge" class="flex items-center gap-1.5 text-red-600 font-black">
+                    <div id="bot-status-badge" class="hidden md:flex items-center gap-1.5 text-red-600 font-black">
                         <div class="bau-shape bau-circle w-3 h-3"></div>
                         <span id="status-text" class="text-xs md:text-sm">OFFLINE</span>
                     </div>
                     <button id="toggle-btn" class="btn-bau btn-bau-red text-xs md:text-sm py-1.5 md:py-3 px-3 md:px-5 border-4 border-black">START_SYSTEM</button>
                     <button id="lang-toggle" class="btn-bau text-xs md:text-sm py-1.5 md:py-3 px-2 md:px-4 border-4 border-black font-black tracking-widest" onclick="toggleLang()">KO</button>
-                    <a href="/logout" class="btn-bau text-xs md:text-sm py-1.5 md:py-3 px-3 md:px-5 border-4 border-black hover:bg-black hover:text-white transition-all">EXIT_NODE</a>
+                    <a href="/logout" class="hidden md:inline-flex btn-bau text-xs md:text-sm py-1.5 md:py-3 px-3 md:px-5 border-4 border-black hover:bg-black hover:text-white transition-all">EXIT_NODE</a>
                 </nav>
             </div>
-            <!-- 모바일 전용: 거래소 배지 두 번째 줄 -->
-            <div class="flex md:hidden items-center gap-2 mt-1.5 font-bold uppercase text-xs tracking-widest">
-                <div id="exchange-badge-mobile" class="flex items-center gap-1.5">
-                    <div class="bau-shape bau-square w-3 h-3"></div>
-                    <span id="exchange-text-mobile">AUTO_CONNECT</span>
+            <!-- 모바일 전용: 두 번째 줄 (상태 + 거래소 + EXIT_NODE) -->
+            <div class="flex md:hidden items-center justify-between gap-2 mt-2 font-bold uppercase text-xs tracking-widest">
+                <div class="flex items-center gap-3">
+                    <div id="bot-status-badge-mobile" class="flex items-center gap-1.5 text-red-600 font-black">
+                        <div class="bau-shape bau-circle w-3 h-3"></div>
+                        <span id="status-text-mobile">OFFLINE</span>
+                    </div>
+                    <div id="exchange-badge-mobile" class="flex items-center gap-1.5">
+                        <div class="bau-shape bau-square w-3 h-3"></div>
+                        <span id="exchange-text-mobile">AUTO_CONNECT</span>
+                    </div>
                 </div>
+                <a href="/logout" class="btn-bau text-xs py-1 px-3 border-4 border-black hover:bg-black hover:text-white transition-all">EXIT_NODE</a>
             </div>
         </header>
 
@@ -815,11 +822,18 @@
                 const statusText = document.getElementById('status-text');
                 const toggleBtn = document.getElementById('toggle-btn');
                 
+                const statusTextMobile = document.getElementById('status-text-mobile');
+                const botBadgeMobile = document.getElementById('bot-status-badge-mobile');
                 if (data.is_running) {
                     if (statusText) statusText.innerText = i18n[currentLang].status_active;
+                    if (statusTextMobile) statusTextMobile.innerText = i18n[currentLang].status_active;
                     if (botBadge) {
-                        botBadge.className = 'flex items-center gap-2 text-green-600 font-black';
+                        botBadge.className = 'hidden md:flex items-center gap-2 text-green-600 font-black';
                         botBadge.querySelector('.bau-shape').style.backgroundColor = '#22C55E';
+                    }
+                    if (botBadgeMobile) {
+                        botBadgeMobile.className = 'flex items-center gap-1.5 text-green-600 font-black';
+                        botBadgeMobile.querySelector('.bau-shape').style.backgroundColor = '#22C55E';
                     }
                     if (toggleBtn) {
                         toggleBtn.innerText = i18n[currentLang].btn_stop;
@@ -827,9 +841,14 @@
                     }
                 } else {
                     if (statusText) statusText.innerText = i18n[currentLang].status_offline;
+                    if (statusTextMobile) statusTextMobile.innerText = i18n[currentLang].status_offline;
                     if (botBadge) {
-                        botBadge.className = 'flex items-center gap-2 text-red-600 font-black';
+                        botBadge.className = 'hidden md:flex items-center gap-2 text-red-600 font-black';
                         botBadge.querySelector('.bau-shape').style.backgroundColor = '#E63946';
+                    }
+                    if (botBadgeMobile) {
+                        botBadgeMobile.className = 'flex items-center gap-1.5 text-red-600 font-black';
+                        botBadgeMobile.querySelector('.bau-shape').style.backgroundColor = '#E63946';
                     }
                     if (toggleBtn) {
                         toggleBtn.innerText = i18n[currentLang].btn_start;
