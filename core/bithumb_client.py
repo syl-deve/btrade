@@ -49,7 +49,7 @@ class BithumbClient:
 
     @staticmethod
     def _normalize_ticker(ticker):
-        """ Ensure ticker is in KRW-BTC format for v1 API (same as Upbit) """
+        """ Ensure ticker is in KRW-BTC format for v1 API """
         if "-" not in ticker:
             return f"KRW-{ticker}"
         return ticker

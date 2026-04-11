@@ -26,16 +26,9 @@
 2. 아래와 같이 입력합니다 (본 프로젝트의 `config.py`와 연동됨).
 
 ```env
-# Upbit API Credentials
-UPBIT_ACCESS_KEY=발급받은_업비트_액세스_키
-UPBIT_SECRET_KEY=발급받은_업비트_시크릿_키
-
 # Bithumb API Credentials
 BITHUMB_ACCESS_KEY=발급받은_빗썸_API_Key
 BITHUMB_SECRET_KEY=발급받은_빗썸_Secret_Key
-
-# 거래소 설정 (UPBIT 또는 BITHUMB)
-EXCHANGE=BITHUMB
 
 # 일반 설정
 SYMBOL=KRW-BTC
