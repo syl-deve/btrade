@@ -194,7 +194,7 @@
                 <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
                     <button class="hint-btn" onclick="showHint('rsi', this)" title="설명">?</button>
                     <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_rsi">RSI_STRENGTH</span></div>
-                    <div id="rsi-value" class="text-4xl font-black leading-none">0.00</div>
+                    <div id="rsi-value" class="text-3xl font-black archivo-bold leading-none">0.00</div>
                     <div>
                         <div id="rsi-status" class="mt-2 text-sm font-black px-2 py-1 bg-black text-white inline-block border-2 border-black">NEUTRAL</div>
                         <div id="rsi-thresholds" class="mt-1 text-sm font-bold text-zinc-500 uppercase tracking-wider">1차 — / 2차 —</div>
@@ -206,7 +206,7 @@
                 <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
                     <button class="hint-btn" onclick="showHint('avg_profit', this)" title="설명">?</button>
                     <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_avg_profit">AVG_PROFIT/TRADE</span></div>
-                    <div id="avg-profit-per-trade" class="text-3xl font-black leading-none">0 ₩</div>
+                    <div id="avg-profit-per-trade" class="text-3xl font-black archivo-bold leading-none">0 ₩</div>
                     <p data-i18n="label_avg_profit_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">매도당 평균 순익</p>
                 </div>
 
@@ -214,7 +214,7 @@
                 <div class="bau-tile tile-blue-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
                     <button class="hint-btn" onclick="showHint('today_profit', this)" title="설명">?</button>
                     <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_today_profit">TODAY_P&L</span></div>
-                    <div id="today-net-profit" class="text-3xl font-black leading-none">0 ₩</div>
+                    <div id="today-net-profit" class="text-3xl font-black archivo-bold leading-none">0 ₩</div>
                     <p data-i18n="label_today_profit_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">오늘 실현 손익</p>
                 </div>
 
@@ -222,7 +222,7 @@
                 <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
                     <button class="hint-btn" onclick="showHint('last_trade', this)" title="설명">?</button>
                     <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_last_trade">LAST_TRADE</span></div>
-                    <div id="last-trade-elapsed" class="text-3xl font-black leading-none">-</div>
+                    <div id="last-trade-elapsed" class="text-3xl font-black archivo-bold leading-none">-</div>
                     <p data-i18n="label_last_trade_sub" class="text-sm font-bold mt-1 text-zinc-700 uppercase">마지막 거래 경과</p>
                 </div>
 
@@ -233,7 +233,7 @@
                     <div id="macd-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
                     <div class="flex flex-col gap-0">
                         <span data-i18n="label_macd_hist" class="text-sm font-bold uppercase text-zinc-400">히스토그램</span>
-                        <span class="font-black text-xl leading-tight" id="macd-hist">—</span>
+                        <span class="font-black text-3xl archivo-bold leading-tight" id="macd-hist">—</span>
                         <span class="text-sm font-bold text-zinc-400" id="macd-hist-prev">이전: —</span>
                     </div>
                 </div>
@@ -245,7 +245,7 @@
                     <div id="vol-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
                     <div class="flex flex-col gap-0">
                         <span data-i18n="label_vol_ratio" class="text-sm font-bold uppercase text-zinc-400">평균 대비</span>
-                        <span class="font-black text-xl leading-tight" id="vol-ratio">—</span>
+                        <span class="font-black text-3xl archivo-bold leading-tight" id="vol-ratio">—</span>
                         <span class="text-sm font-bold text-zinc-400" id="vol-threshold">기준: —</span>
                     </div>
                 </div>
@@ -255,10 +255,10 @@
                     <button class="hint-btn" onclick="showHint('bollinger', this)" title="설명">?</button>
                     <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER</span></div>
                     <div id="boll-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
-                    <div class="flex flex-col gap-0.5 text-sm font-bold text-zinc-700">
-                        <span>↑ <span id="boll-upper">—</span></span>
-                        <span>— <span id="boll-middle">—</span></span>
-                        <span class="text-blue-600 font-black">↓ <span id="boll-lower">—</span></span>
+                    <div class="flex flex-col gap-0.5 font-black archivo-bold text-zinc-700">
+                        <span class="text-sm">↑ <span id="boll-upper" class="text-base">—</span></span>
+                        <span class="text-sm">— <span id="boll-middle" class="text-base">—</span></span>
+                        <span class="text-sm text-blue-600">↓ <span id="boll-lower" class="text-base">—</span></span>
                     </div>
                 </div>
 
