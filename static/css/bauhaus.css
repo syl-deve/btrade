@@ -67,6 +67,7 @@ header.sticky {
 
 .tile-red-accent { border-top: 12px solid var(--bau-red); }
 .tile-yellow-accent { border-top: 12px solid var(--bau-yellow); }
+.tile-blue-accent { border-top: 12px solid var(--bau-blue); }
 
 /* Typography */
 h1, .archivo-bold {
