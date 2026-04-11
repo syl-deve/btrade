@@ -44,8 +44,8 @@
                         <span id="status-text" class="text-sm">OFFLINE</span>
                     </div>
                     <button id="toggle-btn" class="btn-bau btn-bau-red text-sm py-3 px-5 border-4 border-black">START_SYSTEM</button>
-                    <button id="lang-toggle" class="btn-bau text-sm py-3 px-4 border-4 border-black font-black tracking-widest" onclick="toggleLang()">KO</button>
-                    <a href="/logout" class="btn-bau text-sm py-3 px-5 border-4 border-black hover:bg-black hover:text-white transition-all">EXIT_NODE</a>
+                    <button id="lang-toggle" class="btn-bau text-sm py-3 px-4 border-4 border-black font-black tracking-widest" onclick="toggleLang()"><span data-i18n="btn_lang">KO</span></button>
+                    <a href="/logout" class="btn-bau text-sm py-3 px-5 border-4 border-black hover:bg-black hover:text-white transition-all"><span data-i18n="btn_exit">EXIT_NODE</span></a>
                 </nav>
             </div>
             <!-- 2줄: 모바일 전용 버튼 줄 -->
@@ -62,8 +62,8 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <button id="toggle-btn-mobile" class="btn-bau btn-bau-red text-xs py-1.5 px-3 border-4 border-black">정지</button>
-                    <button id="lang-toggle-mobile" class="btn-bau text-xs py-1.5 px-2 border-4 border-black font-black" onclick="toggleLang()">KO</button>
-                    <a href="/logout" class="btn-bau text-xs py-1.5 px-3 border-4 border-black hover:bg-black hover:text-white transition-all">EXIT_NODE</a>
+                    <button id="lang-toggle-mobile" class="btn-bau text-xs py-1.5 px-2 border-4 border-black font-black" onclick="toggleLang()"><span data-i18n="btn_lang">KO</span></button>
+                    <a href="/logout" class="btn-bau text-xs py-1.5 px-3 border-4 border-black hover:bg-black hover:text-white transition-all"><span data-i18n="btn_exit">EXIT_NODE</span></a>
                 </div>
             </div>
         </header>
@@ -482,6 +482,9 @@
                 label_vol_ratio: 'Ratio vs Avg',
                 side_buy: 'BUY', side_sell: 'SELL',
                 btn_sell_now: 'INSTANT_SELL',
+                btn_exit: 'EXIT_NODE',
+                btn_lang: 'KO',
+                label_candle_chart: 'BTC REALTIME (15M)',
             },
             ko: {
                 label_krw:    '사용 가능 잔고 (원화)',
@@ -539,6 +542,9 @@
                 label_vol_ratio: '평균 대비 비율',
                 side_buy: '매수', side_sell: '매도',
                 btn_sell_now: '즉시 매도',
+                btn_exit: '로그아웃',
+                btn_lang: 'EN',
+                label_candle_chart: 'BTC 실시간 (15분봉)',
             }
         };
 
@@ -552,10 +558,7 @@
                 const key = el.getAttribute('data-i18n');
                 if (dict[key] !== undefined) el.textContent = dict[key];
             });
-            const btn = document.getElementById('lang-toggle');
-            if (btn) btn.textContent = lang === 'ko' ? 'EN' : 'KO';
-            const btnMobile = document.getElementById('lang-toggle-mobile');
-            if (btnMobile) btnMobile.textContent = lang === 'ko' ? 'EN' : 'KO';
+            // lang 버튼은 data-i18n="btn_lang"으로 자동 처리됨
         }
 
         function toggleLang() {
