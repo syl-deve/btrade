@@ -203,7 +203,7 @@
                 </div>
 
                 <!-- 매매당 평균 손익 -->
-                <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
                     <button class="hint-btn" onclick="showHint('avg_profit', this)" title="설명">?</button>
                     <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_avg_profit">AVG_PROFIT/TRADE</span></div>
                     <div id="avg-profit-per-trade" class="text-3xl font-black leading-none">0 ₩</div>
@@ -211,7 +211,7 @@
                 </div>
 
                 <!-- 오늘 손익 -->
-                <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
                     <button class="hint-btn" onclick="showHint('today_profit', this)" title="설명">?</button>
                     <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_today_profit">TODAY_P&L</span></div>
                     <div id="today-net-profit" class="text-3xl font-black leading-none">0 ₩</div>
@@ -219,7 +219,7 @@
                 </div>
 
                 <!-- 마지막 거래 -->
-                <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
                     <button class="hint-btn" onclick="showHint('last_trade', this)" title="설명">?</button>
                     <div class="label-bau"><div class="bau-shape bau-triangle"></div><span data-i18n="label_last_trade">LAST_TRADE</span></div>
                     <div id="last-trade-elapsed" class="text-3xl font-black leading-none">-</div>
@@ -227,7 +227,7 @@
                 </div>
 
                 <!-- MACD -->
-                <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                <div class="bau-tile tile-red-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
                     <button class="hint-btn" onclick="showHint('macd', this)" title="설명">?</button>
                     <div class="label-bau"><div class="bau-shape bau-square"></div><span data-i18n="label_macd">MACD</span></div>
                     <div id="macd-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
@@ -239,7 +239,7 @@
                 </div>
 
                 <!-- 거래량 -->
-                <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                <div class="bau-tile flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
                     <button class="hint-btn" onclick="showHint('volume', this)" title="설명">?</button>
                     <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_volume_filter">VOLUME</span></div>
                     <div id="vol-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
@@ -251,14 +251,14 @@
                 </div>
 
                 <!-- 볼린저밴드 -->
-                <div class="bau-tile tile-yellow-accent flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
-                    <button class="hint-btn" onclick="showHint('bollinger', this)" title="설명">?</button>
-                    <div class="label-bau"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER</span></div>
-                    <div id="boll-status" class="text-sm font-black inline-block px-2 py-1 border-2 border-black bg-black text-white">--</div>
-                    <div class="flex flex-col gap-0.5 text-sm font-bold text-zinc-700">
+                <div class="bau-tile tile-blue-dot flex flex-col justify-between" style="flex:1; min-width:160px; position:relative;">
+                    <button class="hint-btn hint-btn-light" onclick="showHint('bollinger', this)" title="설명">?</button>
+                    <div class="label-bau text-white/80"><div class="bau-shape bau-circle"></div><span data-i18n="label_bollinger">BOLLINGER</span></div>
+                    <div id="boll-status" class="text-sm font-black text-white inline-block px-2 py-1 border-2 border-white">--</div>
+                    <div class="flex flex-col gap-0.5 text-sm font-bold text-white/90">
                         <span>↑ <span id="boll-upper">—</span></span>
                         <span>— <span id="boll-middle">—</span></span>
-                        <span class="text-blue-600 font-black">↓ <span id="boll-lower">—</span></span>
+                        <span class="text-yellow-300 font-black">↓ <span id="boll-lower">—</span></span>
                     </div>
                 </div>
 
