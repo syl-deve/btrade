@@ -62,70 +62,89 @@
         </div>
 
         <main class="bau-container mb-12">
-            <!-- Main Chart -->
-            <section class="bau-tile tile-big flex flex-col">
-                <div class="label-bau">
-                    <div class="bau-shape bau-square"></div>
-                    <span data-i18n="label_chart">ACCUMULATED_PROFIT_HISTORY (KRW)</span>
-                </div>
-                <div class="flex-grow min-h-[400px] relative" style="background:#0f172a; border: 2px solid #000; margin-top: 0.5rem;">
-                    <canvas id="profitChart"></canvas>
-                </div>
-                <div class="mt-8 border-t-2 border-black pt-4 flex justify-between items-end">
-                    <div>
-                        <p data-i18n="label_gross" class="meta-label">Gross Accumulation</p>
-                        <div id="total-net-profit" class="value-bau">0 ₩</div>
-                    </div>
-                    <div class="flex gap-10">
-                        <div class="text-right">
-                            <p data-i18n="label_winrate" class="meta-label">Success Rate</p>
-                            <p id="win-rate" class="text-3xl font-black">0.0%</p>
-                        </div>
-                        <div class="text-right">
-                            <p data-i18n="label_trades" class="meta-label">Trade Records</p>
-                            <p id="win-loss-count" class="text-xl font-black">0 W / 0 L</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
-            <!-- Current Performance Section -->
-            <section class="bau-tile tile-side tile-blue-dot flex flex-col justify-between">
+            <!-- ① 실시간 수익률 바 (전체폭) -->
+            <section class="bau-tile tile-blue-dot tile-full flex flex-wrap items-center gap-6 md:gap-12" style="grid-row: span 1; padding: 1.5rem 2rem;">
+                <button class="hint-btn hint-btn-light" onclick="showHint('yield_bar', this)" title="설명">?</button>
                 <div>
-                    <div class="label-bau text-white">
-                        <div class="bau-shape bau-circle border-2 border-white"></div>
-                        <span data-i18n="label_yield">REALTIME_YIELD_PERFORMANCE</span>
-                    </div>
-                    <!-- Significant Profit Rate Display -->
-                    <div id="current-profit-rate" class="text-6xl md:text-8xl font-black archivo-bold leading-tight mt-4 text-white tracking-tighter">0.00<span class="text-3xl md:text-4xl">%</span></div>
-                    <div id="holding-profit-krw" class="text-2xl md:text-3xl font-black text-white mt-1 tracking-tighter opacity-90">0 ₩</div>
-                    <div id="buy-count-badge" class="mt-2 inline-block font-black tracking-widest uppercase px-3 py-1 border-2 border-white text-black text-base" style="display:none; background:#FACC15;"></div>
-                </div>
-                
-                <div id="current-crypto" class="border-4 border-black bg-white p-6 text-black shadow-[4px_4px_0px_#000]">
-                    <div class="label-bau mb-1 text-black"><div class="bau-shape bau-triangle mr-2"></div><span data-i18n="label_engine">MONITORING_ENGINE</span></div>
-                    <div id="target-coin" class="text-5xl font-black archivo-bold">NONE</div>
-                    
-                    <div class="mt-6 space-y-2 border-t-2 border-black/10 pt-4">
-                        <div class="flex justify-between items-center">
-                            <span data-i18n="label_price" class="meta-label">Current Price</span>
-                            <span id="current-price" class="text-lg font-black">0 ₩</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span data-i18n="label_avgbuy" class="meta-label">Avg Buy Price</span>
-                            <span id="avg-buy-price" class="text-lg font-black text-blue-600">0 ₩</span>
-                        </div>
+                    <div class="label-bau text-white/80 mb-1"><div class="bau-shape bau-circle border-2 border-white"></div><span data-i18n="label_yield">REALTIME_YIELD</span></div>
+                    <div class="flex items-baseline gap-3">
+                        <div id="current-profit-rate" class="text-5xl font-black archivo-bold text-white tracking-tighter leading-none">0.00<span class="text-2xl">%</span></div>
+                        <div id="holding-profit-krw" class="text-2xl font-black text-white/80 tracking-tighter">0 ₩</div>
+                        <div id="buy-count-badge" class="font-black tracking-widest uppercase px-3 py-1 border-2 border-white text-black text-sm" style="display:none; background:#FACC15;"></div>
                     </div>
                 </div>
-
-                <div class="mt-6">
-                    <button id="sell-now-btn" onclick="sellNow()" class="btn-bau w-full justify-center py-4 bg-red-600 text-white border-4 border-black font-black tracking-widest text-sm hover:bg-red-700 transition-colors shadow-[4px_4px_0px_#000]" style="display:none;">
+                <div class="w-[2px] bg-white/20 self-stretch hidden md:block"></div>
+                <div>
+                    <div class="label-bau text-white/80 mb-1"><div class="bau-shape bau-triangle"></div><span data-i18n="label_engine">ENGINE</span></div>
+                    <div id="target-coin" class="text-3xl font-black archivo-bold text-white">NONE</div>
+                </div>
+                <div class="w-[2px] bg-white/20 self-stretch hidden md:block"></div>
+                <div class="flex gap-8">
+                    <div>
+                        <span data-i18n="label_price" class="meta-label text-white/60">Current Price</span>
+                        <div id="current-price" class="text-xl font-black text-white">0 ₩</div>
+                    </div>
+                    <div>
+                        <span data-i18n="label_avgbuy" class="meta-label text-white/60">Avg Buy</span>
+                        <div id="avg-buy-price" class="text-xl font-black text-yellow-300">0 ₩</div>
+                    </div>
+                </div>
+                <div class="ml-auto">
+                    <button id="sell-now-btn" onclick="sellNow()" class="btn-bau justify-center py-3 px-6 bg-red-600 text-white border-4 border-white font-black tracking-widest text-sm" style="display:none;">
                         <span data-i18n="btn_sell_now">즉시 매도</span>
                     </button>
                 </div>
             </section>
 
-            <!-- 스탯 카드 7개 (한 줄 flex) -->
+            <!-- ② 비트코인 실시간 차트 + 누적수익 히스토리 (나란히) -->
+            <section class="bau-tile flex flex-col" style="grid-column: span 6; grid-row: span 3;">
+                <div class="label-bau">
+                    <div class="bau-shape bau-triangle"></div>
+                    <span data-i18n="label_candle_chart">BTC 실시간 (15분봉)</span>
+                </div>
+                <div class="flex-grow min-h-[340px] relative" style="background:#0f172a; border: 2px solid #000; margin-top: 0.5rem;">
+                    <canvas id="candleChart"></canvas>
+                </div>
+                <div class="mt-4 border-t-2 border-black pt-3 flex gap-8">
+                    <div>
+                        <span data-i18n="label_price" class="meta-label">현재가</span>
+                        <div id="candle-current-price" class="text-2xl font-black">— ₩</div>
+                    </div>
+                    <div>
+                        <span class="meta-label">볼린저 하단</span>
+                        <div id="candle-boll-lower" class="text-2xl font-black text-blue-600">— ₩</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="bau-tile flex flex-col" style="grid-column: span 6; grid-row: span 3;">
+                <div class="label-bau">
+                    <div class="bau-shape bau-square"></div>
+                    <span data-i18n="label_chart">ACCUMULATED_PROFIT_HISTORY (KRW)</span>
+                </div>
+                <div class="flex-grow min-h-[340px] relative" style="background:#0f172a; border: 2px solid #000; margin-top: 0.5rem;">
+                    <canvas id="profitChart"></canvas>
+                </div>
+                <div class="mt-4 border-t-2 border-black pt-3 flex justify-between items-end">
+                    <div>
+                        <p data-i18n="label_gross" class="meta-label">Gross Accumulation</p>
+                        <div id="total-net-profit" class="value-bau text-3xl">0 ₩</div>
+                    </div>
+                    <div class="flex gap-8">
+                        <div class="text-right">
+                            <p data-i18n="label_winrate" class="meta-label">Win Rate</p>
+                            <p id="win-rate" class="text-2xl font-black">0.0%</p>
+                        </div>
+                        <div class="text-right">
+                            <p data-i18n="label_trades" class="meta-label">Trades</p>
+                            <p id="win-loss-count" class="text-lg font-black">0W / 0L</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ③ 스탯 카드 7개 (한 줄 flex) -->
             <div class="tile-full flex flex-wrap gap-0" style="grid-column: span 12;">
 
                 <!-- RSI -->
@@ -360,6 +379,7 @@
     <script>
         const CSRF_TOKEN = "{{ csrf_token }}";
         let profitChart;
+        let candleChart;
         let isConfigPopulated = false;
 
         // ─── 한/영 번역 딕셔너리 ────────────────────────────────────────
@@ -566,6 +586,104 @@
                         x: {
                             grid: { display: false },
                             ticks: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initCandleChart() {
+            const ctx = document.getElementById('candleChart').getContext('2d');
+            // Chart.js에는 기본 캔들스틱이 없으므로 라인 차트로 OHLC 근사 표현
+            // close 라인 + 고가/저가 fill 영역
+            candleChart = new Chart(ctx, {
+                plugins: [darkBgPlugin],
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'High',
+                            data: [],
+                            borderColor: 'rgba(250,204,21,0)',
+                            backgroundColor: 'rgba(250,204,21,0.12)',
+                            fill: '+1',
+                            tension: 0.2,
+                            borderWidth: 0,
+                            pointRadius: 0,
+                        },
+                        {
+                            label: 'Low',
+                            data: [],
+                            borderColor: 'rgba(250,204,21,0)',
+                            backgroundColor: 'rgba(250,204,21,0)',
+                            fill: false,
+                            tension: 0.2,
+                            borderWidth: 0,
+                            pointRadius: 0,
+                        },
+                        {
+                            label: 'Close',
+                            data: [],
+                            borderColor: '#FACC15',
+                            backgroundColor: 'rgba(250,204,21,0)',
+                            fill: false,
+                            tension: 0.2,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 5,
+                            pointHoverBackgroundColor: '#FACC15',
+                        },
+                        {
+                            label: 'Bollinger Lower',
+                            data: [],
+                            borderColor: '#2563EB',
+                            backgroundColor: 'rgba(37,99,235,0)',
+                            fill: false,
+                            tension: 0.2,
+                            borderWidth: 1.5,
+                            borderDash: [4, 3],
+                            pointRadius: 0,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            borderColor: '#FACC15',
+                            borderWidth: 1,
+                            titleColor: '#FACC15',
+                            bodyColor: '#fff',
+                            titleFont: { family: 'Archivo Black', size: 11 },
+                            bodyFont: { family: 'Space Grotesk', size: 11 },
+                            cornerRadius: 0,
+                            callbacks: {
+                                label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString() + ' ₩'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255,255,255,0.06)', lineWidth: 1 },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { family: 'Space Grotesk', size: 10, weight: 'bold' },
+                                callback: v => (v / 1000000).toFixed(1) + 'M'
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: '#64748b',
+                                font: { family: 'Space Grotesk', size: 9 },
+                                maxTicksLimit: 6,
+                                maxRotation: 0
+                            }
                         }
                     }
                 }
@@ -911,11 +1029,32 @@
                     isConfigPopulated = true;
                 }
 
-                // Chart Sync
+                // Profit Chart Sync
                 if (data.chart_data && profitChart) {
                     profitChart.data.labels = data.chart_data.map(d => d.x);
                     profitChart.data.datasets[0].data = data.chart_data.map(d => d.y);
                     profitChart.update();
+                }
+
+                // Candle Chart Sync (15분봉 OHLC)
+                if (data.candle_data && candleChart && data.candle_data.length > 0) {
+                    const labels = data.candle_data.map(d => d.x);
+                    candleChart.data.labels = labels;
+                    candleChart.data.datasets[0].data = data.candle_data.map(d => d.h); // High
+                    candleChart.data.datasets[1].data = data.candle_data.map(d => d.l); // Low
+                    candleChart.data.datasets[2].data = data.candle_data.map(d => d.c); // Close
+                    // 볼린저 하단: 모든 봉에 동일한 boll_lower 값
+                    const bollLower = data.bollinger && data.bollinger.lower;
+                    candleChart.data.datasets[3].data = bollLower
+                        ? data.candle_data.map(() => bollLower)
+                        : [];
+                    candleChart.update('none'); // 애니메이션 없이 빠른 업데이트
+                    // 하단 수치 업데이트
+                    const lastCandle = data.candle_data[data.candle_data.length - 1];
+                    const candlePrice = document.getElementById('candle-current-price');
+                    const candleBoll = document.getElementById('candle-boll-lower');
+                    if (candlePrice) candlePrice.innerText = lastCandle.c.toLocaleString() + ' ₩';
+                    if (candleBoll) candleBoll.innerText = bollLower ? bollLower.toLocaleString() + ' ₩' : '— ₩';
                 }
 
                 // Trade History Table
@@ -1029,6 +1168,7 @@
 
         // Initialize & Loop
         initChart();
+        initCandleChart();
         applyLang(currentLang); // 저장된 언어 적용
         setInterval(updateStatus, 3000);
         updateStatus();
@@ -1037,6 +1177,10 @@
     <script>
         // ── 지표 설명 팝업 ────────────────────────────────────────────────
         const hintData = {
+            yield_bar: {
+                en: { title: 'Realtime Yield', body: 'Shows current position P&L in real-time.\n\n• % = (current price / avg buy price - 1) × 100\n• ₩ = unrealized profit in KRW\n• Badge shows 1st/2nd buy count\n\nUpdates every 3 seconds.' },
+                ko: { title: '실시간 수익률', body: '현재 보유 포지션의 실시간 손익을 표시합니다.\n\n• % = (현재가 / 평단가 - 1) × 100\n• ₩ = 미실현 손익 (원화)\n• 뱃지: 현재 분할매수 횟수\n\n3초마다 갱신됩니다.' }
+            },
             rsi: {
                 en: { title: 'RSI (Relative Strength Index)', body: 'Measures momentum on a 0–100 scale.\n\n• RSI ≤ threshold → BUY signal (oversold)\n• RSI > threshold → NEUTRAL (wait)\n\nSettings:\n1st entry ≤ rsi_threshold\n2nd entry ≤ rsi_threshold_2\n\nPeriod: 14 candles' },
                 ko: { title: 'RSI (상대강도지수)', body: '0~100 사이의 모멘텀 지표입니다.\n\n• RSI ≤ 기준값 → 매수 신호 (과매도)\n• RSI > 기준값 → 관망\n\n설정:\n1차 매수 ≤ rsi_threshold\n2차 매수 ≤ rsi_threshold_2\n\n기간: 14봉' }

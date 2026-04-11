@@ -597,6 +597,19 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                     "y": current_sum
                 })
 
+        # OHLCV 캔들 데이터 (15분봉 50개)
+        ohlcv_df = strategy.get_ohlcv(target_exchange, interval="minute15", count=50)
+        candle_data = []
+        if ohlcv_df is not None and not ohlcv_df.empty:
+            for ts, row in ohlcv_df.iterrows():
+                candle_data.append({
+                    "x": ts.strftime("%m-%d %H:%M"),
+                    "o": round(float(row["open"]), 0),
+                    "h": round(float(row["high"]), 0),
+                    "l": round(float(row["low"]), 0),
+                    "c": round(float(row["close"]), 0),
+                })
+
         # Bollinger Band values
         boll_upper, boll_middle, boll_lower = strategy.get_bollinger(target_exchange)
         boll_ok = bool(strategy.is_below_bollinger_lower(target_exchange)) if boll_lower is not None else None
@@ -651,6 +664,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             "today_net_profit": today_net_profit,
             "last_trade_elapsed_minutes": elapsed_minutes,
             "chart_data": cumulative_profits,
+            "candle_data": candle_data,
             "buy_count": bot_settings.buy_count if bot_settings else 0,
             "config": {
                 "rsi_threshold": bot_settings.rsi_threshold if bot_settings else 35.0,
