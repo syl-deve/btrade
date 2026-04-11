@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bitrade-v1';
+const CACHE_NAME = 'bitrade-v2';
 const STATIC_ASSETS = [
   '/static/css/bauhaus.css',
   '/static/manifest.json',
