@@ -253,7 +253,25 @@ h1, .archivo-bold {
         gap: 0.75rem;
     }
     .tile-stats-bau { grid-column: span 12; }
-    .bau-tile { padding: 1rem; }
+    .bau-tile {
+        padding: 1rem;
+        box-shadow: 4px 4px 0px var(--bau-black);
+    }
+    .bau-tile:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0px var(--bau-black);
+    }
+    .btn-bau {
+        box-shadow: 4px 4px 0px var(--bau-black);
+    }
+    .btn-bau:hover {
+        transform: translate(-2px, -2px) !important;
+        box-shadow: 6px 6px 0px var(--bau-black) !important;
+    }
+    .btn-bau:active {
+        transform: translate(1px, 1px) !important;
+        box-shadow: 1px 1px 0px var(--bau-black) !important;
+    }
     .value-bau { font-size: 2rem; }
     .chart-tile-left,
     .chart-tile-right {
