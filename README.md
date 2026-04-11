@@ -89,9 +89,89 @@ core/
   strategy.py           RSI, 볼린저, MACD, 거래량, ATR 지표 계산
   bithumb_client.py     빗썸 V1 JWT/SHA512 클라이언트
   discord_notifier.py   웹훅 알림
-templates/index.html    Tailwind + Chart.js 대시보드
-static/css/bauhaus.css  Bauhaus 디자인 시스템
+templates/index.html    Tailwind + Chart.js 대시보드 (PWA 지원)
+static/
+  css/bauhaus.css       Bauhaus 디자인 시스템
+  manifest.json         PWA 앱 메타데이터
+  sw.js                 Service Worker (정적 자산 캐싱)
+  icons/                PWA 아이콘 (192x192, 512x512, SVG)
+notify-ngrok.sh         ngrok 주소 디스코드 알림 스크립트
 ```
+
+## 배포 (AWS EC2)
+
+### HTTPS 설정 (PWA 동작 필수)
+
+Service Worker는 HTTPS 환경에서만 동작합니다. ngrok으로 HTTPS 터널을 구성합니다.
+
+```bash
+# 1. ngrok 설치
+wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
+tar -xzf ngrok-v3-stable-linux-amd64.tgz
+sudo mv ngrok /usr/local/bin/
+
+# 2. 인증 토큰 등록 (https://dashboard.ngrok.com 에서 발급)
+ngrok config add-authtoken <TOKEN>
+```
+
+ngrok systemd 서비스 (`/etc/systemd/system/ngrok.service`):
+
+```ini
+[Unit]
+Description=ngrok tunnel
+After=network.target bitrade.service
+
+[Service]
+Type=simple
+User=ec2-user
+ExecStart=/usr/local/bin/ngrok http 8000 --log=stdout
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable ngrok
+sudo systemctl start ngrok
+```
+
+재시작 시 새 ngrok 주소를 디스코드로 자동 알림:
+
+```bash
+# ngrok-notify systemd 서비스 등록
+sudo tee /etc/systemd/system/ngrok-notify.service > /dev/null << 'EOF'
+[Unit]
+Description=ngrok URL notify to Discord
+After=ngrok.service
+
+[Service]
+Type=oneshot
+User=ec2-user
+ExecStart=/home/ec2-user/btrade/notify-ngrok.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable ngrok-notify
+```
+
+현재 ngrok 주소 확인:
+
+```bash
+curl -s http://localhost:4040/api/tunnels | python3 -c "import sys,json;print(json.load(sys.stdin)['tunnels'][0]['public_url'])"
+```
+
+### PWA 설치
+
+HTTPS 주소로 접속 후:
+
+- **Android Chrome**: 주소창 메뉴 → "홈 화면에 추가"
+- **iOS Safari**: 공유 버튼 → "홈 화면에 추가"
 
 ## 환경 변수 (.env)
 
