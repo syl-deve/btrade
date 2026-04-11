@@ -90,12 +90,12 @@ def _run_db_migrations():
         pass
     # fee 전체 재계산 (요율 변경 시 반영, 빗썸 0.04% 쿠폰 적용)
     # BUY: 매수금액 × 0.04% (단건 수수료)
-    # SELL: 매도금액 × 0.04% × 2 (매수+매도 양쪽 합산)
+    # SELL: 매도금액 × 0.04% (단건 수수료, 빗썸 앱 기준 — net_profit에는 매수+매도 양쪽 합산 반영)
     conn.execute("UPDATE trade_history SET fee = total_amount * 0.0004 WHERE side = 'BUY'")
-    conn.execute("UPDATE trade_history SET fee = total_amount * 0.0008 WHERE side = 'SELL'")
+    conn.execute("UPDATE trade_history SET fee = total_amount * 0.0004 WHERE side = 'SELL'")
     conn.commit()
     conn.close()
-    logging.getLogger(__name__).info("[Migration] fee 소급 적용 완료 (BUY×0.04%, SELL×0.08%)")
+    logging.getLogger(__name__).info("[Migration] fee 소급 적용 완료 (BUY×0.04%, SELL×0.04%)")
 
 _run_db_migrations()
 
@@ -245,7 +245,7 @@ def _record_sell(db, current_price, coin_balance, bot_settings):
     db.add(TradeHistory(
         symbol=SYMBOL, side="SELL", price=current_price,
         volume=coin_balance, total_amount=sell_total,
-        net_profit=net_profit, fee=total_fee
+        net_profit=net_profit, fee=sell_fee  # 매도 단건 수수료만 표시 (빗썸 앱 기준)
     ))
     _reset_position(bot_settings)
     db.commit()
@@ -728,20 +728,7 @@ async def sell_now(db: Session = Depends(get_db), user=Depends(get_current_user)
     current_price = current_client.get_current_price(SYMBOL)
     res = current_client.sell_market_order(coin_balance)
     if res:
-        buy_principle = bot_settings.avg_buy_price * coin_balance if bot_settings and bot_settings.avg_buy_price > 0 else 0
-        sell_total = current_price * coin_balance if current_price else 0
-        net_profit = sell_total - buy_principle
-
-        new_trade = TradeHistory(
-            symbol=SYMBOL, side="SELL", price=current_price or 0,
-            volume=coin_balance, total_amount=sell_total,
-            net_profit=net_profit
-        )
-        db.add(new_trade)
-        if bot_settings:
-            bot_settings.avg_buy_price = 0.0
-            bot_settings.highest_profit_rate = 0.0
-        db.commit()
+        net_profit = _record_sell(db, current_price, coin_balance, bot_settings)
         logger.info(f"[즉시매도] SOLD {coin_balance} at {current_price} (P&L: {net_profit:,.0f} KRW)")
         send_discord_message("🔴 즉시매도 실행", f"{SYMBOL} {coin_balance} 전량 매도\n체결가: {current_price}\n손익: {net_profit:,.0f} KRW", color=0xe63946)
         return {"status": "success", "net_profit": int(net_profit)}
