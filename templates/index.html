@@ -136,6 +136,7 @@
                     <div>
                         <div id="rsi-status" class="mt-2 text-sm font-black px-2 py-1 bg-black text-white inline-block border-2 border-black">NEUTRAL</div>
                         <div id="rsi-thresholds" class="mt-1 text-sm font-bold text-zinc-500 uppercase tracking-wider">1차 — / 2차 —</div>
+                        <div id="filter-badges" class="mt-2 flex flex-wrap gap-1" style="display:none!important;"></div>
                     </div>
                 </div>
 
@@ -635,9 +636,29 @@
                         phaseSub.innerText = ko ? '시작 버튼을 눌러 봇을 활성화하세요' : 'Press START to activate the bot';
                     } else if (!holding) {
                         phaseLabel.innerText = ko ? '현재 단계' : 'PHASE';
-                        phaseText.innerText = ko ? '매수 신호 탐색 중' : 'SCANNING FOR ENTRY';
-                        phaseText.style.color = '#3B82F6';
-                        phaseSub.innerText = ko ? 'RSI + 볼린저 조건 충족 시 1차 매수 진입' : 'Waiting for RSI + Bollinger condition';
+                        // RSI 충족 여부 확인
+                        const rsiOk = data.current_rsi && data.config && data.current_rsi <= data.config.rsi_threshold;
+                        if (rsiOk) {
+                            // RSI는 됐는데 다른 필터가 막는 경우
+                            const cfg = data.config;
+                            const blocked = [];
+                            if (cfg.use_bollinger && data.bollinger && !data.bollinger.is_below) blocked.push(ko ? '볼린저(밴드 내부)' : 'BOLL(inside band)');
+                            if (cfg.use_macd && data.macd && !data.macd.is_reversing) blocked.push(ko ? 'MACD(반전 미확인)' : 'MACD(no reversal)');
+                            if (cfg.use_volume_filter && data.volume && !data.volume.is_surging) blocked.push(ko ? '거래량(평이)' : 'VOL(low)');
+                            if (blocked.length > 0) {
+                                phaseText.innerText = ko ? 'RSI 충족 — 필터 대기' : 'RSI OK — FILTER WAIT';
+                                phaseText.style.color = '#F59E0B';
+                                phaseSub.innerText = (ko ? '블로킹: ' : 'Blocked: ') + blocked.join(', ');
+                            } else {
+                                phaseText.innerText = ko ? '매수 신호 탐색 중' : 'SCANNING FOR ENTRY';
+                                phaseText.style.color = '#3B82F6';
+                                phaseSub.innerText = ko ? 'RSI + 볼린저 조건 충족 시 1차 매수 진입' : 'Waiting for RSI + Bollinger condition';
+                            }
+                        } else {
+                            phaseText.innerText = ko ? '매수 신호 탐색 중' : 'SCANNING FOR ENTRY';
+                            phaseText.style.color = '#3B82F6';
+                            phaseSub.innerText = ko ? 'RSI + 볼린저 조건 충족 시 1차 매수 진입' : 'Waiting for RSI + Bollinger condition';
+                        }
                     } else if (cnt === 1) {
                         phaseLabel.innerText = ko ? '현재 단계' : 'PHASE';
                         phaseText.innerText = ko ? '1차 매수 보유 중' : 'HOLDING — ENTRY x1';
@@ -762,15 +783,37 @@
                 
                 const rsiStatus = document.getElementById('rsi-status');
                 if (rsiStatus && data.config) {
-                    if (data.current_rsi <= data.config.rsi_threshold_2) {
+                    const rsiOk1st = data.current_rsi <= data.config.rsi_threshold;
+                    const rsiOk2nd = data.current_rsi <= data.config.rsi_threshold_2;
+                    if (rsiOk2nd) {
                         rsiStatus.innerText = currentLang === 'ko' ? '2차매수 신호' : '2ND_BUY_SIGNAL';
                         rsiStatus.className = "mt-3 text-sm font-black p-2 bg-purple-600 text-white inline-block border-2 border-black";
-                    } else if (data.current_rsi <= data.config.rsi_threshold) {
+                    } else if (rsiOk1st) {
                         rsiStatus.innerText = currentLang === 'ko' ? '1차매수 신호' : '1ST_BUY_SIGNAL';
                         rsiStatus.className = "mt-3 text-sm font-black p-2 bg-red-600 text-white inline-block border-2 border-black";
                     } else {
                         rsiStatus.innerText = i18n[currentLang].rsi_neutral;
                         rsiStatus.className = "mt-3 text-sm font-black p-2 bg-black text-white inline-block border-2 border-black";
+                    }
+
+                    // 필터 뱃지: RSI 조건 충족 시에만 표시
+                    const filterBadges = document.getElementById('filter-badges');
+                    if (filterBadges && rsiOk1st && !coinVal) {
+                        const cfg = data.config;
+                        const boll = data.bollinger;
+                        const macd = data.macd;
+                        const vol = data.volume;
+                        const ko = currentLang === 'ko';
+                        const filters = [];
+                        if (cfg.use_bollinger) filters.push({ label: ko ? '볼린저' : 'BOLL', pass: boll && boll.is_below });
+                        if (cfg.use_macd)      filters.push({ label: 'MACD',              pass: macd && macd.is_reversing });
+                        if (cfg.use_volume_filter) filters.push({ label: ko ? '거래량' : 'VOL', pass: vol && vol.is_surging });
+                        filterBadges.style.display = filters.length ? 'flex' : 'none';
+                        filterBadges.innerHTML = filters.map(f =>
+                            `<span style="font-size:0.7rem;font-weight:900;padding:2px 6px;border:2px solid #000;background:${f.pass ? '#16a34a' : '#dc2626'};color:#fff;letter-spacing:0.05em;">${f.label} ${f.pass ? '✓' : '✗'}</span>`
+                        ).join('');
+                    } else if (filterBadges) {
+                        filterBadges.style.display = 'none';
                     }
 
                     const rsiThresh = document.getElementById('rsi-thresholds');
