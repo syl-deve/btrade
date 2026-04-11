@@ -554,8 +554,9 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         
         current_price = current_client.get_current_price(SYMBOL)
         if current_price is None:
-            logger.error(f"❌ Failed to fetch current price for {SYMBOL} on {target_exchange}")
-        current_rsi = strategy.get_rsi(target_exchange) or 0.0
+            logger.warning(f"[Status] {target_exchange} 현재가 조회 실패, BITHUMB fallback 시도")
+            current_price = bithumb_client.get_current_price(SYMBOL) if bithumb_client else None
+        current_rsi = (strategy.get_rsi("BITHUMB") if strategy else None) or 0.0
 
         profit_rate = 0.0
         if bot_settings and bot_settings.avg_buy_price > 0 and current_price:
@@ -597,31 +598,43 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                     "y": current_sum
                 })
 
-        # OHLCV 캔들 데이터 (15분봉 50개)
-        ohlcv_df = strategy.get_ohlcv(target_exchange, interval="minute15", count=50)
+        # strategy가 초기화 실패한 경우 fallback 생성
+        _strategy = strategy if strategy is not None else ScalperStrategy()
+
+        # OHLCV 캔들 데이터 (15분봉 50개) — 봇 정지 상태에서도 항상 조회
+        # BITHUMB public API 우선 사용 (인증 불필요, 안정적)
         candle_data = []
-        if ohlcv_df is not None and not ohlcv_df.empty:
-            for ts, row in ohlcv_df.iterrows():
-                candle_data.append({
-                    "x": ts.strftime("%m-%d %H:%M"),
-                    "o": round(float(row["open"]), 0),
-                    "h": round(float(row["high"]), 0),
-                    "l": round(float(row["low"]), 0),
-                    "c": round(float(row["close"]), 0),
-                })
+        try:
+            ohlcv_df = _strategy.get_ohlcv("BITHUMB", interval="minute15", count=50)
+            if ohlcv_df is None or ohlcv_df.empty:
+                ohlcv_df = _strategy.get_ohlcv(target_exchange, interval="minute15", count=50)
+            if ohlcv_df is not None and not ohlcv_df.empty:
+                for ts, row in ohlcv_df.iterrows():
+                    candle_data.append({
+                        "x": ts.strftime("%m-%d %H:%M"),
+                        "o": round(float(row["open"]), 0),
+                        "h": round(float(row["high"]), 0),
+                        "l": round(float(row["low"]), 0),
+                        "c": round(float(row["close"]), 0),
+                    })
+        except Exception as e:
+            logger.warning(f"[OHLCV] 캔들 데이터 조회 실패: {e}")
+
+        # 지표 계산용 exchange: BITHUMB public API 우선 (인증 불필요)
+        indicator_exchange = "BITHUMB"
 
         # Bollinger Band values
-        boll_upper, boll_middle, boll_lower = strategy.get_bollinger(target_exchange)
-        boll_ok = bool(strategy.is_below_bollinger_lower(target_exchange)) if boll_lower is not None else None
+        boll_upper, boll_middle, boll_lower = _strategy.get_bollinger(indicator_exchange)
+        boll_ok = bool(_strategy.is_below_bollinger_lower(indicator_exchange)) if boll_lower is not None else None
 
         # MACD values
-        macd_val, macd_signal, macd_hist = strategy.get_macd(target_exchange)
-        macd_reversing = bool(strategy.is_macd_reversing(target_exchange)) if macd_hist else None
+        macd_val, macd_signal, macd_hist = _strategy.get_macd(indicator_exchange)
+        macd_reversing = bool(_strategy.is_macd_reversing(indicator_exchange)) if macd_hist else None
 
         # Volume ratio
-        vol_current, vol_avg, vol_ratio = strategy.get_volume_ratio(target_exchange)
-        vol_surging = bool(strategy.is_volume_surging(
-            target_exchange,
+        vol_current, vol_avg, vol_ratio = _strategy.get_volume_ratio(indicator_exchange)
+        vol_surging = bool(_strategy.is_volume_surging(
+            indicator_exchange,
             multiplier=bot_settings.volume_multiplier if bot_settings else 1.5
         )) if vol_ratio is not None else None
 
