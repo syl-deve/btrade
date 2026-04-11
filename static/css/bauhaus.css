@@ -23,6 +23,12 @@ body {
     font-family: 'Space Grotesk', sans-serif;
     letter-spacing: -0.02em;
     padding-bottom: 5rem;
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+
+/* 노치/상태바 safe area */
+header.sticky {
+    padding-top: calc(0.75rem + env(safe-area-inset-top));
 }
 
 /* Grid System Override */
