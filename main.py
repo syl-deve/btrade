@@ -168,7 +168,7 @@ async def lifespan(app: FastAPI):
     task.cancel()
 
 # FastAPI Setup
-app = FastAPI(title="Upbit Auto-Trader Dashboard", lifespan=lifespan)
+app = FastAPI(title="BITRADE Dashboard", lifespan=lifespan)
 app.add_middleware(SecurityHeadersMiddleware)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -204,7 +204,7 @@ def get_client(exchange="BITHUMB"):
 def is_client_authorized(exchange="BITHUMB"):
     client = get_client(exchange)
     if not client: return False
-    # Upbit & Bithumb clients both have _is_authenticated attribute
+    # BithumbClient has _is_authenticated attribute
     return getattr(client, "_is_authenticated", False)
 
 # DB Dependency
@@ -609,7 +609,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                             import pandas as _pd
                             ts_str = str(row[time_col])[:16].replace("T", " ")
                         else:
-                            # pyupbit: 인덱스가 datetime
+                            # fallback: 인덱스가 datetime인 경우
                             ts_str = i.strftime("%m-%d %H:%M") if hasattr(i, "strftime") else str(i)[:16]
                         candle_data.append({
                             "x": ts_str,

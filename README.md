@@ -120,7 +120,7 @@ SYMBOL=KRW-BTC
   - `_record_buy()`: 매수 기록. fee = 매수금액×0.04%
   - `_check_daily_loss()`: 당일 net_profit 합계 ≤ daily_loss_limit → is_running = False
   - `_check_consecutive_loss()`: 최근 N매도 전부 손실 → cooldown_until 설정 (로컬 시간)
-  - `get_fee_rate()`: BITHUMB=0.0004, UPBIT=0.0005
+  - `get_fee_rate()`: BITHUMB_FEE_RATE = 0.0004 고정 반환
   - `SecurityHeadersMiddleware`: 모든 응답에 CSP, X-Frame-Options, HSTS 등 주입
   - `verify_csrf()`: POST/PUT/DELETE에 `X-CSRF-Token` 헤더 검증 (Depends로 주입)
   - `SettingsUpdate` (Pydantic): rsi_threshold(10~90), stop_loss_rate(-50~-0.1) 등 범위 검증
@@ -137,7 +137,7 @@ SYMBOL=KRW-BTC
   - `/api/status`: 지표(RSI/볼린저/MACD/거래량)·캔들 데이터는 `indicator_exchange = "BITHUMB"`으로 고정 조회 (public API, 인증 불필요). `strategy=None` 시 `ScalperStrategy()` fallback 생성. 현재가 실패 시 `bithumb_client.get_current_price()` fallback
   - `candle_data`: 빗썸 OHLCV DataFrame은 인덱스가 정수, 시각은 `candle_date_time_kst` 컬럼 → `strftime` 직접 호출 불가. `candle_date_time_kst` → `candle_date_time_utc` → `timestamp` 컬럼 순서로 탐색
 - **`core/strategy.py`**: 모든 지표 계산
-  - `get_ohlcv()`: BITHUMB이면 `BithumbClient.get_ohlcv()`, UPBIT이면 `pyupbit.get_ohlcv()`
+  - `get_ohlcv()`: `BithumbClient.get_ohlcv()` 직접 호출 (빗썸 단일 거래소)
 - **`models.py`**: TradeHistory, BotSettings SQLAlchemy ORM
 - **`config.py`**: .env 로드
 - **`templates/index.html`**: Jinja2 + Tailwind + Chart.js. `csrf_token` context로 전달받아 API 헤더에 사용

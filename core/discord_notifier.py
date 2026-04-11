@@ -23,7 +23,7 @@ def send_discord_message(title: str, description: str, color: int = 0x00ff00):
                 "description": description,
                 "color": color,
                 "footer": {
-                    "text": f"Upbit Bot Alert | {timestamp}"
+                    "text": f"BITRADE Alert | {timestamp}"
                 }
             }
         ]
