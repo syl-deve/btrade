@@ -609,14 +609,29 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             if ohlcv_df is None or ohlcv_df.empty:
                 ohlcv_df = _strategy.get_ohlcv(target_exchange, interval="minute15", count=50)
             if ohlcv_df is not None and not ohlcv_df.empty:
-                for ts, row in ohlcv_df.iterrows():
-                    candle_data.append({
-                        "x": ts.strftime("%m-%d %H:%M"),
-                        "o": round(float(row["open"]), 0),
-                        "h": round(float(row["high"]), 0),
-                        "l": round(float(row["low"]), 0),
-                        "c": round(float(row["close"]), 0),
-                    })
+                # 인덱스가 datetime이 아닐 수 있으므로 컬럼에서 시각 추출
+                time_col = None
+                for col in ("candle_date_time_kst", "candle_date_time_utc", "timestamp"):
+                    if col in ohlcv_df.columns:
+                        time_col = col
+                        break
+                for i, row in ohlcv_df.iterrows():
+                    try:
+                        if time_col:
+                            import pandas as _pd
+                            ts_str = str(row[time_col])[:16].replace("T", " ")
+                        else:
+                            # pyupbit: 인덱스가 datetime
+                            ts_str = i.strftime("%m-%d %H:%M") if hasattr(i, "strftime") else str(i)[:16]
+                        candle_data.append({
+                            "x": ts_str,
+                            "o": round(float(row["open"]), 0),
+                            "h": round(float(row["high"]), 0),
+                            "l": round(float(row["low"]), 0),
+                            "c": round(float(row["close"]), 0),
+                        })
+                    except Exception:
+                        pass
         except Exception as e:
             logger.warning(f"[OHLCV] 캔들 데이터 조회 실패: {e}")
 
