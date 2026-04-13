@@ -591,7 +591,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         else:
             elapsed_minutes = None
         
-        # Prepare Chart Data (Cumulative Profit Over Time)
+        # Prepare Chart Data (Cumulative Profit Over Time, 최근 30건)
         cumulative_profits = []
         current_sum = 0
         for t in all_trades:
@@ -601,6 +601,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                     "x": t.timestamp.strftime("%m-%d %H:%M"),
                     "y": current_sum
                 })
+        cumulative_profits = cumulative_profits[-30:]
 
         # strategy가 초기화 실패한 경우 fallback 생성
         _strategy = strategy if strategy is not None else ScalperStrategy()
