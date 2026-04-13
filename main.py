@@ -85,14 +85,15 @@ def _run_db_migrations():
         conn.execute("ALTER TABLE trade_history ADD COLUMN fee FLOAT")
     except Exception:
         pass
-    # fee 전체 재계산 (요율 변경 시 반영, 빗썸 0.04% 쿠폰 적용)
-    # BUY: 매수금액 × 0.04% (단건 수수료)
-    # SELL: 매도금액 × 0.04% (단건 수수료, 빗썸 앱 기준 — net_profit에는 매수+매도 양쪽 합산 반영)
-    conn.execute("UPDATE trade_history SET fee = total_amount * 0.0004 WHERE side = 'BUY'")
-    conn.execute("UPDATE trade_history SET fee = total_amount * 0.0004 WHERE side = 'SELL'")
-    conn.commit()
+    # fee가 NULL인 레코드만 채움 (최초 1회만 실행되도록)
+    cur = conn.execute("SELECT COUNT(*) FROM trade_history WHERE fee IS NULL")
+    null_count = cur.fetchone()[0]
+    if null_count > 0:
+        conn.execute("UPDATE trade_history SET fee = total_amount * 0.0004 WHERE side = 'BUY' AND fee IS NULL")
+        conn.execute("UPDATE trade_history SET fee = total_amount * 0.0004 WHERE side = 'SELL' AND fee IS NULL")
+        conn.commit()
+        logging.getLogger(__name__).info(f"[Migration] fee 소급 적용 완료 ({null_count}건, BUY×0.04%, SELL×0.04%)")
     conn.close()
-    logging.getLogger(__name__).info("[Migration] fee 소급 적용 완료 (BUY×0.04%, SELL×0.04%)")
 
 _run_db_migrations()
 
@@ -689,6 +690,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             "chart_data": cumulative_profits,
             "candle_data": candle_data,
             "buy_count": bot_settings.buy_count if bot_settings else 0,
+            "cooldown_remaining_minutes": int((bot_settings.cooldown_until - datetime.datetime.now()).total_seconds() / 60) if (bot_settings and bot_settings.cooldown_until and bot_settings.cooldown_until > datetime.datetime.now()) else 0,
             "config": {
                 "rsi_threshold": bot_settings.rsi_threshold if bot_settings else 35.0,
                 "rsi_threshold_2": bot_settings.rsi_threshold_2 if bot_settings else 28.0,
