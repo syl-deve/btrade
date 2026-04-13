@@ -13,7 +13,7 @@
 - **실시간 대시보드**: Bauhaus 디자인 UI
   - 전폭 수익률 바: 실시간 수익률%, 미실현 손익, 현재가/평단가, 즉시매도 버튼
   - BTC 15분봉 실시간 차트 (close 라인 + 고가/저가 범위 + 볼린저 하단선)
-  - 누적수익 히스토리 차트 (두 차트 나란히 배치)
+  - 누적수익 히스토리 차트 최근 30건 표시 (두 차트 나란히 배치)
   - 스탯 카드 7개: RSI 충족 시 필터별 통과/실패 뱃지(✓/✗) 표시
   - 상태 바: 필터 블로킹 시 어떤 필터가 막히는지 명시 (`RSI 충족 — 필터 대기`)
   - 스탯 카드·설정 모달 각 항목에 `?` 힌트 버튼 — 지표/파라미터 설명 팝업 (한/영 언어 연동)
@@ -65,10 +65,17 @@ python main.py               # http://localhost:8000
 | 기능 | 기본값 | 설명 |
 |---|---|---|
 | 일일 손실 한도 | -50,000 ₩ | 초과 시 봇 자동 정지 |
-| 연속 손절 쿨다운 | 3회 → 60분 | N회 연속 손절 시 매수 금지 |
+| 연속 손절 쿨다운 | 2회 → 60분 | N회 연속 손절 시 매수 금지 |
 | ATR 손절 범위 | -0.5 ~ -3.0% | 변동성 낮으면 좁게, 높으면 넓게 |
 
 모든 수치는 대시보드 거래 설정에서 실시간 변경 가능합니다.
+
+#### 쿨다운 동작 상세
+
+- 쿨다운 만료 후 `cooldown_until`을 현재 시각으로 갱신 → 그 이후 발생한 SELL만 연속 손절 카운트
+- 과거 손절 내역이 쿨다운 만료 시 재감지되는 무한루프 방지
+- 쿨다운 중 대시보드 거래 단계 섹션에 `⏸ 쿨다운 N분 남음` 표시
+- DB 직접 해제: `UPDATE bot_settings SET cooldown_until = NULL`
 
 ### 수수료
 
@@ -194,12 +201,12 @@ SYMBOL=KRW-BTC
 ### Key Files
 
 - **`main.py`**: FastAPI 앱, 인증, API 라우트, 트레이딩 루프
-  - `_run_db_migrations()`: 모듈 로드 시 즉시 실행. BUY fee = `total_amount × 0.0004`, SELL fee = `total_amount × 0.0004` (매도 단건 기준, 빗썸 앱 일치)
+  - `_run_db_migrations()`: 모듈 로드 시 즉시 실행. fee가 NULL인 레코드만 소급 적용 (중복 실행 방지). BUY fee = `total_amount × 0.0004`, SELL fee = `total_amount × 0.0004` (매도 단건 기준, 빗썸 앱 일치)
   - `_reset_position()`: avg_buy_price, highest_profit_rate, buy_count, position_opened_at 초기화
   - `_record_sell()`: 매도 기록. DB fee = 매도금액×0.04% (단건, 빗썸 앱 기준). net_profit = 매도금액 - 매수원금 - (매수+매도 수수료 합산). `_reset_position` 호출. `/api/sell_now`도 이 함수 재사용
   - `_record_buy()`: 매수 기록. fee = 매수금액×0.04%
   - `_check_daily_loss()`: 당일 net_profit 합계 ≤ daily_loss_limit → is_running = False
-  - `_check_consecutive_loss()`: 최근 N매도 전부 손실 → cooldown_until 설정 (로컬 시간)
+  - `_check_consecutive_loss()`: 쿨다운 만료 시점 이후 SELL만 카운트 → cooldown_until 설정 (로컬 시간). 만료 직후 cooldown_until을 now로 갱신하여 과거 손절 재감지 방지
   - `get_fee_rate()`: BITHUMB_FEE_RATE = 0.0004 고정 반환
   - `SecurityHeadersMiddleware`: 모든 응답에 CSP, X-Frame-Options, HSTS 등 주입
   - `verify_csrf()`: POST/PUT/DELETE에 `X-CSRF-Token` 헤더 검증 (Depends로 주입)
