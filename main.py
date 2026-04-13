@@ -251,7 +251,10 @@ def _record_buy(db, current_price, buy_amount):
 def _check_daily_loss(db, bot_settings):
     """당일 실현 손실이 한도 초과 시 봇 정지. True 반환 시 정지됨."""
     import datetime as dt
-    today_start = dt.datetime.combine(dt.date.today(), dt.time.min)
+    # KST(UTC+9) 기준 오늘 자정
+    kst_now = dt.datetime.utcnow() + dt.timedelta(hours=9)
+    kst_today_start = dt.datetime.combine(kst_now.date(), dt.time.min)
+    today_start = kst_today_start - dt.timedelta(hours=9)  # UTC로 변환
     today_sells = db.query(TradeHistory).filter(
         TradeHistory.side == "SELL",
         TradeHistory.timestamp >= today_start,
