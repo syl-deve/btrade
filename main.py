@@ -283,8 +283,13 @@ def _check_consecutive_loss(db, bot_settings):
 
     max_loss = bot_settings.max_consecutive_loss or 3
 
-    # 마지막 쿨다운 만료 시점 이후의 SELL만 카운트 (이전 손절로 인한 재감지 방지)
-    after_ts = bot_settings.cooldown_until if bot_settings.cooldown_until else dt.datetime(2000, 1, 1)
+    # 쿨다운 만료 직후: cooldown_until을 now로 갱신해 기준점으로 사용 (재감지 방지)
+    if bot_settings.cooldown_until and now >= bot_settings.cooldown_until:
+        bot_settings.cooldown_until = now
+        db.commit()
+
+    # 마지막 쿨다운 만료 시점 이후의 SELL만 카운트
+    after_ts = bot_settings.cooldown_until if bot_settings.cooldown_until else now
     recent_sells = db.query(TradeHistory).filter(
         TradeHistory.side == "SELL",
         TradeHistory.timestamp > after_ts,
