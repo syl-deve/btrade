@@ -325,6 +325,7 @@ async def trading_loop():
                     await asyncio.sleep(10)
                     continue
 
+
                 rsi_display = f"{current_rsi:.2f}" if current_rsi else "N/A"
                 logger.info(f"[Loop] {SYMBOL} @ {current_price:,.0f} | RSI: {rsi_display} | Held: {coin_balance:.6f} | Buys: {bot_settings.buy_count}")
 
@@ -392,9 +393,11 @@ async def trading_loop():
                 elif coin_balance <= 0.0001:
                     # C. 일일 손실 한도 체크
                     if _check_daily_loss(db, bot_settings):
+                        await asyncio.sleep(60)
                         continue
                     # C. 연속 손절 쿨다운 체크
                     if _check_consecutive_loss(db, bot_settings):
+                        await asyncio.sleep(60)
                         continue
 
                     if current_rsi and current_rsi <= bot_settings.rsi_threshold:
