@@ -129,6 +129,10 @@
                                 <span data-i18n="label_avgbuy" class="meta-label text-white/60">Avg Buy</span>
                                 <div id="avg-buy-price" class="text-lg md:text-xl font-black text-yellow-300">0 ₩</div>
                             </div>
+                            <div id="sl-display" style="display:none;">
+                                <span class="meta-label text-white/60">손절선</span>
+                                <div id="current-sl" class="text-lg md:text-xl font-black text-red-300">—</div>
+                            </div>
                         </div>
                     </div>
                     <!-- 즉시 매도 버튼 -->
@@ -929,6 +933,16 @@
                 safeUpdate('target-coin', coinUnit);
                 safeUpdate('current-price', data.current_price ? new Intl.NumberFormat().format(data.current_price) + ' ₩' : 'API_SYNC...');
                 safeUpdate('avg-buy-price', (data.avg_buy_price > 0) ? new Intl.NumberFormat().format(data.avg_buy_price) + ' ₩' : '0 ₩');
+
+                // 손절선 표시 (포지션 보유 중일 때만)
+                const slDisplay = document.getElementById('sl-display');
+                const slEl = document.getElementById('current-sl');
+                if (data.avg_buy_price > 0 && data.current_sl !== null) {
+                    if (slDisplay) slDisplay.style.display = '';
+                    if (slEl) slEl.innerText = data.current_sl + '%';
+                } else {
+                    if (slDisplay) slDisplay.style.display = 'none';
+                }
 
                 // 평균 매매 단가
                 const avgProfitEl = document.getElementById('avg-profit-per-trade');

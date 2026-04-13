@@ -678,6 +678,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             },
             "avg_buy_price": int(bot_settings.avg_buy_price) if bot_settings else 0,
             "profit_rate": profit_rate,
+            "current_sl": round(strategy.get_dynamic_stop_loss("BITHUMB", current_price, bot_settings.atr_multiplier or 1.5) or bot_settings.stop_loss_rate, 2) if (strategy and current_price and bot_settings) else None,
             "total_net_profit": int(total_net_profit),
             "win_rate": win_rate,
             "win_count": win_count,
