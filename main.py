@@ -708,7 +708,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                 "id": h.id, "side": h.side, "price": int(h.price), "volume": h.volume,
                 "total_amount": int(h.total_amount), "net_profit": int(h.net_profit) if h.net_profit else 0,
                 "fee": int(h.fee) if h.fee else 0,
-                "timestamp": h.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                "timestamp": (h.timestamp + datetime.timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S")
             } for h in history]
         }
     except Exception:
