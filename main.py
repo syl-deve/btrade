@@ -54,6 +54,7 @@ class SettingsUpdate(BaseModel):
     use_volume_filter: bool = True
     volume_multiplier: float = Field(default=1.5, ge=1.0, le=10.0)
     atr_multiplier: float = Field(default=1.5, ge=0.5, le=5.0)
+    use_atr: bool = True
     daily_loss_limit: float = Field(default=-50000.0, le=0.0)
     max_consecutive_loss: int = Field(default=3, ge=1, le=10)
     cooldown_minutes: int = Field(default=60, ge=1, le=1440)
@@ -124,6 +125,7 @@ async def lifespan(app: FastAPI):
         ("max_consecutive_loss",   "ALTER TABLE bot_settings ADD COLUMN max_consecutive_loss INTEGER DEFAULT 3"),
         ("cooldown_minutes",       "ALTER TABLE bot_settings ADD COLUMN cooldown_minutes INTEGER DEFAULT 60"),
         ("cooldown_until",         "ALTER TABLE bot_settings ADD COLUMN cooldown_until DATETIME"),
+        ("use_atr",                "ALTER TABLE bot_settings ADD COLUMN use_atr BOOLEAN DEFAULT 1"),
     ]
     for col, sql in migrations:
         try:
@@ -154,6 +156,7 @@ async def lifespan(app: FastAPI):
             use_volume_filter=True,
             volume_multiplier=1.5,
             atr_multiplier=1.5,
+            use_atr=True,
             max_hold_hours=4.0,
             daily_loss_limit=-50000.0,
             max_consecutive_loss=3,
@@ -347,10 +350,14 @@ async def trading_loop():
                     profit_rate = ((current_price / bot_settings.avg_buy_price) - 1) * 100
 
                     # B. ATR 동적 손절율 계산
-                    dynamic_sl = strategy.get_dynamic_stop_loss(
-                        target_exchange, current_price, bot_settings.atr_multiplier or 1.5
-                    )
-                    effective_sl = dynamic_sl if dynamic_sl is not None else bot_settings.stop_loss_rate
+                    use_atr = bot_settings.use_atr if bot_settings.use_atr is not None else True
+                    if use_atr:
+                        dynamic_sl = strategy.get_dynamic_stop_loss(
+                            target_exchange, current_price, bot_settings.atr_multiplier or 1.5
+                        )
+                        effective_sl = dynamic_sl if dynamic_sl is not None else bot_settings.stop_loss_rate
+                    else:
+                        effective_sl = bot_settings.stop_loss_rate
 
                     # 1. 긴급 손절 (ATR 동적 손절 적용)
                     if profit_rate <= effective_sl:
@@ -689,7 +696,11 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             },
             "avg_buy_price": int(bot_settings.avg_buy_price) if bot_settings else 0,
             "profit_rate": profit_rate,
-            "current_sl": round(strategy.get_dynamic_stop_loss("BITHUMB", current_price, bot_settings.atr_multiplier or 1.5) or bot_settings.stop_loss_rate, 2) if (strategy and current_price and bot_settings) else None,
+            "current_sl": round(
+                (strategy.get_dynamic_stop_loss("BITHUMB", current_price, bot_settings.atr_multiplier or 1.5) or bot_settings.stop_loss_rate)
+                if (bot_settings and (bot_settings.use_atr if bot_settings.use_atr is not None else True))
+                else bot_settings.stop_loss_rate, 2
+            ) if (strategy and current_price and bot_settings) else None,
             "total_net_profit": int(total_net_profit),
             "win_rate": win_rate,
             "win_count": win_count,
@@ -713,6 +724,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                 "use_volume_filter": bot_settings.use_volume_filter if bot_settings else True,
                 "volume_multiplier": bot_settings.volume_multiplier if bot_settings else 1.5,
                 "atr_multiplier": bot_settings.atr_multiplier if bot_settings else 1.5,
+                "use_atr": bot_settings.use_atr if (bot_settings and bot_settings.use_atr is not None) else True,
                 "daily_loss_limit": bot_settings.daily_loss_limit if bot_settings else -50000.0,
                 "max_consecutive_loss": bot_settings.max_consecutive_loss if bot_settings else 3,
                 "cooldown_minutes": bot_settings.cooldown_minutes if bot_settings else 60,
@@ -748,6 +760,7 @@ async def update_settings(data: SettingsUpdate, db: Session = Depends(get_db), u
             bot_settings.use_volume_filter = data.use_volume_filter
             bot_settings.volume_multiplier = data.volume_multiplier
             bot_settings.atr_multiplier = data.atr_multiplier
+            bot_settings.use_atr = data.use_atr
             bot_settings.daily_loss_limit = data.daily_loss_limit
             bot_settings.max_consecutive_loss = data.max_consecutive_loss
             bot_settings.cooldown_minutes = data.cooldown_minutes
