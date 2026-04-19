@@ -67,6 +67,7 @@ python main.py               # http://localhost:8000
 | 일일 손실 한도 | -50,000 ₩ | 초과 시 봇 자동 정지 |
 | 연속 손절 쿨다운 | 2회 → 60분 | N회 연속 손절 시 매수 금지 |
 | ATR 손절 범위 | -0.5 ~ -3.0% | 변동성 낮으면 좁게, 높으면 넓게 |
+| ATR 비활성화 | use_atr=false | ATR 무시, 설정한 손절율 그대로 사용 |
 
 모든 수치는 대시보드 거래 설정에서 실시간 변경 가능합니다.
 
@@ -207,6 +208,7 @@ SYMBOL=KRW-BTC
   - `_record_buy()`: 매수 기록. fee = 매수금액×0.04%
   - `_check_daily_loss()`: 당일 net_profit 합계 ≤ daily_loss_limit → is_running = False
   - `_check_consecutive_loss()`: 쿨다운 만료 시점 이후 SELL만 카운트 → cooldown_until 설정 (로컬 시간). 만료 직후 cooldown_until을 now로 갱신하여 과거 손절 재감지 방지
+  - ATR 동적 손절: `use_atr=True`면 ATR×배수 계산값 사용, `False`면 `stop_loss_rate` 고정값 사용
   - `get_fee_rate()`: BITHUMB_FEE_RATE = 0.0004 고정 반환
   - `SecurityHeadersMiddleware`: 모든 응답에 CSP, X-Frame-Options, HSTS 등 주입
   - `verify_csrf()`: POST/PUT/DELETE에 `X-CSRF-Token` 헤더 검증 (Depends로 주입)
@@ -265,6 +267,7 @@ SYMBOL=KRW-BTC
 | `use_volume_filter` | True | 거래량 급증 필터 |
 | `volume_multiplier` | 1.5 | 거래량 배수 (20봉 평균 대비) |
 | `atr_multiplier` | 1.5 | ATR 손절폭 배수 |
+| `use_atr` | True | ATR 동적 손절 사용 여부. False 시 stop_loss_rate 고정 사용 |
 | `max_hold_hours` | 4.0 | DB 컬럼 존재, 강제 청산 비활성화 |
 | `daily_loss_limit` | -50000 | 일일 손실 한도 (원) |
 | `max_consecutive_loss` | 3 | 연속 손절 허용 횟수 |
