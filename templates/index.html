@@ -1420,6 +1420,18 @@
             if (e.key === 'Escape') closeHint();
         });
 
+        // 모달 열릴 때 body 스크롤 잠금
+        const configModal = document.getElementById('config-modal');
+        configModal.addEventListener('open', () => document.body.style.overflow = 'hidden');
+        configModal.addEventListener('close', () => document.body.style.overflow = '');
+        // showModal 후에도 즉시 잠금 (open 이벤트 미지원 브라우저 대비)
+        const origOpen = HTMLDialogElement.prototype.showModal;
+        HTMLDialogElement.prototype.showModal = function() {
+            origOpen.call(this);
+            if (this.id === 'config-modal') document.body.style.overflow = 'hidden';
+        };
+        configModal.addEventListener('close', () => document.body.style.overflow = '');
+
         // ATR 체크박스 토글 — 배수 입력 활성/비활성
         document.getElementById('set-use-atr').addEventListener('change', function() {
             const on = this.checked;
