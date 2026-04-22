@@ -415,8 +415,6 @@
                             <label class="bau-label" style="display:flex;align-items:center;gap:6px;"><span data-i18n="cfg_cons_loss">연속 손절 허용 횟수</span><button type="button" class="cfg-hint-btn" onclick="showHint('cfg_cons_loss',this)">?</button></label>
                             <input type="number" id="set-cons-loss" step="1" min="1" class="bau-input" placeholder="3">
                         </div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mt-4">
                         <div>
                             <label class="bau-label" style="display:flex;align-items:center;gap:6px;"><span data-i18n="cfg_cooldown">쿨다운 시간 (분)</span><button type="button" class="cfg-hint-btn" onclick="showHint('cfg_cooldown',this)">?</button></label>
                             <input type="number" id="set-cooldown" step="5" min="5" class="bau-input" placeholder="60">
@@ -1134,8 +1132,9 @@
                     document.getElementById('atr-options').style.opacity = data.config.use_atr !== false ? '1' : '0.4';
                     document.getElementById('set-atr').disabled = data.config.use_atr === false;
                     document.getElementById('set-use-daily-loss').checked = data.config.use_daily_loss !== false;
-                    document.getElementById('daily-loss-options').style.opacity = data.config.use_daily_loss !== false ? '1' : '0.4';
-                    document.getElementById('set-daily-loss').disabled = data.config.use_daily_loss === false;
+                    const dlOn = data.config.use_daily_loss !== false;
+                    document.getElementById('daily-loss-options').style.opacity = dlOn ? '1' : '0.4';
+                    ['set-daily-loss','set-cons-loss','set-cooldown'].forEach(id => document.getElementById(id).disabled = !dlOn);
                     document.getElementById('set-vol-mult').value = data.config.volume_multiplier;
                     document.getElementById('set-daily-loss').value = data.config.daily_loss_limit;
                     document.getElementById('set-cons-loss').value = data.config.max_consecutive_loss;
@@ -1453,7 +1452,7 @@
         document.getElementById('set-use-daily-loss').addEventListener('change', function() {
             const on = this.checked;
             document.getElementById('daily-loss-options').style.opacity = on ? '1' : '0.4';
-            document.getElementById('set-daily-loss').disabled = !on;
+            ['set-daily-loss','set-cons-loss','set-cooldown'].forEach(id => document.getElementById(id).disabled = !on);
         });
 
         // PWA Service Worker 등록
