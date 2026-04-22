@@ -584,10 +584,12 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         trade_count = win_count + loss_count
         avg_profit_per_trade = int(total_net_profit / trade_count) if trade_count > 0 else 0
 
-        # 오늘 손익
+        # 오늘 손익 (KST 기준 자정)
         import datetime as dt
-        today_start = dt.datetime.combine(dt.date.today(), dt.time.min)
-        today_trades = [t for t in all_trades if t.timestamp >= today_start and t.net_profit is not None]
+        kst_now = dt.datetime.utcnow() + dt.timedelta(hours=9)
+        kst_today_start = dt.datetime.combine(kst_now.date(), dt.time.min)
+        today_start_utc = kst_today_start - dt.timedelta(hours=9)
+        today_trades = [t for t in all_trades if t.timestamp >= today_start_utc and t.net_profit is not None]
         today_net_profit = int(sum(t.net_profit for t in today_trades))
 
         # 마지막 매매 경과시간
