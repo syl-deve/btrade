@@ -49,6 +49,7 @@ class BotSettings(Base):
     position_opened_at = Column(DateTime, nullable=True)  # 포지션 진입 시각
     # C. 리스크 관리
     daily_loss_limit = Column(Float, default=-50000.0)    # 일일 최대 손실 (원)
+    use_daily_loss = Column(Boolean, default=True)        # 일일 손실 한도 사용 여부
     max_consecutive_loss = Column(Integer, default=3)     # 연속 손절 허용 횟수
     cooldown_minutes = Column(Integer, default=60)        # 쿨다운 시간 (분)
     cooldown_until = Column(DateTime, nullable=True)      # 쿨다운 종료 시각

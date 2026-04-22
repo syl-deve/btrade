@@ -402,7 +402,11 @@
                 <!-- 리스크 관리 -->
                 <div class="border-t-2 border-black/10 pt-4">
                     <p class="bau-label text-zinc-400">리스크 관리</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                    <label class="flex items-center gap-3 mb-4 cursor-pointer">
+                        <input type="checkbox" id="set-use-daily-loss" class="w-5 h-5 border-2 border-black accent-blue-600">
+                        <span class="bau-label mb-0" data-i18n="cfg_use_daily_loss">일일 손실 한도 사용</span>
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6" id="daily-loss-options">
                         <div>
                             <label class="bau-label" style="display:flex;align-items:center;gap:6px;"><span data-i18n="cfg_daily_loss">일일 손실 한도 (₩)</span><button type="button" class="cfg-hint-btn" onclick="showHint('cfg_daily_loss',this)">?</button></label>
                             <input type="number" id="set-daily-loss" step="1000" class="bau-input" placeholder="-50000">
@@ -467,6 +471,7 @@
                 cfg_macd:     'MACD Reversal Filter',
                 cfg_volume:   'Volume Surge Filter',
                 cfg_use_atr:  'Use ATR Dynamic Stop-Loss',
+                cfg_use_daily_loss: 'Use Daily Loss Limit',
                 cfg_atr:      'ATR Stop Multiplier',
                 cfg_vol_mult: 'Volume Multiplier',
                 cfg_daily_loss:'Daily Loss Limit (₩)',
@@ -528,6 +533,7 @@
                 cfg_macd:     'MACD 반전 필터',
                 cfg_volume:   '거래량 급증 필터',
                 cfg_use_atr:  'ATR 동적 손절 사용',
+                cfg_use_daily_loss: '일일 손실 한도 사용',
                 cfg_atr:      'ATR 손절 배수',
                 cfg_vol_mult: '거래량 기준 배수',
                 cfg_daily_loss:'일일 손실 한도 (₩)',
@@ -1127,6 +1133,9 @@
                     document.getElementById('set-atr').value = data.config.atr_multiplier;
                     document.getElementById('atr-options').style.opacity = data.config.use_atr !== false ? '1' : '0.4';
                     document.getElementById('set-atr').disabled = data.config.use_atr === false;
+                    document.getElementById('set-use-daily-loss').checked = data.config.use_daily_loss !== false;
+                    document.getElementById('daily-loss-options').style.opacity = data.config.use_daily_loss !== false ? '1' : '0.4';
+                    document.getElementById('set-daily-loss').disabled = data.config.use_daily_loss === false;
                     document.getElementById('set-vol-mult').value = data.config.volume_multiplier;
                     document.getElementById('set-daily-loss').value = data.config.daily_loss_limit;
                     document.getElementById('set-cons-loss').value = data.config.max_consecutive_loss;
@@ -1209,6 +1218,7 @@
                 use_macd: document.getElementById('set-macd').checked,
                 use_volume_filter: document.getElementById('set-volume').checked,
                 use_atr: document.getElementById('set-use-atr').checked,
+                use_daily_loss: document.getElementById('set-use-daily-loss').checked,
                 atr_multiplier: parseFloat(document.getElementById('set-atr').value),
                 volume_multiplier: parseFloat(document.getElementById('set-vol-mult').value),
                 daily_loss_limit: parseFloat(document.getElementById('set-daily-loss').value),
@@ -1432,11 +1442,18 @@
         };
         configModal.addEventListener('close', () => document.body.style.overflow = '');
 
-        // ATR 체크박스 토글 — 배수 입력 활성/비활성
+        // ATR 체크박스 토글
         document.getElementById('set-use-atr').addEventListener('change', function() {
             const on = this.checked;
             document.getElementById('atr-options').style.opacity = on ? '1' : '0.4';
             document.getElementById('set-atr').disabled = !on;
+        });
+
+        // 일일 손실 한도 체크박스 토글
+        document.getElementById('set-use-daily-loss').addEventListener('change', function() {
+            const on = this.checked;
+            document.getElementById('daily-loss-options').style.opacity = on ? '1' : '0.4';
+            document.getElementById('set-daily-loss').disabled = !on;
         });
 
         // PWA Service Worker 등록

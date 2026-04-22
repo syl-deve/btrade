@@ -56,6 +56,7 @@ class SettingsUpdate(BaseModel):
     atr_multiplier: float = Field(default=1.5, ge=0.5, le=5.0)
     use_atr: bool = True
     daily_loss_limit: float = Field(default=-50000.0, le=0.0)
+    use_daily_loss: bool = True
     max_consecutive_loss: int = Field(default=3, ge=1, le=10)
     cooldown_minutes: int = Field(default=60, ge=1, le=1440)
 
@@ -126,6 +127,7 @@ async def lifespan(app: FastAPI):
         ("cooldown_minutes",       "ALTER TABLE bot_settings ADD COLUMN cooldown_minutes INTEGER DEFAULT 60"),
         ("cooldown_until",         "ALTER TABLE bot_settings ADD COLUMN cooldown_until DATETIME"),
         ("use_atr",                "ALTER TABLE bot_settings ADD COLUMN use_atr BOOLEAN DEFAULT 1"),
+        ("use_daily_loss",         "ALTER TABLE bot_settings ADD COLUMN use_daily_loss BOOLEAN DEFAULT 1"),
     ]
     for col, sql in migrations:
         try:
@@ -159,6 +161,7 @@ async def lifespan(app: FastAPI):
             use_atr=True,
             max_hold_hours=4.0,
             daily_loss_limit=-50000.0,
+            use_daily_loss=True,
             max_consecutive_loss=3,
             cooldown_minutes=60,
         ))
@@ -253,7 +256,9 @@ def _record_buy(db, current_price, buy_amount):
     db.commit()
 
 def _check_daily_loss(db, bot_settings):
-    """당일 실현 손실이 한도 초과 시 봇 정지. True 반환 시 정지됨."""
+    """당일 실현 손실이 한도 초과 시 봇 정지. True 반환 시 정지됨. use_daily_loss=False면 스킵."""
+    if not (bot_settings.use_daily_loss if bot_settings.use_daily_loss is not None else True):
+        return False
     import datetime as dt
     # KST(UTC+9) 기준 오늘 자정
     kst_now = dt.datetime.utcnow() + dt.timedelta(hours=9)
@@ -728,6 +733,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                 "atr_multiplier": bot_settings.atr_multiplier if bot_settings else 1.5,
                 "use_atr": bot_settings.use_atr if (bot_settings and bot_settings.use_atr is not None) else True,
                 "daily_loss_limit": bot_settings.daily_loss_limit if bot_settings else -50000.0,
+                "use_daily_loss": bot_settings.use_daily_loss if (bot_settings and bot_settings.use_daily_loss is not None) else True,
                 "max_consecutive_loss": bot_settings.max_consecutive_loss if bot_settings else 3,
                 "cooldown_minutes": bot_settings.cooldown_minutes if bot_settings else 60,
             },
@@ -764,6 +770,7 @@ async def update_settings(data: SettingsUpdate, db: Session = Depends(get_db), u
             bot_settings.atr_multiplier = data.atr_multiplier
             bot_settings.use_atr = data.use_atr
             bot_settings.daily_loss_limit = data.daily_loss_limit
+            bot_settings.use_daily_loss = data.use_daily_loss
             bot_settings.max_consecutive_loss = data.max_consecutive_loss
             bot_settings.cooldown_minutes = data.cooldown_minutes
             db.commit()
