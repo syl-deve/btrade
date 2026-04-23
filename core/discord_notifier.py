@@ -14,7 +14,7 @@ def send_discord_message(title: str, description: str, color: int = 0x00ff00):
         print("[Notifier] Discord Webhook URL is not set. Skipping notification.")
         return
     
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = (datetime.datetime.utcnow() + datetime.timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S")
     
     payload = {
         "embeds": [
