@@ -8,6 +8,7 @@
 - **분할매수**: 1차 진입(잔고 60%) 후 추가 하락 시 2차 추가매수로 평단 낮추기
 - **ATR 동적 손절**: 시장 변동성에 따라 손절폭 자동 조정 (-0.5 ~ -3.0%)
 - **트레일링 익절**: 목표 수익률 도달 후 고점 대비 일정 폭 하락 시 자동 매도
+- **추세 익절 보류**: 트레일링 익절이 발동해도 EMA, Chandelier Stop, MACD가 강한 추세를 보이면 계속 보유
 - **리스크 관리**: 일일 손실 한도 자동 정지 + 연속 손절 쿨다운
 - **즉시매도 버튼**: 대시보드에서 수동 전량 매도
 - **실시간 대시보드**: Bauhaus 디자인 UI
@@ -58,8 +59,18 @@ python main.py               # http://localhost:8000
 | 순위 | 조건 | 행동 |
 |---|---|---|
 | 1 | ATR 동적 손절 도달 (-0.5 ~ -3.0%) | 전량 시장가 매도 |
-| 2 | 트레일링 익절 (목표% 도달 후 offset% 하락) | 전량 시장가 매도 |
+| 2 | 트레일링 익절 + 추세 확인 | 추세 강하면 보유, 추세 약화 시 전량 시장가 매도 |
 | - | 즉시매도 버튼 | 수동 전량 매도 |
+
+#### 추세 익절 보류
+
+`use_trend_exit=true`이면 목표 수익률 도달 후 트레일링 되돌림이 발생해도 아래 조건이 모두 유지되는 동안 매도를 보류합니다.
+
+- 현재가가 `EMA(trend_ema_period)` 위에 있음
+- 현재가가 `Chandelier Stop` 위에 있음
+- MACD histogram이 `macd_weak_confirm_candles`개 봉 연속 약화 중이 아님
+
+조건이 깨지면 기존 트레일링 익절 매도가 허용됩니다. ATR 손절은 이 로직보다 우선순위가 높아서 즉시 매도할 수 있습니다.
 
 ### 리스크 관리
 
@@ -258,6 +269,9 @@ sudo systemctl restart bitrade  # if running with systemd
   - `is_volume_surging()`: current_vol ≥ 20봉평균 × multiplier
   - `get_atr()`: 14기간 ATR
   - `get_dynamic_stop_loss()`: ATR × atr_multiplier, 범위 클램프 -0.5% ~ -3.0%
+  - `get_ema()`: 추세 익절 보류용 EMA 계산
+  - `get_chandelier_stop()`: 최근 고점 - ATR×배수 방식의 Chandelier Stop 계산
+  - `get_trend_exit_state()`: EMA, Chandelier Stop, MACD 약화 여부를 종합해 `trend_ok` 반환
   - `/api/status`: 지표(RSI/볼린저/MACD/거래량)·캔들 데이터는 `indicator_exchange = "BITHUMB"`으로 고정 조회 (public API, 인증 불필요). `strategy=None` 시 `ScalperStrategy()` fallback 생성. 현재가 실패 시 `bithumb_client.get_current_price()` fallback
   - `candle_data`: 빗썸 OHLCV DataFrame은 인덱스가 정수, 시각은 `candle_date_time_kst` 컬럼 → `strftime` 직접 호출 불가. `candle_date_time_kst` → `candle_date_time_utc` → `timestamp` 컬럼 순서로 탐색
 - **`core/strategy.py`**: 모든 지표 계산
@@ -303,6 +317,10 @@ sudo systemctl restart bitrade  # if running with systemd
 | `volume_multiplier` | 1.5 | 거래량 배수 (20봉 평균 대비) |
 | `atr_multiplier` | 1.5 | ATR 손절폭 배수 |
 | `use_atr` | True | ATR 동적 손절 사용 여부. False 시 stop_loss_rate 고정 사용 |
+| `use_trend_exit` | True | 트레일링 익절 발동 후 추세가 강하면 매도 보류 |
+| `trend_ema_period` | 20 | 추세 유지 판단용 EMA 기간 |
+| `chandelier_atr_multiplier` | 2.5 | Chandelier Stop 계산에 쓰는 ATR 배수 |
+| `macd_weak_confirm_candles` | 2 | MACD histogram 연속 약화 확인 봉 수 |
 | `max_hold_hours` | 4.0 | DB 컬럼 존재, 강제 청산 비활성화 |
 | `daily_loss_limit` | -50000 | 일일 손실 한도 (원) |
 | `max_consecutive_loss` | 3 | 연속 손절 허용 횟수 |
@@ -337,6 +355,13 @@ Current dashboard authentication supports administrator and read-only viewer acc
 
 Viewer sessions are allowed only on `GET /` and `GET /api/status`. The write/execute endpoints require an admin session and CSRF token; viewer sessions receive `403 Forbidden`.
 
+`GET /api/status` also returns trend-exit state for the dashboard:
+
+- `highest_profit_rate`: current position peak profit rate used by trailing exit
+- `trend_exit.enabled`: whether trend-aware exit hold is active
+- `trend_exit.trend_ok`: true when EMA, Chandelier Stop, and MACD checks still support holding
+- `trend_exit.ema`, `trend_exit.chandelier_stop`, `trend_exit.macd_weak`: detail values used for the phase label
+
 ### UI Layout
 
 ```
@@ -347,6 +372,11 @@ Viewer sessions are allowed only on `GET /` and `GET /api/status`. The write/exe
 [스탯 카드 7개] — RSI 충족 시 필터 뱃지(✓/✗) 표시
 [거래내역 테이블]
 ```
+
+The Balance Bar phase label shows trend-aware exit states:
+
+- `TREND HOLD`: target profit is armed, trailing pullback occurred, but trend checks still support holding
+- `TREND WEAKNESS WATCH`: target profit is armed and trend checks weakened, so the next trailing pullback can sell
 
 **필터 블로킹 UI:**
 - 상태 바 `trade-phase-text`: RSI 충족 + 필터 미달 시 `RSI 충족 — 필터 대기` (주황색)

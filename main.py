@@ -781,6 +781,16 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             multiplier=bot_settings.volume_multiplier if bot_settings else 1.5
         )) if vol_ratio is not None else None
 
+        trend_exit = None
+        if bot_settings and current_price and bot_settings.avg_buy_price > 0:
+            trend_exit = _strategy.get_trend_exit_state(
+                indicator_exchange,
+                current_price=current_price,
+                ema_period=bot_settings.trend_ema_period or 20,
+                chandelier_atr_multiplier=bot_settings.chandelier_atr_multiplier or 2.5,
+                macd_weak_confirm_candles=bot_settings.macd_weak_confirm_candles or 2,
+            )
+
         # Full trade history (all records, newest first)
         history = db.query(TradeHistory).order_by(TradeHistory.timestamp.desc()).all()
 
@@ -812,6 +822,14 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
             },
             "avg_buy_price": int(bot_settings.avg_buy_price) if bot_settings else 0,
             "profit_rate": profit_rate,
+            "highest_profit_rate": bot_settings.highest_profit_rate if bot_settings else 0.0,
+            "trend_exit": {
+                "enabled": bot_settings.use_trend_exit if (bot_settings and bot_settings.use_trend_exit is not None) else True,
+                "trend_ok": trend_exit.get("trend_ok") if trend_exit else False,
+                "ema": int(trend_exit["ema"]) if trend_exit and trend_exit.get("ema") else None,
+                "chandelier_stop": int(trend_exit["chandelier_stop"]) if trend_exit and trend_exit.get("chandelier_stop") else None,
+                "macd_weak": trend_exit.get("macd_weak") if trend_exit else None,
+            },
             "current_sl": round(
                 (strategy.get_dynamic_stop_loss("BITHUMB", current_price, bot_settings.atr_multiplier or 1.5) or bot_settings.stop_loss_rate)
                 if (bot_settings and (bot_settings.use_atr if bot_settings.use_atr is not None else True))

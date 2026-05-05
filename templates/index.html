@@ -889,20 +889,32 @@
                             phaseText.style.color = '#3B82F6';
                             phaseSub.innerText = ko ? 'RSI + 볼린저 조건 충족 시 1차 매수 진입' : 'Waiting for RSI + Bollinger condition';
                         }
-                    } else if (cnt === 1) {
-                        phaseLabel.innerText = ko ? '현재 단계' : 'PHASE';
-                        phaseText.innerText = ko ? '1차 매수 보유 중' : 'HOLDING — ENTRY x1';
-                        phaseText.style.color = '#F59E0B';
-                        phaseSub.innerText = ko ? '익절 목표 도달 시 트레일링 / RSI 급락 시 2차 추가매수' : 'Trailing profit target / RSI drop → 2nd buy';
-                    } else if (cnt >= 2) {
-                        phaseLabel.innerText = ko ? '현재 단계' : 'PHASE';
-                        phaseText.innerText = ko ? '분할매수 완료 — 익절 대기' : 'SPLIT BUY DONE — AWAITING EXIT';
-                        phaseText.style.color = '#8B5CF6';
-                        phaseSub.innerText = ko ? '트레일링 익절 또는 ATR 손절 대기 중' : 'Waiting for trailing profit or ATR stop-loss';
+                    } else if (holding) {
+                        phaseLabel.innerText = 'PHASE';
+                        const trendArmed = data.highest_profit_rate >= data.config.target_profit_rate;
+                        const splitDone = cnt >= 2;
+                        const prefix = splitDone ? 'SPLIT BUY DONE - ' : '';
+                        if (trendArmed && data.trend_exit && data.trend_exit.enabled && data.trend_exit.trend_ok) {
+                            phaseText.innerText = 'TREND HOLD';
+                            phaseText.style.color = '#16A34A';
+                            const chandelier = data.trend_exit.chandelier_stop ? data.trend_exit.chandelier_stop.toLocaleString() : 'pending';
+                            phaseSub.innerText = `${prefix}Above EMA${data.config.trend_ema_period} - Chandelier ${chandelier}`;
+                        } else if (trendArmed && data.trend_exit && data.trend_exit.enabled) {
+                            phaseText.innerText = 'TREND WEAKNESS WATCH';
+                            phaseText.style.color = '#E63946';
+                            phaseSub.innerText = `${prefix}Trailing exit will sell on pullback`;
+                        } else if (splitDone) {
+                            phaseText.innerText = 'SPLIT BUY DONE - AWAITING EXIT';
+                            phaseText.style.color = '#8B5CF6';
+                            phaseSub.innerText = 'Waiting for trailing profit or ATR stop-loss';
+                        } else {
+                            phaseText.innerText = 'HOLDING ENTRY x1';
+                            phaseText.style.color = '#F59E0B';
+                            phaseSub.innerText = 'Waiting for trailing profit target / RSI drop second buy';
+                        }
                     }
                 }
 
-                // 쿨다운 표시
                 const cooldownDisplay = document.getElementById('cooldown-display');
                 const cooldownRemaining = document.getElementById('cooldown-remaining');
                 if (data.cooldown_remaining_minutes > 0) {
@@ -1364,7 +1376,7 @@
             },
             avg_profit: {
                 en: { title: 'Avg Profit per Trade', body: 'Average net profit per completed SELL.\n\nFormula:\nTotal Net Profit ÷ Number of SELLs\n\nIncludes all fees (buy + sell side).\nPositive = strategy is profitable overall.' },
-                ko: { title: '매매당 평균 손익', body: '매도 1회당 평균 순수익입니다.\n\n계산식:\n총 순익 ÷ 매도 횟수\n\n매수·매도 양쪽 수수료를 모두 차감한 값.\n양수면 전략이 수익 중 상태입니다.' }
+                ko: { title: '매매당 평균 손익', body: '매도 1회당 평균 순수익입니다.\n\n계산식:\n총 순익 ÷ 매도 횟수\n\n매수-매도 양쪽 수수료를 모두 차감한 값.\n양수면 전략이 수익 중 상태입니다.' }
             },
             today_profit: {
                 en: { title: 'Today\'s Net P&L', body: 'Realized profit/loss for today (KST).\n\nOnly counts completed SELLs.\nFees are already deducted.\n\nIf bot stops due to daily loss limit, this value triggered the cutoff.' },
@@ -1376,7 +1388,7 @@
             },
             macd: {
                 en: { title: 'MACD Signal', body: 'Moving Average Convergence Divergence.\n\nSettings: 12 / 26 EMA, Signal 9\n\nEntry condition (when enabled):\nHistogram < 0 AND histogram rising\n→ "반전 신호" = reversal forming\n\nShows last 3 candles\' histogram values.' },
-                ko: { title: 'MACD 신호', body: '이동평균 수렴·발산 지표입니다.\n\n설정: 12 / 26 EMA, 시그널 9\n\n매수 조건 (활성화 시):\n히스토그램 < 0 이면서 상승 중\n→ "반전 신호" = 하락 모멘텀 약화\n\n최근 3봉의 히스토그램 값을 표시합니다.' }
+                ko: { title: 'MACD 신호', body: '이동평균 수렴-발산 지표입니다.\n\n설정: 12 / 26 EMA, 시그널 9\n\n매수 조건 (활성화 시):\n히스토그램 < 0 이면서 상승 중\n→ "반전 신호" = 하락 모멘텀 약화\n\n최근 3봉의 히스토그램 값을 표시합니다.' }
             },
             volume: {
                 en: { title: 'Volume Surge', body: 'Compares current candle volume to the 20-candle average.\n\nEntry condition (when enabled):\nCurrent volume ≥ Avg × volume_multiplier\n\nDefault multiplier: 1.5×\n\nHigh ratio = strong market interest → more reliable signal.' },
