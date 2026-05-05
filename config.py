@@ -9,6 +9,8 @@ BITHUMB_SECRET_KEY = str(os.getenv("BITHUMB_SECRET_KEY") or "").strip("'\" ")
 DISCORD_WEBHOOK_URL = str(os.getenv("DISCORD_WEBHOOK_URL") or "").strip("'\" ")
 ADMIN_USERNAME = str(os.getenv("ADMIN_USERNAME", "admin")).strip("'\" ")
 ADMIN_PASSWORD_HASH = str(os.getenv("ADMIN_PASSWORD_HASH") or "").strip("'\" ")
+VIEWER_USERNAME = str(os.getenv("VIEWER_USERNAME", "viewer")).strip("'\" ")
+VIEWER_PASSWORD_HASH = str(os.getenv("VIEWER_PASSWORD_HASH") or "").strip("'\" ")
 DASHBOARD_PASSWORD = str(os.getenv("DASHBOARD_PASSWORD") or "").strip("'\" ")
 
 # Security Check

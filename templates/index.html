@@ -48,7 +48,10 @@
                         <div class="bau-shape bau-circle w-3 h-3"></div>
                         <span id="status-text" class="text-sm">OFFLINE</span>
                     </div>
-                    <button id="toggle-btn" class="btn-bau btn-bau-red text-sm py-3 px-5 border-4 border-black">START_SYSTEM</button>
+                    {% if user_role == "viewer" %}
+                    <span class="text-xs font-black border-4 border-black px-3 py-2 bg-zinc-100">VIEW_ONLY</span>
+                    {% endif %}
+                    <button id="toggle-btn" class="btn-bau btn-bau-red text-sm py-3 px-5 border-4 border-black" {% if user_role == "viewer" %}disabled{% endif %}>START_SYSTEM</button>
                     <button id="lang-toggle" class="btn-bau text-sm py-3 px-4 border-4 border-black font-black tracking-widest" onclick="toggleLang()"><span data-i18n="btn_lang">KO</span></button>
                     <a href="/logout" class="btn-bau text-sm py-3 px-5 border-4 border-black hover:bg-black hover:text-white transition-all"><span data-i18n="btn_exit">EXIT_NODE</span></a>
                 </nav>
@@ -66,7 +69,10 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button id="toggle-btn-mobile" class="btn-bau btn-bau-red text-xs py-1.5 px-3 border-4 border-black">정지</button>
+                    {% if user_role == "viewer" %}
+                    <span class="text-[10px] font-black border-2 border-black px-2 py-1 bg-zinc-100">VIEW_ONLY</span>
+                    {% endif %}
+                    <button id="toggle-btn-mobile" class="btn-bau btn-bau-red text-xs py-1.5 px-3 border-4 border-black" {% if user_role == "viewer" %}disabled{% endif %}>정지</button>
                     <button id="lang-toggle-mobile" class="btn-bau text-xs py-1.5 px-2 border-4 border-black font-black" onclick="toggleLang()"><span data-i18n="btn_lang">KO</span></button>
                     <a href="/logout" class="btn-bau text-xs py-1.5 px-3 border-4 border-black hover:bg-black hover:text-white transition-all"><span data-i18n="btn_exit">EXIT_NODE</span></a>
                 </div>
@@ -143,7 +149,7 @@
                     </div>
                     <!-- 즉시 매도 버튼 -->
                     <div class="md:ml-auto flex md:block">
-                        <button id="sell-now-btn" onclick="sellNow()" class="btn-bau justify-center py-2.5 md:py-3 px-5 md:px-6 bg-red-600 text-white border-4 border-white font-black tracking-widest text-sm w-full md:w-auto" style="display:none;">
+                        <button id="sell-now-btn" onclick="sellNow()" class="btn-bau justify-center py-2.5 md:py-3 px-5 md:px-6 bg-red-600 text-white border-4 border-white font-black tracking-widest text-sm w-full md:w-auto" style="display:none;" {% if user_role == "viewer" %}disabled{% endif %}>
                             <span data-i18n="btn_sell_now">즉시 매도</span>
                         </button>
                     </div>
@@ -427,7 +433,7 @@
                 <form method="dialog">
                     <div class="flex gap-4">
                         <button data-i18n="btn_ignore" class="btn-bau">IGNORE</button>
-                        <button onclick="saveSettings()" data-i18n="btn_apply" class="btn-bau btn-bau-yellow text-black">APPLY_CHANGES</button>
+                        <button id="apply-settings-btn" onclick="saveSettings()" data-i18n="btn_apply" class="btn-bau btn-bau-yellow text-black" {% if user_role == "viewer" %}disabled{% endif %}>APPLY_CHANGES</button>
                     </div>
                 </form>
             </div>
@@ -436,6 +442,8 @@
 
     <script>
         const CSRF_TOKEN = "{{ csrf_token }}";
+        const USER_ROLE = "{{ user_role }}";
+        const IS_VIEW_ONLY = USER_ROLE === "viewer";
         let profitChart;
         let candleChart;
         let isConfigPopulated = false;
@@ -583,6 +591,21 @@
 
         function toggleLang() {
             applyLang(currentLang === 'en' ? 'ko' : 'en');
+        }
+
+        function applyViewerRestrictions() {
+            if (!IS_VIEW_ONLY) return;
+            ['toggle-btn', 'toggle-btn-mobile', 'sell-now-btn', 'apply-settings-btn'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.disabled = true;
+                    el.classList.add('opacity-60', 'cursor-not-allowed');
+                }
+            });
+            document.querySelectorAll('#config-modal input, #config-modal select').forEach(el => {
+                el.disabled = true;
+                el.classList.add('opacity-60', 'cursor-not-allowed');
+            });
         }
         // ────────────────────────────────────────────────────────────────
         
@@ -1196,6 +1219,7 @@
                     const countEl = document.getElementById('trade-count');
                     if (countEl) countEl.textContent = '0 RECORDS';
                 }
+                applyViewerRestrictions();
             } catch (err) { 
                 console.error('SYNC_CRASH_PREVENTED:', err); 
                 // Restore button state on crash
@@ -1205,6 +1229,7 @@
         }
 
         async function saveSettings() {
+            if (IS_VIEW_ONLY) return;
             const data = {
                 exchange: document.getElementById('set-exchange').value,
                 rsi_threshold: parseFloat(document.getElementById('set-rsi').value),
@@ -1243,6 +1268,7 @@
         }
 
         async function sellNow() {
+            if (IS_VIEW_ONLY) return;
             const btn = document.getElementById('sell-now-btn');
             if (!confirm(currentLang === 'ko' ? '보유 코인을 즉시 시장가 매도하시겠습니까?' : 'Sell all holdings at market price now?')) return;
             btn.disabled = true;
@@ -1268,6 +1294,7 @@
         }
 
         async function doToggle(btn) {
+            if (IS_VIEW_ONLY) return;
             btn.disabled = true;
             btn.innerText = '...';
             try {
@@ -1288,6 +1315,7 @@
         initChart();
         initCandleChart();
         applyLang(currentLang); // 저장된 언어 적용
+        applyViewerRestrictions();
         setInterval(updateStatus, 3000);
         updateStatus();
     </script>

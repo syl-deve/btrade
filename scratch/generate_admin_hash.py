@@ -25,7 +25,7 @@ def make_password_hash(password: str) -> str:
 
 
 if __name__ == "__main__":
-    password = getpass.getpass("Admin password: ")
+    password = getpass.getpass("Dashboard password: ")
     confirm = getpass.getpass("Confirm password: ")
     if password != confirm:
         raise SystemExit("Passwords do not match.")

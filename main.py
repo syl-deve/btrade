@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 import uvicorn
 
-from config import SYMBOL, ADMIN_USERNAME, ADMIN_PASSWORD_HASH, DASHBOARD_PASSWORD, TRADING_INTERVAL_MINUTES, EXCHANGE
+from config import SYMBOL, ADMIN_USERNAME, ADMIN_PASSWORD_HASH, VIEWER_USERNAME, VIEWER_PASSWORD_HASH, DASHBOARD_PASSWORD, TRADING_INTERVAL_MINUTES, EXCHANGE
 from models import SessionLocal, init_db, BotSettings, TradeHistory
 from core.bithumb_client import BithumbClient
 from core.strategy import ScalperStrategy
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 BITHUMB_FEE_RATE = 0.0004 # 빗썸 0.04% (수수료 쿠폰 적용)
 
 # 세션 및 CSRF를 위한 보안 키 (실제 상용 시 .env로 관리 권장)
-SESSION_TOKEN = secrets.token_urlsafe(32)
+SESSIONS = {}
 CSRF_SECRET = secrets.token_hex(32)
 
 # --- Rate Limiting Config ---
@@ -85,6 +85,19 @@ def verify_admin_credentials(username: str, password: str) -> bool:
     if ADMIN_PASSWORD_HASH:
         return verify_password(password, ADMIN_PASSWORD_HASH)
     return bool(DASHBOARD_PASSWORD) and hmac.compare_digest(password, DASHBOARD_PASSWORD)
+
+def verify_viewer_credentials(username: str, password: str) -> bool:
+    username_ok = hmac.compare_digest(username.strip(), VIEWER_USERNAME)
+    if not username_ok or not VIEWER_PASSWORD_HASH:
+        return False
+    return verify_password(password, VIEWER_PASSWORD_HASH)
+
+def authenticate_user(username: str, password: str):
+    if verify_admin_credentials(username, password):
+        return {"username": ADMIN_USERNAME, "role": "admin"}
+    if verify_viewer_credentials(username, password):
+        return {"username": VIEWER_USERNAME, "role": "viewer"}
+    return None
 
 class SettingsUpdate(BaseModel):
     rsi_threshold: float = Field(default=35.0, ge=10, le=90)
@@ -521,9 +534,16 @@ def get_current_user(request: Request):
     Checks for a valid session token in cookie.
     """
     session = request.cookies.get("session_auth")
-    if not session or not hmac.compare_digest(session, SESSION_TOKEN):
+    if not session:
         return None
-    return ADMIN_USERNAME
+    return SESSIONS.get(session)
+
+def require_admin(user=Depends(get_current_user)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return user
 
 def verify_csrf(request: Request):
     """
@@ -557,13 +577,16 @@ async def login(request: Request, response: Response, username: str = Form(...),
             context={"error": f"Too many attempts. Blocked for {wait_time}s."}
         )
 
-    if verify_admin_credentials(username, password):
+    user = authenticate_user(username, password)
+    if user:
         # Reset counter on success
         LOGIN_ATTEMPTS[attempt_key] = {"count": 0, "blocked_until": 0}
+        session_token = secrets.token_urlsafe(32)
+        SESSIONS[session_token] = user
         response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
         response.set_cookie(
             key="session_auth", 
-            value=SESSION_TOKEN, 
+            value=session_token, 
             httponly=True, 
             max_age=86400,
             samesite="lax",
@@ -588,7 +611,10 @@ async def login(request: Request, response: Response, username: str = Form(...),
     )
 
 @app.get("/logout")
-async def logout():
+async def logout(request: Request):
+    session = request.cookies.get("session_auth")
+    if session:
+        SESSIONS.pop(session, None)
     response = RedirectResponse(url="/login")
     response.delete_cookie("session_auth")
     return response
@@ -598,7 +624,7 @@ async def homepage(request: Request, user=Depends(get_current_user), db: Session
     if not user:
         return RedirectResponse(url="/login")
     return templates.TemplateResponse(
-        request=request, name="index.html", context={"csrf_token": CSRF_SECRET}
+        request=request, name="index.html", context={"csrf_token": CSRF_SECRET, "user_role": user["role"]}
     )
 
 @app.get("/api/status")
@@ -797,10 +823,7 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
         return {"status": "error", "message": "Check server terminal for traceback"}
 
 @app.post("/api/settings")
-async def update_settings(data: SettingsUpdate, db: Session = Depends(get_db), user=Depends(get_current_user), _=Depends(verify_csrf)):
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
+async def update_settings(data: SettingsUpdate, db: Session = Depends(get_db), user=Depends(require_admin), _=Depends(verify_csrf)):
     try:
         bot_settings = db.query(BotSettings).first()
         if bot_settings:
@@ -829,10 +852,7 @@ async def update_settings(data: SettingsUpdate, db: Session = Depends(get_db), u
         return {"status": "error", "message": "Internal server error. Check logs."}
 
 @app.post("/api/sell_now")
-async def sell_now(db: Session = Depends(get_db), user=Depends(get_current_user), _=Depends(verify_csrf)):
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
+async def sell_now(db: Session = Depends(get_db), user=Depends(require_admin), _=Depends(verify_csrf)):
     bot_settings = db.query(BotSettings).first()
     target_exchange = (bot_settings.exchange or "BITHUMB") if bot_settings else "BITHUMB"
     current_client = get_client(target_exchange)
@@ -855,10 +875,7 @@ async def sell_now(db: Session = Depends(get_db), user=Depends(get_current_user)
     return {"status": "error", "message": "Order failed"}
 
 @app.post("/api/toggle")
-async def toggle_bot(db: Session = Depends(get_db), user=Depends(get_current_user), _=Depends(verify_csrf)):
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    
+async def toggle_bot(db: Session = Depends(get_db), user=Depends(require_admin), _=Depends(verify_csrf)):
     bot_settings = db.query(BotSettings).first()
     if not bot_settings:
         bot_settings = BotSettings(is_running=False)
