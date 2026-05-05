@@ -50,11 +50,8 @@
                     </div>
                     <div class="flex flex-col leading-none border-4 border-black px-3 py-2 bg-white">
                         <span class="text-[10px] font-black text-zinc-500">USER</span>
-                        <span class="text-xs font-black">{{ username }} / {{ user_role|upper }}</span>
+                        <span class="text-xs font-black">{{ username }}</span>
                     </div>
-                    {% if user_role == "viewer" %}
-                    <span class="text-xs font-black border-4 border-black px-3 py-2 bg-zinc-100">VIEW_ONLY</span>
-                    {% endif %}
                     <button id="toggle-btn" class="btn-bau btn-bau-red text-sm py-3 px-5 border-4 border-black" {% if user_role == "viewer" %}disabled{% endif %}>START_SYSTEM</button>
                     <button id="lang-toggle" class="btn-bau text-sm py-3 px-4 border-4 border-black font-black tracking-widest" onclick="toggleLang()"><span data-i18n="btn_lang">KO</span></button>
                     <a href="/logout" class="btn-bau text-sm py-3 px-5 border-4 border-black hover:bg-black hover:text-white transition-all"><span data-i18n="btn_exit">EXIT_NODE</span></a>
@@ -72,13 +69,10 @@
                         <span id="exchange-text-mobile">AUTO_CONNECT</span>
                     </div>
                     <div class="border-2 border-black px-2 py-1 bg-white leading-none">
-                        <span class="text-[10px] font-black">{{ username }} / {{ user_role|upper }}</span>
+                        <span class="text-[10px] font-black">{{ username }}</span>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    {% if user_role == "viewer" %}
-                    <span class="text-[10px] font-black border-2 border-black px-2 py-1 bg-zinc-100">VIEW_ONLY</span>
-                    {% endif %}
                     <button id="toggle-btn-mobile" class="btn-bau btn-bau-red text-xs py-1.5 px-3 border-4 border-black" {% if user_role == "viewer" %}disabled{% endif %}>정지</button>
                     <button id="lang-toggle-mobile" class="btn-bau text-xs py-1.5 px-2 border-4 border-black font-black" onclick="toggleLang()"><span data-i18n="btn_lang">KO</span></button>
                     <a href="/logout" class="btn-bau text-xs py-1.5 px-3 border-4 border-black hover:bg-black hover:text-white transition-all"><span data-i18n="btn_exit">EXIT_NODE</span></a>
@@ -450,7 +444,7 @@
     <script>
         const CSRF_TOKEN = "{{ csrf_token }}";
         const USER_ROLE = "{{ user_role }}";
-        const IS_VIEW_ONLY = USER_ROLE === "viewer";
+        const IS_VIEWER = USER_ROLE === "viewer";
         let profitChart;
         let candleChart;
         let isConfigPopulated = false;
@@ -601,7 +595,7 @@
         }
 
         function applyViewerRestrictions() {
-            if (!IS_VIEW_ONLY) return;
+            if (!IS_VIEWER) return;
             ['toggle-btn', 'toggle-btn-mobile', 'sell-now-btn', 'apply-settings-btn'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
@@ -1236,7 +1230,7 @@
         }
 
         async function saveSettings() {
-            if (IS_VIEW_ONLY) return;
+            if (IS_VIEWER) return;
             const data = {
                 exchange: document.getElementById('set-exchange').value,
                 rsi_threshold: parseFloat(document.getElementById('set-rsi').value),
@@ -1275,7 +1269,7 @@
         }
 
         async function sellNow() {
-            if (IS_VIEW_ONLY) return;
+            if (IS_VIEWER) return;
             const btn = document.getElementById('sell-now-btn');
             if (!confirm(currentLang === 'ko' ? '보유 코인을 즉시 시장가 매도하시겠습니까?' : 'Sell all holdings at market price now?')) return;
             btn.disabled = true;
@@ -1301,7 +1295,7 @@
         }
 
         async function doToggle(btn) {
-            if (IS_VIEW_ONLY) return;
+            if (IS_VIEWER) return;
             btn.disabled = true;
             btn.innerText = '...';
             try {
