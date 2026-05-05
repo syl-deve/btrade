@@ -33,7 +33,7 @@ pip install -r requirements.txt
 
 # 2. 환경 변수 설정
 cp .env.template .env        # .env 파일을 열어 API 키 입력
-python scratch/generate_admin_hash.py  # 관리자 비밀번호 해시 생성 후 .env에 입력
+python3 scratch/generate_admin_hash.py  # 관리자 비밀번호 해시 생성 후 .env에 입력
 
 # 3. 서버 실행
 python main.py               # http://localhost:8000
