@@ -113,6 +113,10 @@ class SettingsUpdate(BaseModel):
     volume_multiplier: float = Field(default=1.5, ge=1.0, le=10.0)
     atr_multiplier: float = Field(default=1.5, ge=0.5, le=5.0)
     use_atr: bool = True
+    use_trend_exit: bool = True
+    trend_ema_period: int = Field(default=20, ge=5, le=120)
+    chandelier_atr_multiplier: float = Field(default=2.5, ge=0.5, le=10.0)
+    macd_weak_confirm_candles: int = Field(default=2, ge=1, le=5)
     daily_loss_limit: float = Field(default=-50000.0, le=0.0)
     use_daily_loss: bool = True
     max_consecutive_loss: int = Field(default=3, ge=1, le=10)
@@ -185,6 +189,10 @@ async def lifespan(app: FastAPI):
         ("cooldown_minutes",       "ALTER TABLE bot_settings ADD COLUMN cooldown_minutes INTEGER DEFAULT 60"),
         ("cooldown_until",         "ALTER TABLE bot_settings ADD COLUMN cooldown_until DATETIME"),
         ("use_atr",                "ALTER TABLE bot_settings ADD COLUMN use_atr BOOLEAN DEFAULT 1"),
+        ("use_trend_exit",         "ALTER TABLE bot_settings ADD COLUMN use_trend_exit BOOLEAN DEFAULT 1"),
+        ("trend_ema_period",       "ALTER TABLE bot_settings ADD COLUMN trend_ema_period INTEGER DEFAULT 20"),
+        ("chandelier_atr_multiplier", "ALTER TABLE bot_settings ADD COLUMN chandelier_atr_multiplier FLOAT DEFAULT 2.5"),
+        ("macd_weak_confirm_candles", "ALTER TABLE bot_settings ADD COLUMN macd_weak_confirm_candles INTEGER DEFAULT 2"),
         ("use_daily_loss",         "ALTER TABLE bot_settings ADD COLUMN use_daily_loss BOOLEAN DEFAULT 1"),
     ]
     for col, sql in migrations:
@@ -217,6 +225,10 @@ async def lifespan(app: FastAPI):
             volume_multiplier=1.5,
             atr_multiplier=1.5,
             use_atr=True,
+            use_trend_exit=True,
+            trend_ema_period=20,
+            chandelier_atr_multiplier=2.5,
+            macd_weak_confirm_candles=2,
             max_hold_hours=4.0,
             daily_loss_limit=-50000.0,
             use_daily_loss=True,
@@ -463,7 +475,24 @@ async def trading_loop():
 
                         if bot_settings.highest_profit_rate >= bot_settings.target_profit_rate:
                             if profit_rate <= (bot_settings.highest_profit_rate - bot_settings.trailing_stop_offset):
-                                res = current_client.sell_market_order(coin_balance)
+                                use_trend_exit = bot_settings.use_trend_exit if bot_settings.use_trend_exit is not None else True
+                                trend_state = strategy.get_trend_exit_state(
+                                    target_exchange,
+                                    current_price=current_price,
+                                    ema_period=bot_settings.trend_ema_period or 20,
+                                    chandelier_atr_multiplier=bot_settings.chandelier_atr_multiplier or 2.5,
+                                    macd_weak_confirm_candles=bot_settings.macd_weak_confirm_candles or 2,
+                                ) if use_trend_exit else {"trend_ok": False}
+                                if use_trend_exit and trend_state.get("trend_ok"):
+                                    logger.info(
+                                        "[Trend Hold] trailing armed but trend remains strong | "
+                                        f"profit={profit_rate:.2f}% peak={bot_settings.highest_profit_rate:.2f}% "
+                                        f"EMA{bot_settings.trend_ema_period or 20}={trend_state.get('ema') or 0:,.0f} "
+                                        f"Chandelier={trend_state.get('chandelier_stop') or 0:,.0f}"
+                                    )
+                                    res = None
+                                else:
+                                    res = current_client.sell_market_order(coin_balance)
                                 if res:
                                     net_profit = _record_sell(db, current_price, coin_balance, bot_settings)
                                     logger.info(f"🎣 트레일링 익절: SOLD @ {current_price:,.0f} (고점: {bot_settings.highest_profit_rate:.2f}% → {profit_rate:.2f}%) | P&L: +{net_profit:,.0f} KRW")
@@ -812,6 +841,10 @@ async def get_status(db: Session = Depends(get_db), user=Depends(get_current_use
                 "volume_multiplier": bot_settings.volume_multiplier if bot_settings else 1.5,
                 "atr_multiplier": bot_settings.atr_multiplier if bot_settings else 1.5,
                 "use_atr": bot_settings.use_atr if (bot_settings and bot_settings.use_atr is not None) else True,
+                "use_trend_exit": bot_settings.use_trend_exit if (bot_settings and bot_settings.use_trend_exit is not None) else True,
+                "trend_ema_period": bot_settings.trend_ema_period if bot_settings else 20,
+                "chandelier_atr_multiplier": bot_settings.chandelier_atr_multiplier if bot_settings else 2.5,
+                "macd_weak_confirm_candles": bot_settings.macd_weak_confirm_candles if bot_settings else 2,
                 "daily_loss_limit": bot_settings.daily_loss_limit if bot_settings else -50000.0,
                 "use_daily_loss": bot_settings.use_daily_loss if (bot_settings and bot_settings.use_daily_loss is not None) else True,
                 "max_consecutive_loss": bot_settings.max_consecutive_loss if bot_settings else 3,
@@ -846,6 +879,10 @@ async def update_settings(data: SettingsUpdate, db: Session = Depends(get_db), u
             bot_settings.volume_multiplier = data.volume_multiplier
             bot_settings.atr_multiplier = data.atr_multiplier
             bot_settings.use_atr = data.use_atr
+            bot_settings.use_trend_exit = data.use_trend_exit
+            bot_settings.trend_ema_period = data.trend_ema_period
+            bot_settings.chandelier_atr_multiplier = data.chandelier_atr_multiplier
+            bot_settings.macd_weak_confirm_candles = data.macd_weak_confirm_candles
             bot_settings.daily_loss_limit = data.daily_loss_limit
             bot_settings.use_daily_loss = data.use_daily_loss
             bot_settings.max_consecutive_loss = data.max_consecutive_loss

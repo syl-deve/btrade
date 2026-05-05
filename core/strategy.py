@@ -176,3 +176,76 @@ class ScalperStrategy:
             return max(-3.0, min(-0.5, stop_pct))
         except Exception:
             return None
+
+    def get_ema(self, exchange="BITHUMB", interval="minute15", period=20, count=120):
+        try:
+            df = self.get_ohlcv(exchange, interval, max(count, period + 5))
+            if df is None or df.empty:
+                return None
+            ema = df["close"].ewm(span=period, adjust=False).mean()
+            return float(ema.iloc[-1])
+        except Exception:
+            return None
+
+    def get_chandelier_stop(self, exchange="BITHUMB", interval="minute15", period=14, atr_multiplier=2.5, count=120):
+        try:
+            df = self.get_ohlcv(exchange, interval, max(count, period + 5))
+            if df is None or df.empty:
+                return None
+            atr = self.get_atr(exchange, interval, period, count)
+            if atr is None:
+                return None
+            highest_high = float(df["high"].tail(period).max())
+            return highest_high - (float(atr) * atr_multiplier)
+        except Exception:
+            return None
+
+    def get_trend_exit_state(
+        self,
+        exchange="BITHUMB",
+        current_price=None,
+        interval="minute15",
+        ema_period=20,
+        chandelier_atr_multiplier=2.5,
+        macd_weak_confirm_candles=2,
+    ):
+        try:
+            if current_price is None:
+                return {
+                    "trend_ok": False,
+                    "ema": None,
+                    "chandelier_stop": None,
+                    "macd_weak": None,
+                }
+
+            ema = self.get_ema(exchange, interval, ema_period)
+            chandelier_stop = self.get_chandelier_stop(
+                exchange,
+                interval,
+                period=14,
+                atr_multiplier=chandelier_atr_multiplier,
+            )
+            _, _, hist = self.get_macd(exchange, interval)
+
+            macd_weak = None
+            if hist and len(hist) >= max(2, macd_weak_confirm_candles + 1):
+                recent = hist[-(macd_weak_confirm_candles + 1):]
+                macd_weak = all(recent[i] < recent[i - 1] for i in range(1, len(recent)))
+
+            above_ema = ema is not None and current_price >= ema
+            above_chandelier = chandelier_stop is not None and current_price > chandelier_stop
+            macd_ok = macd_weak is False or macd_weak is None
+
+            return {
+                "trend_ok": bool(above_ema and above_chandelier and macd_ok),
+                "ema": ema,
+                "chandelier_stop": chandelier_stop,
+                "macd_weak": macd_weak,
+            }
+        except Exception:
+            return {
+                "trend_ok": False,
+                "ema": None,
+                "chandelier_stop": None,
+                "macd_weak": None,
+            }

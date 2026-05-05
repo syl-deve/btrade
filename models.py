@@ -45,6 +45,10 @@ class BotSettings(Base):
     # B. 동적 손익 조정
     atr_multiplier = Column(Float, default=1.5)      # ATR 기반 손절폭 배수
     use_atr = Column(Boolean, default=True)          # ATR 동적 손절 사용 여부
+    use_trend_exit = Column(Boolean, default=True)
+    trend_ema_period = Column(Integer, default=20)
+    chandelier_atr_multiplier = Column(Float, default=2.5)
+    macd_weak_confirm_candles = Column(Integer, default=2)
     max_hold_hours = Column(Float, default=4.0)      # 최대 보유 시간 (시간)
     position_opened_at = Column(DateTime, nullable=True)  # 포지션 진입 시각
     # C. 리스크 관리
