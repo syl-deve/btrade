@@ -48,6 +48,10 @@
                         <div class="bau-shape bau-circle w-3 h-3"></div>
                         <span id="status-text" class="text-sm">OFFLINE</span>
                     </div>
+                    <div class="flex flex-col leading-none border-4 border-black px-3 py-2 bg-white">
+                        <span class="text-[10px] font-black text-zinc-500">USER</span>
+                        <span class="text-xs font-black">{{ username }} / {{ user_role|upper }}</span>
+                    </div>
                     {% if user_role == "viewer" %}
                     <span class="text-xs font-black border-4 border-black px-3 py-2 bg-zinc-100">VIEW_ONLY</span>
                     {% endif %}
@@ -66,6 +70,9 @@
                     <div id="exchange-badge-mobile" class="flex items-center gap-1.5">
                         <div class="bau-shape bau-square w-3 h-3"></div>
                         <span id="exchange-text-mobile">AUTO_CONNECT</span>
+                    </div>
+                    <div class="border-2 border-black px-2 py-1 bg-white leading-none">
+                        <span class="text-[10px] font-black">{{ username }} / {{ user_role|upper }}</span>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">

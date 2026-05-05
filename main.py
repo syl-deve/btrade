@@ -624,7 +624,13 @@ async def homepage(request: Request, user=Depends(get_current_user), db: Session
     if not user:
         return RedirectResponse(url="/login")
     return templates.TemplateResponse(
-        request=request, name="index.html", context={"csrf_token": CSRF_SECRET, "user_role": user["role"]}
+        request=request,
+        name="index.html",
+        context={
+            "csrf_token": CSRF_SECRET,
+            "user_role": user["role"],
+            "username": user["username"],
+        }
     )
 
 @app.get("/api/status")
