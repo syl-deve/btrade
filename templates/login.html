@@ -10,8 +10,6 @@
 </head>
 <body class="bg-white min-h-screen flex items-center justify-center">
     <div class="w-full max-w-md px-6">
-
-        <!-- 로고 헤더 -->
         <div class="flex items-center gap-4 mb-10">
             <div class="flex gap-2">
                 <div class="bau-shape bau-circle w-6 h-6"></div>
@@ -21,7 +19,6 @@
             <h1 class="text-3xl font-black archivo-bold tracking-tighter uppercase">BITRADE.<span class="text-red-600">CORE</span></h1>
         </div>
 
-        <!-- 로그인 카드 -->
         <div class="bau-tile p-10">
             <div class="label-bau mb-6">
                 <div class="bau-shape bau-square"></div>
@@ -32,14 +29,27 @@
 
             <form action="/login" method="post" class="space-y-6">
                 <div>
-                    <label class="bau-label">MASTER PASSCODE</label>
+                    <label class="bau-label">ADMIN USERNAME</label>
+                    <input
+                        type="text"
+                        name="username"
+                        placeholder="admin"
+                        class="bau-input w-full text-center text-xl"
+                        autocomplete="username"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <div>
+                    <label class="bau-label">ADMIN PASSWORD</label>
                     <input
                         type="password"
                         name="password"
-                        placeholder="••••••••"
+                        placeholder="********"
                         class="bau-input w-full text-center tracking-[0.3em] text-xl"
+                        autocomplete="current-password"
                         required
-                        autofocus
                     >
                 </div>
 
@@ -50,12 +60,11 @@
                 {% endif %}
 
                 <button type="submit" class="btn-bau btn-bau-yellow w-full justify-center py-4 text-sm tracking-widest font-black">
-                    AUTHENTICATE →
+                    AUTHENTICATE
                 </button>
             </form>
         </div>
 
-        <!-- 하단 데코 -->
         <div class="mt-6 flex items-center justify-between px-1">
             <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">BITRADE CORE // AUTHORIZED ACCESS ONLY</p>
             <div class="flex gap-1">
@@ -64,7 +73,6 @@
                 <div class="w-2 h-2 bg-yellow-400"></div>
             </div>
         </div>
-
     </div>
 </body>
 </html>

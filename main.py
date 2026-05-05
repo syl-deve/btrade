@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 import uvicorn
 
-from config import SYMBOL, DASHBOARD_PASSWORD, TRADING_INTERVAL_MINUTES, EXCHANGE
+from config import SYMBOL, ADMIN_USERNAME, ADMIN_PASSWORD_HASH, DASHBOARD_PASSWORD, TRADING_INTERVAL_MINUTES, EXCHANGE
 from models import SessionLocal, init_db, BotSettings, TradeHistory
 from core.bithumb_client import BithumbClient
 from core.strategy import ScalperStrategy
@@ -16,6 +16,8 @@ from contextlib import asynccontextmanager
 import logging
 import sys
 import traceback
+import base64
+import hmac
 
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -33,13 +35,56 @@ logger = logging.getLogger(__name__)
 BITHUMB_FEE_RATE = 0.0004 # 빗썸 0.04% (수수료 쿠폰 적용)
 
 # 세션 및 CSRF를 위한 보안 키 (실제 상용 시 .env로 관리 권장)
-SESSION_SECRET_KEY = hashlib.sha256(DASHBOARD_PASSWORD.encode()).hexdigest()
+SESSION_TOKEN = secrets.token_urlsafe(32)
 CSRF_SECRET = secrets.token_hex(32)
 
 # --- Rate Limiting Config ---
-LOGIN_ATTEMPTS = {}  # {ip: {"count": n, "blocked_until": timestamp}}
+LOGIN_ATTEMPTS = {}  # {ip:username: {"count": n, "blocked_until": timestamp}}
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_DURATION = 600 # 10 minutes in seconds
+
+PASSWORD_HASH_ALGORITHM = "pbkdf2_sha256"
+PASSWORD_HASH_ITERATIONS = 260000
+
+def make_password_hash(password: str) -> str:
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        salt,
+        PASSWORD_HASH_ITERATIONS,
+    )
+    return "$".join([
+        PASSWORD_HASH_ALGORITHM,
+        str(PASSWORD_HASH_ITERATIONS),
+        base64.urlsafe_b64encode(salt).decode("ascii"),
+        base64.urlsafe_b64encode(digest).decode("ascii"),
+    ])
+
+def verify_password(password: str, stored_hash: str) -> bool:
+    try:
+        algorithm, iterations, salt_b64, digest_b64 = stored_hash.split("$", 3)
+        if algorithm != PASSWORD_HASH_ALGORITHM:
+            return False
+        salt = base64.urlsafe_b64decode(salt_b64.encode("ascii"))
+        expected = base64.urlsafe_b64decode(digest_b64.encode("ascii"))
+        actual = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt,
+            int(iterations),
+        )
+        return hmac.compare_digest(actual, expected)
+    except Exception:
+        return False
+
+def verify_admin_credentials(username: str, password: str) -> bool:
+    username_ok = hmac.compare_digest(username.strip(), ADMIN_USERNAME)
+    if not username_ok:
+        return False
+    if ADMIN_PASSWORD_HASH:
+        return verify_password(password, ADMIN_PASSWORD_HASH)
+    return bool(DASHBOARD_PASSWORD) and hmac.compare_digest(password, DASHBOARD_PASSWORD)
 
 class SettingsUpdate(BaseModel):
     rsi_threshold: float = Field(default=35.0, ge=10, le=90)
@@ -476,9 +521,9 @@ def get_current_user(request: Request):
     Checks for a valid session token in cookie.
     """
     session = request.cookies.get("session_auth")
-    if session != SESSION_SECRET_KEY:
+    if not session or not hmac.compare_digest(session, SESSION_TOKEN):
         return None
-    return True
+    return ADMIN_USERNAME
 
 def verify_csrf(request: Request):
     """
@@ -497,12 +542,14 @@ async def login_page(request: Request, error: str = None):
     )
 
 @app.post("/login")
-async def login(request: Request, response: Response, password: str = Form(...)):
+async def login(request: Request, response: Response, username: str = Form(...), password: str = Form(...)):
     client_ip = request.client.host
     now = time.time()
+    username = username.strip()
+    attempt_key = f"{client_ip}:{username.lower()}"
     
     # Check if IP is blocked
-    attempt_info = LOGIN_ATTEMPTS.get(client_ip, {"count": 0, "blocked_until": 0})
+    attempt_info = LOGIN_ATTEMPTS.get(attempt_key, {"count": 0, "blocked_until": 0})
     if now < attempt_info["blocked_until"]:
         wait_time = int(attempt_info["blocked_until"] - now)
         return templates.TemplateResponse(
@@ -510,17 +557,17 @@ async def login(request: Request, response: Response, password: str = Form(...))
             context={"error": f"Too many attempts. Blocked for {wait_time}s."}
         )
 
-    if password == DASHBOARD_PASSWORD:
+    if verify_admin_credentials(username, password):
         # Reset counter on success
-        LOGIN_ATTEMPTS[client_ip] = {"count": 0, "blocked_until": 0}
+        LOGIN_ATTEMPTS[attempt_key] = {"count": 0, "blocked_until": 0}
         response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
         response.set_cookie(
             key="session_auth", 
-            value=SESSION_SECRET_KEY, 
+            value=SESSION_TOKEN, 
             httponly=True, 
             max_age=86400,
             samesite="lax",
-            secure=False # Set to True if using HTTPS
+            secure=request.url.scheme == "https",
         )
         return response
     
@@ -529,11 +576,12 @@ async def login(request: Request, response: Response, password: str = Form(...))
     blocked_until = 0
     if new_count >= MAX_LOGIN_ATTEMPTS:
         blocked_until = now + LOCKOUT_DURATION
-        logger.warning(f"🔒 Brute-force detected: IP {client_ip} blocked until {blocked_until}")
+        LOGIN_ATTEMPTS[attempt_key] = {"count": new_count, "blocked_until": blocked_until}
+        logger.warning(f"Brute-force login protection: IP {client_ip}, user {username!r} blocked until {blocked_until}")
         error_msg = f"Access Denied. Too many failures. Blocked for {LOCKOUT_DURATION//60} mins."
     else:
-        LOGIN_ATTEMPTS[client_ip] = {"count": new_count, "blocked_until": 0}
-        error_msg = f"Invalid Passcode ({new_count}/{MAX_LOGIN_ATTEMPTS})."
+        LOGIN_ATTEMPTS[attempt_key] = {"count": new_count, "blocked_until": 0}
+        error_msg = f"Invalid credentials ({new_count}/{MAX_LOGIN_ATTEMPTS})."
 
     return templates.TemplateResponse(
         request=request, name="login.html", context={"error": error_msg}
