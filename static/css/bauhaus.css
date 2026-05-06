@@ -138,41 +138,6 @@ h1, .archivo-bold {
 .btn-bau-red { background: var(--bau-red); color: white; }
 .btn-bau-yellow { background: var(--bau-yellow); color: black; }
 
-.manual-icon-btn {
-    width: 46px;
-    height: 46px;
-    border: 4px solid #000;
-    background: var(--bau-yellow);
-    color: #000;
-    box-shadow: 6px 6px 0 #000;
-    font-family: 'Archivo Black', sans-serif;
-    font-size: 1.15rem;
-    line-height: 1;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.1s;
-}
-
-.manual-icon-btn:hover {
-    transform: translate(-3px, -3px);
-    box-shadow: 9px 9px 0 #000;
-}
-
-.manual-icon-btn:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0 #000;
-}
-
-.manual-icon-btn-mobile {
-    width: 34px;
-    height: 34px;
-    border-width: 3px;
-    box-shadow: 4px 4px 0 #000;
-    font-size: 0.9rem;
-}
-
 /* Bauhaus Input System */
 .bau-label {
     font-size: 0.8rem;
@@ -258,9 +223,30 @@ h1, .archivo-bold {
     border-radius: 0;
 }
 
+#manual-modal {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+}
+
+#manual-modal[open] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+#manual-modal::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
+
 .manual-modal-box {
     width: min(1040px, calc(100vw - 32px));
-    max-height: 90vh;
+    max-height: calc(100vh - 48px);
     overflow: hidden;
     border: 6px solid #000;
     box-shadow: 16px 16px 0 #000;
@@ -311,14 +297,16 @@ h1, .archivo-bold {
     display: flex;
     gap: 0;
     overflow-x: auto;
+    overflow-y: hidden;
     border-bottom: 4px solid #000;
     background: #f4f4f5;
+    flex-shrink: 0;
 }
 
 .manual-tab {
     flex: 0 0 auto;
-    min-height: 48px;
-    padding: 0.85rem 1rem;
+    min-height: 56px;
+    padding: 0.9rem 1.05rem;
     border: 0;
     border-right: 3px solid #000;
     background: #f4f4f5;
@@ -327,6 +315,11 @@ h1, .archivo-bold {
     font-weight: 900;
     text-transform: uppercase;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+    white-space: nowrap;
 }
 
 .manual-tab.active {
@@ -464,7 +457,7 @@ h1, .archivo-bold {
     }
     .manual-modal-box {
         width: calc(100vw - 16px);
-        max-height: 92vh;
+        max-height: calc(100vh - 24px);
         box-shadow: 8px 8px 0 #000;
     }
     .manual-header {
@@ -477,7 +470,7 @@ h1, .archivo-bold {
         grid-template-columns: 1fr;
     }
     .manual-tab {
-        min-height: 44px;
+        min-height: 50px;
         padding: 0.75rem 0.85rem;
         font-size: 0.72rem;
     }
