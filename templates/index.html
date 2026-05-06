@@ -98,7 +98,7 @@
                 </div>
                 <!-- 거래 단계 상태 -->
                 <div class="flex flex-col justify-center md:px-8 md:border-l-2 border-black/10">
-                    <div id="trade-phase-label" class="meta-label text-zinc-400">PHASE</div>
+                    <div id="trade-phase-label" class="meta-label text-zinc-400" data-i18n="label_phase">현재 단계</div>
                     <div id="trade-phase-text" class="text-sm md:text-base font-black uppercase tracking-wide text-zinc-800">—</div>
                     <div id="trade-phase-sub" class="text-xs md:text-sm font-bold text-zinc-400 mt-0.5">—</div>
                     <div id="cooldown-display" class="mt-1 text-xs font-black text-orange-500 uppercase tracking-wide" style="display:none;">⏸ 쿨다운 <span id="cooldown-remaining"></span>분 남음</div>
@@ -406,22 +406,22 @@
                     </div>
                 </div>
                 <div class="border-t-2 border-black/10 pt-4">
-                    <p class="bau-label text-zinc-400">TREND EXIT</p>
+                    <p class="bau-label text-zinc-400" data-i18n="cfg_trend_exit">추세 이탈 방어</p>
                     <label class="flex items-center gap-3 mb-4 cursor-pointer">
                         <input type="checkbox" id="set-use-trend-exit" class="w-5 h-5 border-2 border-black accent-blue-600">
-                        <span class="bau-label mb-0">Hold while trend is strong</span>
+                        <span class="bau-label mb-0" data-i18n="cfg_use_trend_exit">추세가 강할 때 보유 유지</span>
                     </label>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
                         <div>
-                            <label class="bau-label">EMA PERIOD</label>
+                            <label class="bau-label" data-i18n="cfg_trend_ema">EMA 기간</label>
                             <input type="number" id="set-trend-ema" step="1" min="5" max="120" class="bau-input" placeholder="20">
                         </div>
                         <div>
-                            <label class="bau-label">CHANDELIER ATR</label>
+                            <label class="bau-label" data-i18n="cfg_chandelier_atr">샹들리에 ATR</label>
                             <input type="number" id="set-chandelier-atr" step="0.1" min="0.5" max="10.0" class="bau-input" placeholder="2.5">
                         </div>
                         <div>
-                            <label class="bau-label">MACD WEAK BARS</label>
+                            <label class="bau-label" data-i18n="cfg_macd_weak">MACD 약세 봉 수</label>
                             <input type="number" id="set-macd-weak" step="1" min="1" max="5" class="bau-input" placeholder="2">
                         </div>
                     </div>
@@ -482,6 +482,7 @@
                 label_winrate:'Success Rate',
                 label_trades: 'Trade Records',
                 label_engine: 'MONITORING_ENGINE',
+                label_phase:  'PHASE',
                 label_price:  'Current Price',
                 label_avgbuy: 'Avg Buy Price',
                 label_yield:  'REALTIME_YIELD_PERFORMANCE',
@@ -503,6 +504,11 @@
                 cfg_use_daily_loss: 'Use Daily Loss Limit',
                 cfg_atr:      'ATR Stop Multiplier',
                 cfg_vol_mult: 'Volume Multiplier',
+                cfg_trend_exit: 'TREND EXIT',
+                cfg_use_trend_exit: 'Hold while trend is strong',
+                cfg_trend_ema: 'EMA Period',
+                cfg_chandelier_atr: 'Chandelier ATR',
+                cfg_macd_weak: 'MACD Weak Bars',
                 cfg_daily_loss:'Daily Loss Limit (₩)',
                 cfg_cons_loss: 'Max Consecutive Losses',
                 cfg_cooldown:  'Cooldown Duration (min)',
@@ -544,6 +550,7 @@
                 label_winrate:'승률',
                 label_trades: '거래 기록',
                 label_engine: '감시 대상 코인',
+                label_phase:  '현재 단계',
                 label_price:  '현재가',
                 label_avgbuy: '평균 매수가',
                 label_yield:  '실시간 수익률',
@@ -565,6 +572,11 @@
                 cfg_use_daily_loss: '일일 손실 한도 사용',
                 cfg_atr:      'ATR 손절 배수',
                 cfg_vol_mult: '거래량 기준 배수',
+                cfg_trend_exit: '추세 이탈 방어',
+                cfg_use_trend_exit: '추세가 강할 때 보유 유지',
+                cfg_trend_ema: 'EMA 기간',
+                cfg_chandelier_atr: '샹들리에 ATR',
+                cfg_macd_weak: 'MACD 약세 봉 수',
                 cfg_daily_loss:'일일 손실 한도 (₩)',
                 cfg_cons_loss: '연속 손절 허용 횟수',
                 cfg_cooldown:  '쿨다운 시간 (분)',
@@ -890,27 +902,29 @@
                             phaseSub.innerText = ko ? 'RSI + 볼린저 조건 충족 시 1차 매수 진입' : 'Waiting for RSI + Bollinger condition';
                         }
                     } else if (holding) {
-                        phaseLabel.innerText = 'PHASE';
+                        phaseLabel.innerText = ko ? '현재 단계' : 'PHASE';
                         const trendArmed = data.highest_profit_rate >= data.config.target_profit_rate;
                         const splitDone = cnt >= 2;
-                        const prefix = splitDone ? 'SPLIT BUY DONE - ' : '';
+                        const prefix = splitDone ? (ko ? '분할매수 완료 - ' : 'SPLIT BUY DONE - ') : '';
                         if (trendArmed && data.trend_exit && data.trend_exit.enabled && data.trend_exit.trend_ok) {
-                            phaseText.innerText = 'TREND HOLD';
+                            phaseText.innerText = ko ? '추세 보유' : 'TREND HOLD';
                             phaseText.style.color = '#16A34A';
-                            const chandelier = data.trend_exit.chandelier_stop ? data.trend_exit.chandelier_stop.toLocaleString() : 'pending';
-                            phaseSub.innerText = `${prefix}Above EMA${data.config.trend_ema_period} - Chandelier ${chandelier}`;
+                            const chandelier = data.trend_exit.chandelier_stop ? data.trend_exit.chandelier_stop.toLocaleString() : (ko ? '대기 중' : 'pending');
+                            phaseSub.innerText = ko
+                                ? `${prefix}EMA${data.config.trend_ema_period} 상단 - 샹들리에 ${chandelier}`
+                                : `${prefix}Above EMA${data.config.trend_ema_period} - Chandelier ${chandelier}`;
                         } else if (trendArmed && data.trend_exit && data.trend_exit.enabled) {
-                            phaseText.innerText = 'TREND WEAKNESS WATCH';
+                            phaseText.innerText = ko ? '추세 약화 감시' : 'TREND WEAKNESS WATCH';
                             phaseText.style.color = '#E63946';
-                            phaseSub.innerText = `${prefix}Trailing exit will sell on pullback`;
+                            phaseSub.innerText = ko ? `${prefix}되돌림 발생 시 트레일링 매도` : `${prefix}Trailing exit will sell on pullback`;
                         } else if (splitDone) {
-                            phaseText.innerText = 'SPLIT BUY DONE - AWAITING EXIT';
+                            phaseText.innerText = ko ? '분할매수 완료 - 청산 대기' : 'SPLIT BUY DONE - AWAITING EXIT';
                             phaseText.style.color = '#8B5CF6';
-                            phaseSub.innerText = 'Waiting for trailing profit or ATR stop-loss';
+                            phaseSub.innerText = ko ? '트레일링 익절 또는 ATR 손절 대기' : 'Waiting for trailing profit or ATR stop-loss';
                         } else {
-                            phaseText.innerText = 'HOLDING ENTRY x1';
+                            phaseText.innerText = ko ? '1차 매수 보유 중' : 'HOLDING ENTRY x1';
                             phaseText.style.color = '#F59E0B';
-                            phaseSub.innerText = 'Waiting for trailing profit target / RSI drop second buy';
+                            phaseSub.innerText = ko ? '트레일링 목표 수익 또는 RSI 하락 2차 매수 대기' : 'Waiting for trailing profit target / RSI drop second buy';
                         }
                     }
                 }
