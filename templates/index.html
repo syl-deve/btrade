@@ -53,6 +53,7 @@
                         <span class="text-xs font-black">{{ username }}</span>
                     </div>
                     <button id="toggle-btn" class="btn-bau btn-bau-red text-sm py-3 px-5 border-4 border-black" {% if user_role == "viewer" %}disabled{% endif %}>START_SYSTEM</button>
+                    <button type="button" class="manual-icon-btn" onclick="openManual()" aria-label="사용 설명서" title="사용 설명서">?</button>
                     <button id="lang-toggle" class="btn-bau text-sm py-3 px-4 border-4 border-black font-black tracking-widest" onclick="toggleLang()"><span data-i18n="btn_lang">KO</span></button>
                     <a href="/logout" class="btn-bau text-sm py-3 px-5 border-4 border-black hover:bg-black hover:text-white transition-all"><span data-i18n="btn_exit">EXIT_NODE</span></a>
                 </nav>
@@ -74,6 +75,7 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <button id="toggle-btn-mobile" class="btn-bau btn-bau-red text-xs py-1.5 px-3 border-4 border-black" {% if user_role == "viewer" %}disabled{% endif %}>정지</button>
+                    <button type="button" class="manual-icon-btn manual-icon-btn-mobile" onclick="openManual()" aria-label="사용 설명서" title="사용 설명서">?</button>
                     <button id="lang-toggle-mobile" class="btn-bau text-xs py-1.5 px-2 border-4 border-black font-black" onclick="toggleLang()"><span data-i18n="btn_lang">KO</span></button>
                     <a href="/logout" class="btn-bau text-xs py-1.5 px-3 border-4 border-black hover:bg-black hover:text-white transition-all"><span data-i18n="btn_exit">EXIT_NODE</span></a>
                 </div>
@@ -463,6 +465,158 @@
         </div>
     </dialog>
 
+    <!-- Manual Modal -->
+    <dialog id="manual-modal" class="modal modal-bottom sm:modal-middle">
+        <div class="manual-modal-box bg-white">
+            <div class="manual-header">
+                <div>
+                    <p class="manual-eyebrow">BITRADE GUIDE</p>
+                    <h3 class="manual-title" data-i18n="manual_title">사용 설명서</h3>
+                </div>
+                <form method="dialog">
+                    <button class="manual-close-btn" aria-label="닫기">×</button>
+                </form>
+            </div>
+
+            <div class="manual-tabs" role="tablist" aria-label="Manual sections">
+                <button type="button" class="manual-tab active" data-manual-tab="quick" onclick="showManualTab('quick')" data-i18n="manual_tab_quick">빠른 시작</button>
+                <button type="button" class="manual-tab" data-manual-tab="ui" onclick="showManualTab('ui')" data-i18n="manual_tab_ui">화면 사용법</button>
+                <button type="button" class="manual-tab" data-manual-tab="scenario" onclick="showManualTab('scenario')" data-i18n="manual_tab_scenario">매매 시나리오</button>
+                <button type="button" class="manual-tab" data-manual-tab="strategy" onclick="showManualTab('strategy')" data-i18n="manual_tab_strategy">전략 설정</button>
+                <button type="button" class="manual-tab" data-manual-tab="risk" onclick="showManualTab('risk')" data-i18n="manual_tab_risk">리스크 관리</button>
+            </div>
+
+            <div class="manual-body manual-lang" data-manual-lang="ko">
+                <section class="manual-panel active" data-manual-panel="quick">
+                    <h4>처음 사용할 때</h4>
+                    <ol>
+                        <li><b>잔고와 감시 코인 확인:</b> 상단에서 사용 가능 원화, 보유 수량, 감시 대상 코인, 현재 단계를 확인합니다.</li>
+                        <li><b>거래 설정 열기:</b> `거래 설정`에서 매수 기준, 익절, 손절, 필터, 리스크 제한을 조정합니다.</li>
+                        <li><b>소액으로 시작:</b> 1차 매수 비율을 낮게 두고 실제 체결 흐름을 먼저 확인합니다.</li>
+                        <li><b>시작 버튼:</b> 설정을 저장한 뒤 `시작`을 누르면 봇이 조건을 감시합니다. 정지하면 신규 매수와 자동 매매가 중단됩니다.</li>
+                        <li><b>기록 확인:</b> 하단 거래 내역에서 매수/매도, 체결가, 수수료, 순손익을 확인합니다.</li>
+                    </ol>
+                    <div class="manual-note">이 대시보드는 자동 매매를 돕는 도구입니다. 시장 급변, 거래소 오류, 네트워크 지연이 발생할 수 있으므로 감당 가능한 금액으로만 운용하세요.</div>
+                </section>
+
+                <section class="manual-panel" data-manual-panel="ui">
+                    <h4>화면 구성</h4>
+                    <div class="manual-grid">
+                        <div><b>상단 상태</b><p>봇 상태, 사용자, 시작/정지, 언어 전환, 로그아웃을 제공합니다.</p></div>
+                        <div><b>잔고 영역</b><p>사용 가능 원화, 현재 보유 수량, 현재 단계, 쿨다운 남은 시간을 보여줍니다.</p></div>
+                        <div><b>실시간 수익률 바</b><p>보유 중인 포지션의 수익률, 평가 손익, 평균 매수가, 현재가, 손절선을 표시합니다. 보유 중이면 즉시 매도 버튼이 나타납니다.</p></div>
+                        <div><b>차트</b><p>BTC 15분봉과 볼린저 하단, 누적 실현 손익 그래프를 함께 확인합니다.</p></div>
+                        <div><b>지표 카드</b><p>RSI, 평균 손익, 오늘 손익, 마지막 거래, MACD, 거래량, 볼린저 상태를 요약합니다. 각 카드의 `?` 버튼을 누르면 세부 설명이 나옵니다.</p></div>
+                        <div><b>거래 내역</b><p>전체 체결 내역과 순손익을 시간순으로 확인합니다.</p></div>
+                    </div>
+                </section>
+
+                <section class="manual-panel" data-manual-panel="scenario">
+                    <h4>기본 매매 흐름</h4>
+                    <ol>
+                        <li><b>스캔:</b> 봇이 실행 중이고 보유 수량이 없으면 RSI와 선택한 필터를 감시합니다.</li>
+                        <li><b>1차 매수:</b> RSI가 1차 기준 이하이고 활성화된 필터를 통과하면 설정한 1차 매수 비율만큼 매수합니다.</li>
+                        <li><b>2차 매수:</b> 1차 매수 후 RSI가 2차 기준 이하로 더 내려가면 남은 금액으로 추가 매수합니다.</li>
+                        <li><b>익절 대기:</b> 목표 익절율에 도달하면 트레일링 익절이 활성화됩니다. 고점 대비 트레일링 오프셋만큼 되돌리면 매도합니다.</li>
+                        <li><b>추세 보유:</b> 추세 이탈 방어가 켜져 있고 EMA, 샹들리에 스탑, MACD 조건이 강하면 바로 팔지 않고 보유를 연장합니다.</li>
+                        <li><b>손절:</b> ATR 동적 손절이 켜져 있으면 변동성 기반 손절선을 사용하고, 실패 시 고정 손절율을 안전망으로 사용합니다.</li>
+                    </ol>
+                </section>
+
+                <section class="manual-panel" data-manual-panel="strategy">
+                    <h4>전략 설정 설명</h4>
+                    <div class="manual-list">
+                        <p><b>RSI 1차/2차 매수 기준:</b> 낮을수록 보수적, 높을수록 공격적입니다.</p>
+                        <p><b>목표 익절율:</b> 이 수익률 이상에서 트레일링 익절 감시가 시작됩니다.</p>
+                        <p><b>트레일링 오프셋:</b> 고점 수익률에서 얼마만큼 밀리면 매도할지 정합니다.</p>
+                        <p><b>1차 매수 비율:</b> 첫 진입에 사용할 원화 비율입니다. 0.6이면 60%를 1차에 사용합니다.</p>
+                        <p><b>볼린저밴드 필터:</b> 가격이 하단 밴드 근처일 때만 매수해 과매도 구간을 노립니다.</p>
+                        <p><b>MACD 반전 필터:</b> 하락 모멘텀이 약해지는 반전 신호를 확인합니다.</p>
+                        <p><b>거래량 급증 필터:</b> 평균 거래량 대비 강한 거래량이 있을 때만 진입합니다.</p>
+                        <p><b>ATR 손절 배수:</b> 변동성이 클수록 손절 폭을 넓힙니다. 값이 작으면 빠르게 손절하고, 크면 흔들림을 더 허용합니다.</p>
+                        <p><b>거래량 기준 배수:</b> 거래량 필터가 요구하는 강도를 정합니다.</p>
+                        <p><b>추세 이탈 방어:</b> 익절 조건 도달 후 추세가 살아 있으면 조기 매도를 늦춥니다.</p>
+                        <p><b>EMA 기간 / 샹들리에 ATR / MACD 약세 봉 수:</b> 추세 유지와 약화 판정을 조정하는 고급 설정입니다.</p>
+                    </div>
+                </section>
+
+                <section class="manual-panel" data-manual-panel="risk">
+                    <h4>리스크 관리와 주의사항</h4>
+                    <div class="manual-list">
+                        <p><b>일일 손실 한도:</b> 당일 실현 손실이 한도를 넘으면 봇이 자동 정지합니다. 음수로 입력합니다.</p>
+                        <p><b>연속 손절 허용 횟수:</b> 최근 매도 N회가 모두 손실이면 쿨다운에 들어갑니다.</p>
+                        <p><b>쿨다운 시간:</b> 연속 손실 후 신규 매수를 쉬는 시간입니다.</p>
+                        <p><b>즉시 매도:</b> 보유 중인 포지션을 수동으로 정리합니다. 긴급 상황에서만 사용하세요.</p>
+                        <p><b>시작/정지:</b> 정지 상태에서는 새 자동 매매가 진행되지 않습니다. 설정 변경 후 재시작 여부를 확인하세요.</p>
+                        <p><b>권장 운영:</b> 처음에는 보수적인 RSI, 낮은 1차 매수 비율, 일일 손실 한도, 쿨다운을 함께 켜고 운용 기록을 확인하세요.</p>
+                    </div>
+                </section>
+            </div>
+
+            <div class="manual-body manual-lang" data-manual-lang="en">
+                <section class="manual-panel active" data-manual-panel="quick">
+                    <h4>Quick Start</h4>
+                    <ol>
+                        <li><b>Check balances:</b> Confirm KRW balance, held coin amount, monitored coin, and current phase.</li>
+                        <li><b>Open settings:</b> Use `TRADE_CONFIG` to adjust entries, take-profit, stops, filters, and risk limits.</li>
+                        <li><b>Start small:</b> Use a lower first-buy ratio until you understand the fill behavior.</li>
+                        <li><b>Start the bot:</b> Save settings, then press `START`. `STOP` pauses new automated trading.</li>
+                        <li><b>Review history:</b> Check executed buys/sells, fees, and net P&L in trade history.</li>
+                    </ol>
+                    <div class="manual-note">This dashboard assists automated trading. Market volatility, exchange issues, and network delays can still occur. Use only capital you can afford to risk.</div>
+                </section>
+                <section class="manual-panel" data-manual-panel="ui">
+                    <h4>Dashboard Areas</h4>
+                    <div class="manual-grid">
+                        <div><b>Header</b><p>Bot status, user, start/stop, language toggle, manual, and logout.</p></div>
+                        <div><b>Balance Area</b><p>Available KRW, held amount, current phase, and cooldown remaining.</p></div>
+                        <div><b>Yield Bar</b><p>Position yield, estimated P&L, average buy price, current price, stop line, and instant sell.</p></div>
+                        <div><b>Charts</b><p>BTC 15-minute candles, Bollinger lower band, and accumulated realized P&L.</p></div>
+                        <div><b>Indicator Cards</b><p>RSI, average P&L, today P&L, last trade, MACD, volume, and Bollinger status. Use each `?` for details.</p></div>
+                        <div><b>Trade History</b><p>Full execution history with price, amount, fee, and net P&L.</p></div>
+                    </div>
+                </section>
+                <section class="manual-panel" data-manual-panel="scenario">
+                    <h4>Trading Scenario</h4>
+                    <ol>
+                        <li><b>Scan:</b> When running with no position, the bot watches RSI and enabled filters.</li>
+                        <li><b>First buy:</b> If RSI reaches the first threshold and filters pass, the bot buys using the first-buy ratio.</li>
+                        <li><b>Second buy:</b> If RSI falls to the second threshold after entry, the bot adds with the remaining allocation.</li>
+                        <li><b>Take-profit watch:</b> Once target profit is reached, trailing take-profit starts. A pullback by the offset sells.</li>
+                        <li><b>Trend hold:</b> If trend exit is enabled and trend remains strong, the bot can delay selling.</li>
+                        <li><b>Stop-loss:</b> ATR dynamic stop uses volatility. Fixed stop-loss is the fallback when ATR fails.</li>
+                    </ol>
+                </section>
+                <section class="manual-panel" data-manual-panel="strategy">
+                    <h4>Strategy Settings</h4>
+                    <div class="manual-list">
+                        <p><b>RSI thresholds:</b> Lower is more conservative; higher is more aggressive.</p>
+                        <p><b>Target take-profit:</b> Starts trailing exit monitoring after this profit rate.</p>
+                        <p><b>Trailing offset:</b> Defines how much pullback from peak profit triggers a sell.</p>
+                        <p><b>First-buy ratio:</b> KRW allocation for the first entry. 0.6 means 60%.</p>
+                        <p><b>Bollinger filter:</b> Prefers oversold areas near the lower band.</p>
+                        <p><b>MACD filter:</b> Confirms weakening downside momentum.</p>
+                        <p><b>Volume filter:</b> Requires a stronger-than-average volume move.</p>
+                        <p><b>ATR multiplier:</b> Controls volatility-based stop width.</p>
+                        <p><b>Volume multiplier:</b> Controls how strict the volume surge requirement is.</p>
+                        <p><b>Trend exit:</b> Delays early selling when trend remains strong after profit target.</p>
+                    </div>
+                </section>
+                <section class="manual-panel" data-manual-panel="risk">
+                    <h4>Risk Controls</h4>
+                    <div class="manual-list">
+                        <p><b>Daily loss limit:</b> Stops the bot when realized losses exceed the configured negative amount.</p>
+                        <p><b>Consecutive loss limit:</b> Enters cooldown after the latest N sells are all losses.</p>
+                        <p><b>Cooldown:</b> Pauses new buys after repeated losses.</p>
+                        <p><b>Instant sell:</b> Manually exits the current position. Use for urgent situations.</p>
+                        <p><b>Start/Stop:</b> Stopped state prevents new automated trades. Check state after changing settings.</p>
+                        <p><b>Suggested operation:</b> Start with conservative RSI, lower first-buy ratio, daily loss limit, and cooldown enabled.</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </dialog>
+
     <script>
         const CSRF_TOKEN = "{{ csrf_token }}";
         const USER_ROLE = "{{ user_role }}";
@@ -487,6 +641,12 @@
                 label_avgbuy: 'Avg Buy Price',
                 label_yield:  'REALTIME_YIELD_PERFORMANCE',
                 btn_config:   'TRADE_CONFIG',
+                manual_title: 'User Manual',
+                manual_tab_quick: 'Quick Start',
+                manual_tab_ui: 'Dashboard',
+                manual_tab_scenario: 'Trading Flow',
+                manual_tab_strategy: 'Strategy',
+                manual_tab_risk: 'Risk',
                 label_status: 'System Status: Online',
                 label_version:'System Version',
                 modal_title:  'TRADE_CONFIG',
@@ -555,6 +715,12 @@
                 label_avgbuy: '평균 매수가',
                 label_yield:  '실시간 수익률',
                 btn_config:   '거래 설정',
+                manual_title: '사용 설명서',
+                manual_tab_quick: '빠른 시작',
+                manual_tab_ui: '화면 사용법',
+                manual_tab_scenario: '매매 시나리오',
+                manual_tab_strategy: '전략 설정',
+                manual_tab_risk: '리스크 관리',
                 label_status: '시스템 상태: 가동중',
                 label_version:'시스템 버전',
                 modal_title:  '거래 설정',
@@ -621,11 +787,35 @@
                 const key = el.getAttribute('data-i18n');
                 if (dict[key] !== undefined) el.textContent = dict[key];
             });
+            syncManualLanguage();
             // lang 버튼은 data-i18n="btn_lang"으로 자동 처리됨
         }
 
         function toggleLang() {
             applyLang(currentLang === 'en' ? 'ko' : 'en');
+        }
+
+        function syncManualLanguage() {
+            document.querySelectorAll('.manual-lang').forEach(el => {
+                el.classList.toggle('active', el.dataset.manualLang === currentLang);
+            });
+            const activeTab = document.querySelector('.manual-tab.active')?.dataset.manualTab || 'quick';
+            showManualTab(activeTab);
+        }
+
+        function openManual() {
+            syncManualLanguage();
+            const modal = document.getElementById('manual-modal');
+            if (modal && !modal.open) modal.showModal();
+        }
+
+        function showManualTab(tab) {
+            document.querySelectorAll('.manual-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.manualTab === tab);
+            });
+            document.querySelectorAll('.manual-lang.active .manual-panel').forEach(panel => {
+                panel.classList.toggle('active', panel.dataset.manualPanel === tab);
+            });
         }
 
         function applyViewerRestrictions() {
@@ -1516,15 +1706,24 @@
 
         // 모달 열릴 때 body 스크롤 잠금
         const configModal = document.getElementById('config-modal');
-        configModal.addEventListener('open', () => document.body.style.overflow = 'hidden');
-        configModal.addEventListener('close', () => document.body.style.overflow = '');
+        const manualModal = document.getElementById('manual-modal');
+        function shouldLockBodyScroll() {
+            return (configModal && configModal.open) || (manualModal && manualModal.open);
+        }
+        function unlockBodyIfNoModal() {
+            if (!shouldLockBodyScroll()) document.body.style.overflow = '';
+        }
+        [configModal, manualModal].forEach(modal => {
+            if (!modal) return;
+            modal.addEventListener('open', () => document.body.style.overflow = 'hidden');
+            modal.addEventListener('close', unlockBodyIfNoModal);
+        });
         // showModal 후에도 즉시 잠금 (open 이벤트 미지원 브라우저 대비)
         const origOpen = HTMLDialogElement.prototype.showModal;
         HTMLDialogElement.prototype.showModal = function() {
             origOpen.call(this);
-            if (this.id === 'config-modal') document.body.style.overflow = 'hidden';
+            if (this.id === 'config-modal' || this.id === 'manual-modal') document.body.style.overflow = 'hidden';
         };
-        configModal.addEventListener('close', () => document.body.style.overflow = '');
 
         // ATR 체크박스 토글
         document.getElementById('set-use-atr').addEventListener('change', function() {
