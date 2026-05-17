@@ -21,18 +21,22 @@ GCP Compute Engine 환경으로 이전된 Bitrade 시스템의 서비스 흐름�
 
 ```mermaid
 graph TD
-    subgraph GCP Compute Engine (Ubuntu 24.04)
+    subgraph "GCP Compute Engine (Ubuntu 24.04)"
         A[Bitrade Service / main.py] -->|SQLite| B[(trading_bot.db)]
         A -->|Port 8000| C[Uvicorn Web Server]
         D[ngrok Service] -->|Local Tunneling| C
-        E[notify-ngrok.sh / Oneshot] -->|Check Local API Port 4040| D
+        E["notify-ngrok.sh (Oneshot)"] -->|Check Local API Port 4040| D
     end
 
-    subgraph External Services
-        F[Discord Webhook] <--|Send Address URL| E
-        G[User Web Browser] -->|HTTPS Access| D
-        A -->|Private API Authentication| H[Bithumb Exchange]
+    subgraph "External Services"
+        F[Discord Webhook]
+        G[User Web Browser]
+        H[Bithumb Exchange]
     end
+
+    E -->|Send Address URL| F
+    G -->|HTTPS Access| D
+    A -->|Private API Authentication| H
 
     style A fill:#f9f,stroke:#333,stroke-width:2px
     style D fill:#bbf,stroke:#333,stroke-width:2px
