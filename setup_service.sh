@@ -2,22 +2,33 @@
 
 echo "🚀 Bitrade 시스템 서비스 등록을 시작합니다..."
 
+CURRENT_USER=$(whoami)
+CURRENT_DIR=$(pwd)
+
+# 가상환경 파이썬 경로 탐색
+if [ -f "${CURRENT_DIR}/.venv/bin/python" ]; then
+    PYTHON_PATH="${CURRENT_DIR}/.venv/bin/python"
+    echo "ℹ️ 가상환경(.venv) 파이썬을 사용합니다: ${PYTHON_PATH}"
+else
+    PYTHON_PATH="/usr/bin/python3"
+    echo "ℹ️ 시스템 파이썬을 사용합니다: ${PYTHON_PATH}"
+fi
+
 # 서비스 파일 생성
-cat << 'EOF' | sudo tee /etc/systemd/system/bitrade.service > /dev/null
+cat << EOF | sudo tee /etc/systemd/system/bitrade.service > /dev/null
 [Unit]
 Description=Bitrade Auto Scalping Bot
 After=network.target
 
 [Service]
 Type=simple
-User=ec2-user
-WorkingDirectory=/home/ec2-user/btrade
-# 만약 가상환경(.venv)을 사용 중이라면 아래 경로를 /home/ec2-user/btrade/.venv/bin/python 으로 변경하세요.
-ExecStart=/usr/bin/python3 main.py
+User=${CURRENT_USER}
+WorkingDirectory=${CURRENT_DIR}
+ExecStart=${PYTHON_PATH} main.py
 Restart=always
 RestartSec=5
-StandardOutput=append:/home/ec2-user/btrade/trading.log
-StandardError=append:/home/ec2-user/btrade/trading.log
+StandardOutput=append:${CURRENT_DIR}/trading.log
+StandardError=append:${CURRENT_DIR}/trading.log
 
 [Install]
 WantedBy=multi-user.target
@@ -38,3 +49,4 @@ echo "🛑 봇 중지 명령어: sudo systemctl stop bitrade"
 echo "▶️ 봇 시작 명령어: sudo systemctl start bitrade"
 echo "🔄 봇 재시작 명령어: sudo systemctl restart bitrade"
 echo "--------------------------------------------------------"
+
