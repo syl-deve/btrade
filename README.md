@@ -143,7 +143,7 @@ After=network.target bitrade.service
 
 [Service]
 Type=simple
-User=ec2-user
+User=ec2-user  # 실행할 사용자 계정명으로 변경 (GCP인 경우 예: mythe82)
 ExecStart=/usr/local/bin/ngrok http 8000 --log=stdout
 Restart=always
 RestartSec=5
@@ -169,8 +169,8 @@ After=ngrok.service
 
 [Service]
 Type=oneshot
-User=ec2-user
-ExecStart=/home/ec2-user/btrade/notify-ngrok.sh
+User=ec2-user  # 실행할 사용자 계정명으로 변경 (GCP인 경우 예: mythe82)
+ExecStart=/home/ec2-user/btrade/notify-ngrok.sh  # 본인 계정 경로에 맞게 변경 (예: /home/mythe82/btrade/...)
 
 [Install]
 WantedBy=multi-user.target
